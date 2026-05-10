@@ -352,11 +352,15 @@
             }
             tbody.innerHTML = sites.map(site => {
                 let hostname;
-                try { hostname = new URL(site.url).hostname; } catch { hostname = site.url; }
-                const iconUrl = site.icon || 'https://www.google.com/s2/favicons?domain=' + hostname + '&sz=128';
+                let iconCell;
+                if (site.icon) {
+                    iconCell = '<img src="' + escapeHtml(site.icon) + '" class="site-icon-preview" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'🌐\';">';
+                } else {
+                    iconCell = '<span style="font-size:1.5rem;">🌐</span>';
+                }
                 return `
                     <tr>
-                        <td><img src="${escapeHtml(iconUrl)}" class="site-icon-preview" onerror="this.style.display='none'"></td>
+                        <td>${iconCell}</td>
                         <td>${escapeHtml(site.title)}</td>
                         <td><a href="${escapeHtml(site.url)}" target="_blank" style="color:var(--color-primary);">${escapeHtml(site.url)}</a></td>
                         <td>${escapeHtml(site.description || '')}</td>
