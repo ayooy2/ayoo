@@ -439,9 +439,19 @@
             document.getElementById('preview-footer').textContent = document.getElementById('set-footer').value || '';
         }
 
-        document.getElementById('set-title').addEventListener('input', updatePreview);
-        document.getElementById('set-subtitle').addEventListener('input', updatePreview);
-        document.getElementById('set-footer').addEventListener('input', updatePreview);
+        // 处理中文输入法：composition 期间不更新，等输入法确认后再刷新
+        var composing = false;
+        ['set-title', 'set-subtitle', 'set-footer'].forEach(function(id) {
+            var el = document.getElementById(id);
+            el.addEventListener('compositionstart', function() { composing = true; });
+            el.addEventListener('compositionend', function() {
+                composing = false;
+                updatePreview();
+            });
+            el.addEventListener('input', function() {
+                if (!composing) updatePreview();
+            });
+        });
 
         async function saveSettings(e) {
             e.preventDefault();
