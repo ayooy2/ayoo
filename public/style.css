@@ -153,6 +153,10 @@ body {
     height: 32px;
     object-fit: contain;
 }
+.card-emoji {
+    line-height: 1;
+}
+}
 
 .card-title {
     font-size: var(--text-lg);
@@ -394,6 +398,12 @@ body {
 /* ===== 响应式 ===== */
 @media (max-width: 600px) {
     .main-title { font-size: 1.8rem; }
+    .clock {
+        top: 0.5rem;
+        left: 0.5rem;
+        font-size: 0.85rem;
+        padding: 0.3rem 0.6rem;
+    }
     .sites-grid { grid-template-columns: 1fr; }
     .admin-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
     .data-table { font-size: 0.85rem; }
