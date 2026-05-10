@@ -1,0 +1,11 @@
+{
+  "sites": [
+    {
+      "id": 1,
+      "title": "示例网站",
+      "url": "https://example.com",
+      "icon": "",
+      "description": "这是一个示例，请在后台编辑或删除"
+    }
+  ]
+}

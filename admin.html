@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理 - 网站导航</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <header class="admin-header">
+            <h1>后台管理</h1>
+            <a href="index.html" class="btn btn-secondary">返回主页</a>
+        </header>
+
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="openModal()">+ 添加网站</button>
+            <button class="btn btn-secondary" onclick="exportData()">导出 JSON</button>
+            <label class="btn btn-secondary" style="cursor:pointer;">
+                导入 JSON
+                <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(this)">
+            </label>
+            <button class="btn btn-secondary" onclick="loadDefault()">恢复默认</button>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>图标</th>
+                    <th>标题</th>
+                    <th>网址</th>
+                    <th>介绍</th>
+                    <th style="width:140px;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- 动态生成 -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h2 id="modal-title">添加网站</h2>
+            <form id="edit-form" onsubmit="saveSite(event)">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label>网站标题</label>
+                    <input type="text" id="edit-title" required placeholder="例如：GitHub">
+                </div>
+                <div class="form-group">
+                    <label>网址</label>
+                    <input type="url" id="edit-url" required placeholder="https://github.com">
+                </div>
+                <div class="form-group">
+                    <label>图标 URL（可选）</label>
+                    <input type="url" id="edit-icon" placeholder="留空将自动获取">
+                    <p class="form-hint">填写图标的直接链接，或留空让系统自动抓取</p>
+                </div>
+                <div class="form-group">
+                    <label>简短介绍</label>
+                    <textarea id="edit-desc" placeholder="一两句话介绍这个网站"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let sitesData = { sites: [] };
+        const STORAGE_KEY = 'nav_sites_data';
+
+        // 初始化：优先读取 localStorage，否则读取 sites.json
+        async function init() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                sitesData = JSON.parse(stored);
+                renderTable();
+            } else {
+                try {
+                    const res = await fetch('sites.json?t=' + Date.now());
+                    sitesData = await res.json();
+                    saveToStorage();
+                    renderTable();
+                } catch (e) {
+                    sitesData = { sites: [] };
+                    renderTable();
+                }
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sitesData));
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const sites = sitesData.sites || [];
+
+            if (!sites.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#a0aec0;padding:2rem;">暂无数据，点击上方"添加网站"开始</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sites.map(site => {
+                const iconUrl = site.icon || getFavicon(site.url);
+                return `
+                    <tr>
+                        <td><img src="${escapeHtml(iconUrl)}" class="site-icon-preview" onerror="this.style.display='none'"></td>
+                        <td>${escapeHtml(site.title)}</td>
+                        <td><a href="${escapeHtml(site.url)}" target="_blank" style="color:#667eea;">${escapeHtml(site.url)}</a></td>
+                        <td>${escapeHtml(site.description || '')}</td>
+                        <td class="actions">
+                            <button class="btn btn-secondary btn-sm" onclick="editSite(${site.id})">编辑</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSite(${site.id})">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getFavicon(url) {
+            try {
+                const domain = new URL(url).hostname;
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+            } catch {
+                return '';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        // 模态框
+        function openModal(id) {
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('edit-form').reset();
+            document.getElementById('edit-id').value = '';
+            document.getElementById('modal-title').textContent = id ? '编辑网站' : '添加网站';
+
+            if (id) {
+                const site = sitesData.sites.find(s => s.id === id);
+                if (site) {
+                    document.getElementById('edit-id').value = site.id;
+                    document.getElementById('edit-title').value = site.title;
+                    document.getElementById('edit-url').value = site.url;
+                    document.getElementById('edit-icon').value = site.icon || '';
+                    document.getElementById('edit-desc').value = site.description || '';
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function saveSite(e) {
+            e.preventDefault();
+            const idVal = document.getElementById('edit-id').value;
+            const newSite = {
+                id: idVal ? parseInt(idVal) : Date.now(),
+                title: document.getElementById('edit-title').value.trim(),
+                url: document.getElementById('edit-url').value.trim(),
+                icon: document.getElementById('edit-icon').value.trim(),
+                description: document.getElementById('edit-desc').value.trim()
+            };
+
+            if (idVal) {
+                const idx = sitesData.sites.findIndex(s => s.id === parseInt(idVal));
+                if (idx >= 0) sitesData.sites[idx] = newSite;
+            } else {
+                sitesData.sites.push(newSite);
+            }
+
+            saveToStorage();
+            renderTable();
+            closeModal();
+        }
+
+        function editSite(id) {
+            openModal(id);
+        }
+
+        function deleteSite(id) {
+            if (!confirm('确定要删除这个网站吗？')) return;
+            sitesData.sites = sitesData.sites.filter(s => s.id !== id);
+            saveToStorage();
+            renderTable();
+        }
+
+        // 导入导出
+        function exportData() {
+            const blob = new Blob([JSON.stringify(sitesData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sites.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.sites && Array.isArray(data.sites)) {
+                        sitesData = data;
+                        saveToStorage();
+                        renderTable();
+                        alert('导入成功！');
+                    } else {
+                        alert('文件格式不正确');
+                    }
+                } catch {
+                    alert('无法解析文件');
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        async function loadDefault() {
+            if (!confirm('确定要恢复为默认数据吗？当前修改将丢失。')) return;
+            try {
+                const res = await fetch('sites.json?t=' + Date.now());
+                sitesData = await res.json();
+                saveToStorage();
+                renderTable();
+            } catch (e) {
+                alert('加载默认数据失败');
+            }
+        }
+
+        // 点击遮罩关闭
+        document.getElementById('modal').addEventListener('click', e => {
+            if (e.target.id === 'modal') closeModal();
+        });
+
+        init();
+    </script>
+</body>
+</html>
