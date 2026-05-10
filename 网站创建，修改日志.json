@@ -13,3 +13,6 @@
 修复 Functions 路由冲突（[[id]] → [id]），验证全链路 API CRUD 正常；时间：2026/05/10；
 迁移管理员密码至 Cloudflare Secret（env.ADMIN_PASSWORD），去除硬编码；时间：2026/05/10；
 迁移项目至新域名 https://ayoo-31u.pages.dev（ayoo.pages.dev 已被占用）；时间：2026/05/10；
+实现首页 Edge SSR + CDN 缓存架构（functions/index.js），从 D1 读取设置和站点数据服务端渲染完整 HTML；时间：2026/05/10；
+新增 settings 表与 /api/settings 端点，实现页面设置（标题、副标题、页脚）的可视化管理；时间：2026/05/10；
+后台管理页新增"页面设置"面板，含实时预览功能，修改即时生效并自动清除 CDN 缓存；时间：2026/05/10；
