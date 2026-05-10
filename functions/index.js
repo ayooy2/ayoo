@@ -54,6 +54,7 @@ function renderPage(settings, sites) {
 </head>
 <body>
     <div class="page-wrapper">
+        <div class="clock" id="clock">--:--:--</div>
         <header class="main-header">
             <h1 class="main-title">${title}</h1>
             <p class="subtitle">${subtitle}</p>
@@ -71,6 +72,16 @@ function renderPage(settings, sites) {
     </div>
 
     <script>
+        function updateClock() {
+            var now = new Date();
+            var h = String(now.getHours()).padStart(2, '0');
+            var m = String(now.getMinutes()).padStart(2, '0');
+            var s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
         document.querySelectorAll('.site-card').forEach(function(card) {
             card.addEventListener('dblclick', function() {
                 var url = card.dataset.url;
