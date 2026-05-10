@@ -1,0 +1,10 @@
+name = "a-site"
+compatibility_date = "2026-05-10"
+
+# Cloudflare Pages 项目配置
+# 部署命令: wrangler pages deploy public
+
+[[d1_databases]]
+binding = "DB"
+database_name = "a-site-db"
+database_id = "your-database-id-here"

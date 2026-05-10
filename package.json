@@ -1,0 +1,14 @@
+{
+  "name": "a-site",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler pages dev public --compatibility-date=2026-05-10",
+    "deploy": "wrangler pages deploy public",
+    "db:create": "wrangler d1 create a-site-db",
+    "db:migrate": "wrangler d1 migrations apply a-site-db"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

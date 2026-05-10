@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-box {
+            max-width: 360px;
+            margin: 10vh auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #2d3748;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 0.8rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .login-box button:hover {
+            background: #5a6fd6;
+        }
+        .error-msg {
+            color: #e53e3e;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="login-section" class="login-box">
+        <h2>管理员登录</h2>
+        <p class="error-msg" id="login-error"></p>
+        <input type="password" id="password" placeholder="请输入管理密码" onkeydown="if(event.key==='Enter')doLogin()">
+        <button onclick="doLogin()">登录</button>
+    </div>
+
+    <!-- 管理界面 -->
+    <div id="admin-section" class="admin-wrapper hidden">
+        <header class="admin-header">
+            <h1>后台管理</h1>
+            <button class="btn btn-secondary" onclick="logout()">退出登录</button>
+        </header>
+
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="openModal()">+ 添加网站</button>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>图标</th>
+                    <th>标题</th>
+                    <th>网址</th>
+                    <th>介绍</th>
+                    <th style="width:140px;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h2 id="modal-title">添加网站</h2>
+            <form id="edit-form" onsubmit="saveSite(event)">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label>网站标题 *</label>
+                    <input type="text" id="edit-title" required placeholder="例如：GitHub">
+                </div>
+                <div class="form-group">
+                    <label>网址 *</label>
+                    <input type="url" id="edit-url" required placeholder="https://github.com">
+                </div>
+                <div class="form-group">
+                    <label>图标 URL（可选）</label>
+                    <input type="url" id="edit-icon" placeholder="留空将自动获取 favicon">
+                </div>
+                <div class="form-group">
+                    <label>简短介绍</label>
+                    <textarea id="edit-desc" placeholder="一两句话介绍"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/sites';
+        let token = localStorage.getItem('admin_token') || '';
+
+        // 页面加载时检查登录状态
+        if (token) {
+            showAdmin();
+            loadTable();
+        }
+
+        function doLogin() {
+            const pwd = document.getElementById('password').value.trim();
+            if (!pwd) return;
+            token = pwd;
+            // 验证密码是否有效（尝试调用一次 API）
+            fetch(API_BASE + '/0', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).then(r => {
+                if (r.status === 401) {
+                    document.getElementById('login-error').textContent = '密码错误';
+                    token = '';
+                } else {
+                    localStorage.setItem('admin_token', token);
+                    showAdmin();
+                    loadTable();
+                }
+            }).catch(() => {
+                document.getElementById('login-error').textContent = '网络错误';
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_token');
+            token = '';
+            location.reload();
+        }
+
+        function showAdmin() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('admin-section').classList.remove('hidden');
+        }
+
+        // 加载表格数据
+        async function loadTable() {
+            try {
+                const res = await fetch(API_BASE);
+                const data = await res.json();
+                renderTable(data.sites || []);
+            } catch (e) {
+                document.getElementById('table-body').innerHTML =
+                    '<tr><td colspan="5" class="error" style="text-align:center">加载失败</td></tr>';
+            }
+        }
+
+        function renderTable(sites) {
+            const tbody = document.getElementById('table-body');
+            if (!sites.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#a0aec0;padding:2rem;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = sites.map(site => {
+                const iconUrl = site.icon || `https://www.google.com/s2/favicons?domain=${new URL(site.url).hostname}&sz=128`;
+                return `
+                    <tr>
+                        <td><img src="${escapeHtml(iconUrl)}" class="site-icon-preview" onerror="this.style.display='none'"></td>
+                        <td>${escapeHtml(site.title)}</td>
+                        <td><a href="${escapeHtml(site.url)}" target="_blank" style="color:#667eea;">${escapeHtml(site.url)}</a></td>
+                        <td>${escapeHtml(site.description || '')}</td>
+                        <td class="actions">
+                            <button class="btn btn-secondary btn-sm" onclick="editSite(${site.id})">编辑</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSite(${site.id})">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 模态框
+        function openModal(id) {
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('edit-form').reset();
+            document.getElementById('edit-id').value = '';
+            document.getElementById('modal-title').textContent = id ? '编辑网站' : '添加网站';
+
+            if (id) {
+                fetch(API_BASE + '/' + id).then(r => r.json()).then(site => {
+                    document.getElementById('edit-id').value = site.id;
+                    document.getElementById('edit-title').value = site.title;
+                    document.getElementById('edit-url').value = site.url;
+                    document.getElementById('edit-icon').value = site.icon || '';
+                    document.getElementById('edit-desc').value = site.description || '';
+                });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        async function saveSite(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const body = {
+                title: document.getElementById('edit-title').value.trim(),
+                url: document.getElementById('edit-url').value.trim(),
+                icon: document.getElementById('edit-icon').value.trim(),
+                description: document.getElementById('edit-desc').value.trim()
+            };
+
+            const url = id ? `${API_BASE}/${id}` : API_BASE + '/new';
+            const method = id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (res.ok) {
+                closeModal();
+                loadTable();
+            } else if (res.status === 401) {
+                alert('登录已过期，请重新登录');
+                logout();
+            } else {
+                alert('保存失败');
+            }
+        }
+
+        function editSite(id) {
+            openModal(id);
+        }
+
+        async function deleteSite(id) {
+            if (!confirm('确定删除？')) return;
+            const res = await fetch(`${API_BASE}/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                loadTable();
+            } else if (res.status === 401) {
+                alert('登录已过期');
+                logout();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        document.getElementById('modal').addEventListener('click', e => {
+            if (e.target.id === 'modal') closeModal();
+        });
+    </script>
+</body>
+</html>
