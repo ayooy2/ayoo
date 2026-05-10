@@ -1,6 +1,3 @@
-// API: 单个网站的增删改（需要管理员密码）
-const ADMIN_PASSWORD = 'ayoo666';
-
 export async function onRequest(context) {
   const { request, env, params } = context;
   const id = params.id;
@@ -8,7 +5,7 @@ export async function onRequest(context) {
   // 除 GET 外都需要认证
   if (request.method !== 'GET') {
     const auth = request.headers.get('Authorization');
-    if (!auth || auth !== `Bearer ${ADMIN_PASSWORD}`) {
+    if (!auth || auth !== `Bearer ${env.ADMIN_PASSWORD}`) {
       return jsonResponse({ error: 'Unauthorized' }, 401);
     }
   }
