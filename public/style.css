@@ -169,31 +169,35 @@ body {
 }
 [data-theme="dark"] .track-day { opacity: 0; }
 
-/* 云朵 */
+/* 云朵 —— 柔和堆叠的自然云 */
 .cloud {
     position: absolute;
-    background: rgba(255, 255, 255, 0.85);
-    border-radius: 10px;
-    transition: opacity 0.5s ease;
+    background: rgba(255, 255, 255, 0.88);
+    border-radius: 50%;
+    transition: opacity 0.6s ease;
 }
 .cloud-1 {
-    width: 18px; height: 6px;
-    top: 8px; right: 18px;
-    animation: drift 4s ease-in-out infinite;
+    width: 16px; height: 5px;
+    top: 7px; right: 14px;
+    border-radius: 8px;
+    box-shadow:
+        5px -1px 0 1px rgba(255,255,255,0.7),
+        -4px 1px 0 0 rgba(255,255,255,0.6);
 }
 .cloud-2 {
-    width: 12px; height: 4px;
-    top: 14px; right: 26px;
-    animation: drift 5s ease-in-out 1.5s infinite;
+    width: 10px; height: 4px;
+    top: 15px; right: 21px;
+    border-radius: 6px;
+    box-shadow:
+        4px -1px 0 1px rgba(255,255,255,0.65),
+        -3px 1px 0 0 rgba(255,255,255,0.55);
 }
 .cloud-3 {
-    width: 9px; height: 3px;
-    top: 6px; right: 28px;
-    animation: drift 3.5s ease-in-out 0.8s infinite;
-}
-@keyframes drift {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(-6px); }
+    width: 8px; height: 3px;
+    top: 20px; right: 11px;
+    border-radius: 5px;
+    box-shadow:
+        3px -1px 0 0 rgba(255,255,255,0.6);
 }
 
 /* 夜间场景层 */
@@ -203,21 +207,18 @@ body {
 }
 [data-theme="dark"] .track-night { opacity: 1; }
 
-/* 星星 */
+/* 星星 —— 静态自然散落，柔和微光 */
 .star-dot {
     position: absolute;
     background: white;
     border-radius: 50%;
+    transition: opacity 0.6s ease;
 }
-.star-dot:nth-child(1) { width: 2px; height: 2px; top: 8px;  left: 22px; animation: twinkle 2s ease-in-out 0s infinite; }
-.star-dot:nth-child(2) { width: 2px; height: 2px; top: 12px; left: 30px; animation: twinkle 2.5s ease-in-out 0.5s infinite; }
-.star-dot:nth-child(3) { width: 1px; height: 1px; top: 5px;  left: 16px; animation: twinkle 1.8s ease-in-out 1s infinite; }
-.star-dot:nth-child(4) { width: 2px; height: 2px; top: 20px; left: 35px; animation: twinkle 2.2s ease-in-out 1.5s infinite; }
-.star-dot:nth-child(5) { width: 1px; height: 1px; top: 16px; left: 12px; animation: twinkle 3s ease-in-out 0.7s infinite; }
-@keyframes twinkle {
-    0%, 100% { opacity: 0.2; }
-    50% { opacity: 1; }
-}
+.star-dot:nth-child(1) { width: 2px; height: 2px; top: 7px;  left: 18px; opacity: 0.9;  box-shadow: 0 0 3px rgba(255,255,255,0.6); }
+.star-dot:nth-child(2) { width: 2px; height: 2px; top: 13px; left: 27px; opacity: 0.7;  box-shadow: 0 0 2px rgba(255,255,255,0.5); }
+.star-dot:nth-child(3) { width: 1px; height: 1px; top: 5px;  left: 14px; opacity: 0.55; box-shadow: 0 0 1px rgba(255,255,255,0.45); }
+.star-dot:nth-child(4) { width: 2px; height: 2px; top: 19px; left: 33px; opacity: 0.8;  box-shadow: 0 0 3px rgba(255,255,255,0.55); }
+.star-dot:nth-child(5) { width: 1px; height: 1px; top: 15px; left: 10px; opacity: 0.5;  box-shadow: 0 0 1px rgba(255,255,255,0.4); }
 
 /* ===== 滑块 ===== */
 .theme-thumb {
@@ -235,20 +236,16 @@ body {
     z-index: 2;
 }
 
-/* 日间滑块呼吸光晕 */
+/* 日间滑块静态光晕 */
 .theme-thumb::after {
     content: '';
     position: absolute;
-    top: -4px; left: -4px; right: -4px; bottom: -4px;
+    top: -5px; left: -5px; right: -5px; bottom: -5px;
     border-radius: 50%;
     background: transparent;
-    box-shadow: 0 0 20px rgba(252, 211, 77, 0.55);
-    animation: breathe 2.5s ease-in-out infinite;
+    box-shadow: 0 0 22px rgba(252, 211, 77, 0.45);
     z-index: -1;
-}
-@keyframes breathe {
-    0%, 100% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.4); opacity: 1; }
+    transition: box-shadow 0.6s ease;
 }
 
 /* ===== 夜间滑块 ===== */
@@ -258,8 +255,8 @@ body {
     box-shadow: 0 0 18px rgba(165, 180, 252, 0.7), 0 2px 6px rgba(0,0,0,0.10);
 }
 [data-theme="dark"] .theme-thumb::after {
-    box-shadow: 0 0 22px rgba(165, 180, 252, 0.55);
-    animation: breathe 3s ease-in-out infinite;
+    box-shadow: 0 0 22px rgba(165, 180, 252, 0.5);
+    transition: box-shadow 0.6s ease;
 }
 
 /* ===== 夜间轨道配色 ===== */
