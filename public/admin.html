@@ -175,7 +175,15 @@
     <div id="admin-section" class="admin-wrapper hidden">
         <header class="admin-header">
             <h1>后台管理</h1>
-            <button class="btn btn-secondary" onclick="logout()">退出登录</button>
+            <div style="display:flex;align-items:center;gap:0.8rem;">
+                <button class="theme-toggle" id="theme-toggle" aria-label="切换主题" title="切换日间/夜间模式" style="width:40px;height:40px;">
+                    <div class="theme-icon">
+                        <div class="theme-icon-sun"></div>
+                        <div class="theme-icon-moon"></div>
+                    </div>
+                </button>
+                <button class="btn btn-secondary" onclick="logout()">退出登录</button>
+            </div>
         </header>
 
         <!-- Tab 切换 -->
@@ -288,6 +296,25 @@
         const API_SETTINGS = '/api/settings';
         const API_AUTH = '/api/auth';
         let token = localStorage.getItem('admin_token') || '';
+
+        // 主题初始化
+        (function() {
+            var saved = localStorage.getItem('theme') || 'light';
+            if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+            var btn = document.getElementById('theme-toggle');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    if (isDark) {
+                        document.documentElement.removeAttribute('data-theme');
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('theme', 'dark');
+                    }
+                });
+            }
+        })();
 
         if (token) {
             verifyAndEnter();
