@@ -41,7 +41,7 @@ function renderPage(settings, sites) {
 
 function renderCard(site) {
   // 一律用 emoji 首屏渲染，icon URL 存在 data-icon 里供 JS 异步加载
-  return '\n        <div class="site-card" data-url="' + escapeHtml(site.url) + '" data-icon="' + escapeHtml(site.icon || '') + '" title="双击打开：' + escapeHtml(site.title) + '">\n          <div class="card-icon">\n            <span class="card-emoji">🌐</span>\n          </div>\n          <h3 class="card-title">' + escapeHtml(site.title) + '</h3>\n          <p class="card-desc">' + escapeHtml(site.description || '') + '</p>\n        </div>';
+  return '\n        <div class="site-card" data-url="' + escapeHtml(site.url) + '" data-icon="' + escapeHtml(site.icon || '') + '" title="双击打开：' + escapeHtml(site.title) + '">\n          <div class="card-icon">\n            <span class="card-emoji">🌐</span>\n          </div>\n          <div class="card-text">\n            <h3 class="card-title">' + escapeHtml(site.title) + '</h3>\n            <p class="card-desc">' + escapeHtml(site.description || '') + '</p>\n          </div>\n        </div>';
 }
 
 function escapeHtml(text) {
