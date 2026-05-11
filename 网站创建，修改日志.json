@@ -23,3 +23,5 @@
 时间：2026/05/10 --清理废弃代码：删除根目录旧版文件，关闭 GitHub Pages，统一入口为 Cloudflare Pages；
 时间：2026/05/10 --迁移至新域名 ayoow.pages.dev，旧 ayoo 项目和 GitHub Pages 已关闭；
 时间：2026/05/10 --全架构安全加固：新增 /api/auth 端点修复登录验证绕过漏洞；添加 API 输入验证（title/url/desc 长度与格式校验）；settings 添加 key 白名单；提取共享 lib/response.js 模块；修复 CSS 变量循环引用和多余括号；添加 .dev.vars 到 .gitignore；修复 DELETE 静默成功问题；添加 updated_at 列迁移；修复 sort_order 语义问题；修复外部链接 noopener；隐藏错误详情防止信息泄露；sql 查询添加分页 LIMIT；
+时间：2026/05/10 --重新设计卡片为横向长圆角布局，暗色高级配色（毛玻璃材质 + 紫蓝渐变），hover 右移光效；
+时间：2026/05/11 --重构页面为亚克力导航栏布局（backdrop-filter + sticky），新增日间/夜间双主题切换，创意太阳/月亮动画图标（CSS 脉冲光环 + 月牙剪影 + 星星闪烁），默认日间模式，localStorage 持久化偏好；
