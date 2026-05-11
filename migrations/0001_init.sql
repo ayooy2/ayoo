@@ -10,6 +10,6 @@ CREATE TABLE IF NOT EXISTS sites (
 );
 
 -- 插入示例数据
-INSERT INTO sites (title, url, icon, description, sort_order) VALUES
+INSERT OR IGNORE INTO sites (title, url, icon, description, sort_order) VALUES
 ('GitHub', 'https://github.com', '', '代码托管与协作平台', 1),
 ('V2EX', 'https://v2ex.com', '', '创意工作者社区', 2);

@@ -286,21 +286,35 @@
     <script>
         const API_BASE = '/api/sites';
         const API_SETTINGS = '/api/settings';
+        const API_AUTH = '/api/auth';
         let token = localStorage.getItem('admin_token') || '';
 
         if (token) {
-            showAdmin();
-            loadTable();
+            verifyAndEnter();
+        }
+
+        function verifyAndEnter() {
+            fetch(API_AUTH, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).then(function(r) {
+                if (r.ok) {
+                    showAdmin();
+                    loadTable();
+                } else {
+                    localStorage.removeItem('admin_token');
+                    token = '';
+                }
+            });
         }
 
         function doLogin() {
             const pwd = document.getElementById('password').value.trim();
             if (!pwd) return;
             token = pwd;
-            fetch(API_BASE + '/0', {
+            fetch(API_AUTH, {
                 headers: { 'Authorization': 'Bearer ' + token }
-            }).then(r => {
-                if (r.status === 401) {
+            }).then(function(r) {
+                if (!r.ok) {
                     document.getElementById('login-error').textContent = '密码错误';
                     token = '';
                 } else {
@@ -308,7 +322,7 @@
                     showAdmin();
                     loadTable();
                 }
-            }).catch(() => {
+            }).catch(function() {
                 document.getElementById('login-error').textContent = '网络错误';
             });
         }
@@ -362,7 +376,7 @@
                     <tr>
                         <td>${iconCell}</td>
                         <td>${escapeHtml(site.title)}</td>
-                        <td><a href="${escapeHtml(site.url)}" target="_blank" style="color:var(--color-primary);">${escapeHtml(site.url)}</a></td>
+                        <td><a href="${escapeHtml(site.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--color-primary);">${escapeHtml(site.url)}</a></td>
                         <td>${escapeHtml(site.description || '')}</td>
                         <td class="actions">
                             <button class="btn btn-secondary btn-sm" onclick="editSite(${site.id})">编辑</button>

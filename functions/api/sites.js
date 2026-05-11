@@ -1,21 +1,14 @@
+import { json, error } from '../lib/response.js';
+
 export async function onRequestGet(context) {
   const { env } = context;
   try {
     const { results } = await env.DB.prepare(
-      'SELECT id, title, url, icon, description, created_at FROM sites ORDER BY sort_order ASC, id ASC'
+      'SELECT id, title, url, icon, description, created_at FROM sites ORDER BY sort_order ASC, id ASC LIMIT 200'
     ).all();
-    return jsonResponse({ sites: results || [] });
+    return json({ sites: results || [] });
   } catch (e) {
-    return jsonResponse({ error: e.message }, 500);
+    console.error(e);
+    return error('Internal server error', 500);
   }
-}
-
-function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    }
-  });
 }

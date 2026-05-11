@@ -1,0 +1,2 @@
+ALTER TABLE sites ADD COLUMN updated_at DATETIME;
+ALTER TABLE settings ADD COLUMN updated_at DATETIME;

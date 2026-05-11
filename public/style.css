@@ -32,8 +32,8 @@
   --color-danger-text: #c53030;
   --color-success-bg: #c6f6d5;
   --color-success-text: #276749;
-  --color-bg-subtle: var(--color-bg-subtle);
-  --color-bg-card-icon: var(--color-bg-card-icon);
+  --color-bg-subtle: #f7fafc;
+  --color-bg-card-icon: #f0f2f5;
 
   /* 圆角 */
   --radius-sm: 8px;
@@ -155,7 +155,6 @@ body {
 }
 .card-emoji {
     line-height: 1;
-}
 }
 
 .card-title {

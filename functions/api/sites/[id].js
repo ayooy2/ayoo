@@ -1,67 +1,91 @@
+import { json, error } from '../../lib/response.js';
+
+const TITLE_MAX = 200;
+const URL_MAX = 2000;
+const DESC_MAX = 500;
+
 export async function onRequest(context) {
   const { request, env, params } = context;
   const id = params.id;
 
-  // 除 GET 外都需要认证
   if (request.method !== 'GET') {
     const auth = request.headers.get('Authorization');
     if (!auth || auth !== `Bearer ${env.ADMIN_PASSWORD}`) {
-      return jsonResponse({ error: 'Unauthorized' }, 401);
+      return error('Unauthorized', 401);
     }
   }
 
   try {
     switch (request.method) {
       case 'GET':
-        return await getSite(env.DB, id);
+        return getSite(env.DB, id);
       case 'POST':
-        return await createSite(env.DB, await request.json());
+        return createSite(env.DB, await request.json());
       case 'PUT':
-        return await updateSite(env.DB, id, await request.json());
+        return updateSite(env.DB, id, await request.json());
       case 'DELETE':
-        return await deleteSite(env.DB, id);
+        return deleteSite(env.DB, id);
+      case 'OPTIONS':
+        return new Response(null, { status: 204, headers: { Allow: 'GET,POST,PUT,DELETE,OPTIONS' } });
       default:
-        return jsonResponse({ error: 'Method not allowed' }, 405);
+        return error('Method not allowed', 405);
     }
   } catch (e) {
-    return jsonResponse({ error: e.message }, 500);
+    console.error(e);
+    return error('Internal server error', 500);
   }
+}
+
+function validateSite(data) {
+  if (!data.title || typeof data.title !== 'string' || !data.title.trim()) {
+    return 'Title is required';
+  }
+  if (data.title.length > TITLE_MAX) {
+    return 'Title too long (max ' + TITLE_MAX + ')';
+  }
+  if (!data.url || typeof data.url !== 'string' || !data.url.trim()) {
+    return 'URL is required';
+  }
+  if (data.url.length > URL_MAX) {
+    return 'URL too long';
+  }
+  try { new URL(data.url); } catch { return 'Invalid URL (must be absolute)'; }
+  if (data.description && data.description.length > DESC_MAX) {
+    return 'Description too long (max ' + DESC_MAX + ')';
+  }
+  return null;
 }
 
 async function getSite(db, id) {
   const result = await db.prepare('SELECT * FROM sites WHERE id = ?').bind(id).first();
-  if (!result) return jsonResponse({ error: 'Not found' }, 404);
-  return jsonResponse(result);
+  if (!result) return error('Not found', 404);
+  return json(result);
 }
 
 async function createSite(db, data) {
-  const { title, url, icon, description } = data;
+  const err = validateSite(data);
+  if (err) return error(err, 400);
+
+  const sortOrder = Math.floor(Date.now() / 1000);
   const result = await db.prepare(
     'INSERT INTO sites (title, url, icon, description, sort_order) VALUES (?, ?, ?, ?, ?) RETURNING *'
-  ).bind(title, url, icon || '', description || '', Date.now()).first();
-  return jsonResponse(result, 201);
+  ).bind(data.title.trim(), data.url.trim(), (data.icon || '').trim(), (data.description || '').trim(), sortOrder).first();
+  return json(result, 201);
 }
 
 async function updateSite(db, id, data) {
-  const { title, url, icon, description } = data;
+  const err = validateSite(data);
+  if (err) return error(err, 400);
+
   const result = await db.prepare(
     'UPDATE sites SET title = ?, url = ?, icon = ?, description = ? WHERE id = ? RETURNING *'
-  ).bind(title, url, icon || '', description || '', id).first();
-  if (!result) return jsonResponse({ error: 'Not found' }, 404);
-  return jsonResponse(result);
+  ).bind(data.title.trim(), data.url.trim(), (data.icon || '').trim(), (data.description || '').trim(), id).first();
+  if (!result) return error('Not found', 404);
+  return json(result);
 }
 
 async function deleteSite(db, id) {
-  await db.prepare('DELETE FROM sites WHERE id = ?').bind(id).run();
-  return jsonResponse({ success: true });
-}
-
-function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    }
-  });
+  const { meta } = await db.prepare('DELETE FROM sites WHERE id = ?').bind(id).run();
+  if (meta.changes === 0) return error('Not found', 404);
+  return json({ success: true });
 }
