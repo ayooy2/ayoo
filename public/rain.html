@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>雨屏</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { overflow:hidden; background:#000; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+canvas { display:block; position:fixed; top:0; left:0; width:100%; height:100%; }
+
+/* 悬浮控制台 */
+.console-trigger {
+    position:fixed; bottom:24px; right:24px; z-index:10;
+    width:48px; height:48px; border-radius:50%;
+    background:rgba(255,255,255,0.12); backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,0.15);
+    color:rgba(255,255,255,0.85); font-size:1.4rem;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:all 0.3s ease; box-shadow:0 4px 16px rgba(0,0,0,0.2);
+}
+.console-trigger:hover { background:rgba(255,255,255,0.2); transform:scale(1.08); }
+
+.panel {
+    position:fixed; bottom:88px; right:24px; z-index:10;
+    width:260px; background:rgba(20,20,35,0.75);
+    backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+    border-radius:16px; border:1px solid rgba(255,255,255,0.1);
+    padding:1.2rem; color:#d0d0e0; font-size:0.85rem;
+    box-shadow:0 8px 32px rgba(0,0,0,0.35);
+    opacity:0; pointer-events:none; transform:translateY(12px);
+    transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.panel.open { opacity:1; pointer-events:all; transform:translateY(0); }
+
+.panel label { display:block; margin-bottom:0.2rem; color:#9898b0; font-size:0.78rem; }
+.panel input[type=range] { width:100%; margin-bottom:0.8rem; accent-color:#818cf8; }
+.panel .row { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; }
+.panel .val { color:#a5b4fc; font-size:0.78rem; }
+
+.upload-btn {
+    display:block; width:100%; padding:0.5rem; margin-top:0.6rem;
+    background:rgba(129,140,248,0.2); border:1px solid rgba(129,140,248,0.3);
+    border-radius:8px; color:#c7d2fe; text-align:center; cursor:pointer;
+    font-size:0.82rem; transition:all 0.2s;
+}
+.upload-btn:hover { background:rgba(129,140,248,0.35); }
+.upload-btn input { display:none; }
+
+.reset-btn {
+    display:block; width:100%; padding:0.4rem; margin-top:0.4rem;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px; color:#888; text-align:center; cursor:pointer;
+    font-size:0.78rem; transition:all 0.2s;
+}
+.reset-btn:hover { background:rgba(255,255,255,0.1); color:#aaa; }
+
+.back-link {
+    position:fixed; top:20px; left:20px; z-index:10;
+    color:rgba(255,255,255,0.5); text-decoration:none; font-size:0.85rem;
+    transition:color 0.2s;
+}
+.back-link:hover { color:rgba(255,255,255,0.85); }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<a href="/" class="back-link">← 返回</a>
+
+<button class="console-trigger" id="trigger" title="雨滴控制台">💧</button>
+
+<div class="panel" id="panel">
+    <label>雨势 <span class="val" id="v-intensity">1.0</span></label>
+    <input type="range" id="intensity" min="0" max="2" step="0.01" value="1">
+
+    <label>雾气 <span class="val" id="v-fog">0.3</span></label>
+    <input type="range" id="fog" min="0" max="1" step="0.01" value="0.3">
+
+    <label>折射率 <span class="val" id="v-refraction">1.15</span></label>
+    <input type="range" id="refraction" min="1" max="1.5" step="0.01" value="1.15">
+
+    <label class="upload-btn">
+        📁 上传背景图片/视频
+        <input type="file" id="bgfile" accept="image/*,video/*">
+    </label>
+    <button class="reset-btn" id="reset-bg">↻ 恢复默认渐变</button>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+if (!gl) {
+    document.body.innerHTML = '<p style="color:white;text-align:center;padding:2rem;">需要 WebGL 支持</p>';
+    throw new Error('WebGL not available');
+}
+
+// --- Shaders ---
+const vertSrc = `#version 300 es
+in vec2 aPos;
+out vec2 vUv;
+void main() { vUv = aPos*0.5+0.5; gl_Position = vec4(aPos,0.,1.); }`;
+
+const fragSrc = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 fragColor;
+
+uniform vec2 uRes;
+uniform float uTime;
+uniform float uIntensity;
+uniform float uFog;
+uniform float uRefraction;
+uniform sampler2D uBg;
+uniform bool uHasBg;
+
+// Hash
+float hash(vec2 p) {
+    return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);
+}
+
+// 2D noise
+float noise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    f = f*f*(3.-2.*f);
+    return mix(mix(hash(i), hash(i+vec2(1,0)), f.x),
+               mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
+}
+
+// ===== Raindrop simulation =====
+
+// Drop state across 3 layers
+struct Drop {
+    vec2 pos;
+    float size;
+    float phase;   // 0..1 grow, 1..2 slide, 2+ dead
+    float seed;
+};
+
+Drop getDrop(vec2 uv, int layer, float scale) {
+    float t = uTime * (0.3 + 0.15*float(layer));
+    vec2 grid = floor(uv * scale - t*0.5);
+    float h = hash(grid + float(layer)*123.4);
+
+    vec2 local = fract(uv * scale - t*0.5) - 0.5;
+
+    float phase = fract(h*7.13 + t*0.4);
+    float size = 0.04 + h*0.08;
+
+    // Grow phase 0..0.4, hold 0.4..0.6, slide 0.6..1.0
+    float grow = smoothstep(0., 0.4, phase) * (1. - smoothstep(0.6, 1., phase));
+    float slideDist = smoothstep(0.6, 1., phase) * 2.5;
+
+    Drop d;
+    d.pos = local - vec2(0., -slideDist);
+    d.size = size * grow * uIntensity;
+    d.phase = phase;
+    d.seed = h;
+    return d;
+}
+
+// Refracted UV inside a drop
+vec2 refractUv(vec2 uv, Drop drop) {
+    vec2 center = drop.pos;
+    float r2 = dot(center, center);
+    float r = sqrt(r2);
+    float dropR = drop.size;
+    if (r > dropR) return uv;
+
+    float z = sqrt(max(0., dropR*dropR - r2));
+    float nx = center.x / (z + 0.001);
+    float ny = center.y / (z + 0.001);
+
+    float refr = 1. / uRefraction;
+    return uv - vec2(nx, ny) * z * (1.-refr) * 0.15;
+}
+
+void main() {
+    vec2 uv = vUv;
+    vec2 res = uRes;
+
+    // Procedural gradient background
+    vec3 bgColor;
+    if (uHasBg) {
+        bgColor = texture(uBg, uv).rgb;
+    } else {
+        // Dual-color fluid gradient
+        float n = noise(uv*3. + uTime*0.02);
+        vec3 c1 = vec3(0.05, 0.02, 0.15); // deep indigo
+        vec3 c2 = vec3(0.02, 0.08, 0.2);  // deep teal
+        vec3 c3 = vec3(0.08, 0.03, 0.12); // dark plum
+        float grad = uv.y + n*0.15;
+        bgColor = mix(c1, c2, smoothstep(0.2, 0.6, grad));
+        bgColor = mix(bgColor, c3, smoothstep(0.5, 0.9, grad*1.3));
+        bgColor += n*0.04;
+    }
+
+    vec3 color = bgColor;
+    float totalDrop = 0.;
+
+    // 3 layers of drops at different scales
+    for (int L = 0; L < 3; L++) {
+        float scale = 8. + float(L)*12.;
+
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                vec2 off = vec2(float(dx), float(dy));
+                Drop d = getDrop(uv + off/scale, L, scale);
+
+                if (d.size < 0.002) continue;
+
+                vec2 refrUv = refractUv(uv + off/scale, d);
+                float dropR = d.size;
+                float dist = length(d.pos);
+
+                if (dist < dropR) {
+                    vec3 refrColor;
+                    if (uHasBg) {
+                        refrColor = texture(uBg, clamp(refrUv, 0., 1.)).rgb;
+                    } else {
+                        float n2 = noise(refrUv*3. + uTime*0.02);
+                        float g = refrUv.y + n2*0.15;
+                        refrColor = mix(vec3(0.05,0.02,0.15), vec3(0.02,0.08,0.2), smoothstep(0.2,0.6,g));
+                        refrColor = mix(refrColor, vec3(0.08,0.03,0.12), smoothstep(0.5,0.9,g*1.3));
+                        refrColor += n2*0.04;
+                    }
+                    // Brighten inside drop (lens effect) + slight blue tint
+                    refrColor = mix(refrColor, refrColor*1.25+vec3(0.02,0.04,0.08), 0.5);
+                    float blend = smoothstep(dropR, dropR*0.7, dist);
+                    color = mix(color, refrColor, blend);
+                    totalDrop += blend;
+                }
+
+                // Edge highlight
+                float edge = abs(dist - dropR);
+                float highlight = exp(-edge*200.) * 0.5;
+                highlight += exp(-edge*60.) * 0.3;
+                color += highlight * vec3(0.25, 0.3, 0.45) * (0.5 + d.seed*0.5);
+            }
+        }
+    }
+
+    // Streak drops (vertical elongated)
+    for (int i = 0; i < 6; i++) {
+        float h = hash(vec2(float(i)*0.73, 0.));
+        vec2 streakPos = vec2(h, fract(h*7.31 + uTime*0.15));
+        float streakLen = 0.08 + h*0.15;
+        float streakW = 0.003 + h*0.006;
+        float distX = abs(uv.x - streakPos.x) - streakW;
+        float distY = abs(uv.y - streakPos.y + streakLen*0.5) - streakLen*0.5;
+        float dist = max(distX, distY);
+        float streak = exp(-dist*120.) * 0.25 * uIntensity;
+        color += streak * vec3(0.15, 0.2, 0.35);
+
+        // Tiny dot at top of streak (the forming drop)
+        float dotDist = length(uv - vec2(streakPos.x, streakPos.y));
+        float dotVal = exp(-dotDist*300.) * 0.4 * uIntensity;
+        color += dotVal * vec3(0.3, 0.4, 0.6);
+    }
+
+    // Fog layer
+    float fogAmount = uFog * 0.25;
+    float fogNoise = noise(uv*5. + uTime*0.01)*0.5 + 0.5;
+    color = mix(color, vec3(0.04, 0.06, 0.12), fogAmount * fogNoise);
+    color = mix(color, vec3(0.06, 0.08, 0.16), fogAmount * 0.6);
+
+    // Subtle vignette
+    float vignette = 1. - length(vUv - 0.5)*0.4;
+    color *= vignette;
+
+    // Tone mapping
+    color = color / (color + 0.5);
+
+    fragColor = vec4(color, 1.);
+}`;
+
+// --- WebGL Setup ---
+function compileShader(gl, src, type) {
+    const shader = gl.createShader(type);
+    const header = type === gl.VERTEX_SHADER ? '#version 300 es\n' : '#version 300 es\n';
+    gl.shaderSource(shader, src);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        // Try without version directive
+        const srcLegacy = src.replace('#version 300 es', '');
+        gl.shaderSource(shader, srcLegacy);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.error(gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+        }
+    }
+    return shader;
+}
+
+const vShader = compileShader(gl, vertSrc, gl.VERTEX_SHADER);
+const fShader = compileShader(gl, fragSrc, gl.FRAGMENT_SHADER);
+const program = gl.createProgram();
+gl.attachShader(program, vShader);
+gl.attachShader(program, fShader);
+gl.linkProgram(program);
+if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(program));
+}
+gl.useProgram(program);
+
+const quad = new Float32Array([-1,-1, 1,-1, -1,1, 1,1]);
+const vbo = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(program, 'aPos');
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+const uRes = gl.getUniformLocation(program, 'uRes');
+const uTime = gl.getUniformLocation(program, 'uTime');
+const uIntensity = gl.getUniformLocation(program, 'uIntensity');
+const uFog = gl.getUniformLocation(program, 'uFog');
+const uRefraction = gl.getUniformLocation(program, 'uRefraction');
+const uBg = gl.getUniformLocation(program, 'uBg');
+const uHasBg = gl.getUniformLocation(program, 'uHasBg');
+
+// Background texture
+let bgTexture = null;
+
+function createBgTexture(img) {
+    if (bgTexture) gl.deleteTexture(bgTexture);
+    bgTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, bgTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.uniform1i(uHasBg, 1);
+}
+
+function removeBg() {
+    if (bgTexture) { gl.deleteTexture(bgTexture); bgTexture = null; }
+    gl.uniform1i(uHasBg, 0);
+}
+
+// --- Render ---
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+}
+window.addEventListener('resize', resize);
+resize();
+
+let bgVideo = null;
+let bgImage = null;
+
+function render(time) {
+    requestAnimationFrame(render);
+
+    // Update video texture if playing
+    if (bgVideo && !bgVideo.paused) {
+        gl.bindTexture(gl.TEXTURE_2D, bgTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bgVideo);
+    }
+
+    gl.uniform1f(uTime, time * 0.001);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+requestAnimationFrame(render);
+
+// --- UI ---
+const panel = document.getElementById('panel');
+const trigger = document.getElementById('trigger');
+trigger.addEventListener('click', () => panel.classList.toggle('open'));
+
+// Sliders
+document.getElementById('intensity').addEventListener('input', function() {
+    gl.uniform1f(uIntensity, parseFloat(this.value));
+    document.getElementById('v-intensity').textContent = this.value;
+});
+document.getElementById('fog').addEventListener('input', function() {
+    gl.uniform1f(uFog, parseFloat(this.value));
+    document.getElementById('v-fog').textContent = this.value;
+});
+document.getElementById('refraction').addEventListener('input', function() {
+    gl.uniform1f(uRefraction, parseFloat(this.value));
+    document.getElementById('v-refraction').textContent = this.value;
+});
+
+// Set defaults
+gl.uniform1f(uIntensity, 1.0);
+gl.uniform1f(uFog, 0.3);
+gl.uniform1f(uRefraction, 1.15);
+
+// File upload
+document.getElementById('bgfile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+
+    if (file.type.startsWith('video/')) {
+        if (bgVideo) { bgVideo.pause(); URL.revokeObjectURL(bgVideo.src); }
+        bgVideo = document.createElement('video');
+        bgVideo.src = url;
+        bgVideo.loop = true;
+        bgVideo.muted = true;
+        bgVideo.playsInline = true;
+        bgVideo.crossOrigin = 'anonymous';
+        bgVideo.addEventListener('loadeddata', () => {
+            createBgTexture(bgVideo);
+            bgVideo.play();
+        });
+    } else {
+        if (bgVideo) { bgVideo.pause(); URL.revokeObjectURL(bgVideo.src); bgVideo = null; }
+        const img = new Image();
+        img.onload = () => { createBgTexture(img); bgImage = img; };
+        img.src = url;
+    }
+});
+
+document.getElementById('reset-bg').addEventListener('click', () => {
+    if (bgVideo) { bgVideo.pause(); URL.revokeObjectURL(bgVideo.src); bgVideo = null; }
+    bgImage = null;
+    removeBg();
+});
+
+// Click panel outside to close
+document.addEventListener('click', function(e) {
+    if (!panel.contains(e.target) && e.target !== trigger) {
+        panel.classList.remove('open');
+    }
+});
+</script>
+</body>
+</html>

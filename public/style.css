@@ -147,6 +147,14 @@ body::before {
     white-space: nowrap;
 }
 
+.nav-link {
+    font-size: 1.1rem;
+    text-decoration: none;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+.nav-link:hover { opacity: 1; }
+
 .nav-spacer { flex: 1; }
 
 .nav-clock {
