@@ -133,139 +133,263 @@ body {
     user-select: none;
 }
 
-/* ===== 动漫风胶囊昼夜切换开关 ===== */
+/* ===== 超现实梦幻粒子昼夜开关 ===== */
 .theme-toggle {
-    width: 68px;
-    height: 34px;
-    border-radius: 17px;
+    width: 72px;
+    height: 36px;
+    border-radius: 18px;
     border: none;
     cursor: pointer;
     position: relative;
     flex-shrink: 0;
-    background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 35%, #60a5fa 100%);
-    box-shadow: 0 2px 14px rgba(125, 211, 252, 0.4), inset 0 1px 0 rgba(255,255,255,0.45);
-    transition: background 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    /* 日间：晨曦渐变 + 柔光穿透 */
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.5) 0%, transparent 60%),
+        radial-gradient(ellipse at 75% 60%, rgba(252,211,77,0.15) 0%, transparent 50%),
+        linear-gradient(160deg, #e0f2fe 0%, #bae6fd 25%, #7dd3fc 55%, #a5d8ff 100%);
+    box-shadow:
+        0 0 20px rgba(186, 230, 253, 0.3),
+        0 3px 16px rgba(0,0,0,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.5),
+        inset 0 -1px 0 rgba(0,0,0,0.03);
+    transition: background 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
 }
 
-/* 柔和悬浮阴影 */
 .theme-toggle:hover {
-    box-shadow: 0 4px 22px rgba(125, 211, 252, 0.55), inset 0 1px 0 rgba(255,255,255,0.5);
+    box-shadow:
+        0 0 30px rgba(186, 230, 253, 0.45),
+        0 6px 24px rgba(0,0,0,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.55);
 }
 
-/* ===== 轨道内场景 ===== */
+/* ===== 场景层 ===== */
 .track-scene {
     position: absolute;
     inset: 0;
-    border-radius: 17px;
-    transition: opacity 0.6s ease;
+    border-radius: 18px;
+    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 日间场景层 */
-.track-day {
-    opacity: 1;
-    transition: opacity 0.5s ease;
-}
+/* ---- 日间场景 ---- */
+.track-day { opacity: 1; }
 [data-theme="dark"] .track-day { opacity: 0; }
 
-/* 云朵 —— 柔和堆叠的自然云 */
+/* 光柱 —— 柔和斜射光束 */
+.day-beam {
+    position: absolute;
+    background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.35) 45%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0.25) 55%, transparent 70%);
+    border-radius: 50%;
+    transition: opacity 0.7s ease;
+}
+.day-beam-1 {
+    width: 40px; height: 14px;
+    top: -2px; left: 14px;
+    transform: rotate(-8deg);
+}
+.day-beam-2 {
+    width: 30px; height: 10px;
+    top: 8px; left: 20px;
+    transform: rotate(-12deg);
+    opacity: 0.7;
+}
+
+/* 梦幻云 —— 有机层叠半透明絮状 */
 .cloud {
     position: absolute;
-    background: rgba(255, 255, 255, 0.88);
-    border-radius: 50%;
-    transition: opacity 0.6s ease;
+    background: radial-gradient(ellipse at 40% 35%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 60%, transparent 100%);
+    transition: opacity 0.7s ease;
 }
 .cloud-1 {
-    width: 16px; height: 5px;
-    top: 7px; right: 14px;
-    border-radius: 8px;
+    width: 22px; height: 9px;
+    top: 5px; right: 10px;
+    border-radius: 50%;
     box-shadow:
-        5px -1px 0 1px rgba(255,255,255,0.7),
-        -4px 1px 0 0 rgba(255,255,255,0.6);
+        7px -2px 0 2px rgba(255,255,255,0.55),
+        -5px 1px 0 1px rgba(255,255,255,0.5),
+        3px 3px 0 0 rgba(255,255,255,0.35);
+    animation: cloudFlow 6s ease-in-out infinite;
 }
 .cloud-2 {
-    width: 10px; height: 4px;
-    top: 15px; right: 21px;
-    border-radius: 6px;
+    width: 12px; height: 5px;
+    top: 18px; right: 18px;
+    border-radius: 50%;
+    opacity: 0.75;
     box-shadow:
-        4px -1px 0 1px rgba(255,255,255,0.65),
-        -3px 1px 0 0 rgba(255,255,255,0.55);
+        4px -1px 0 1px rgba(255,255,255,0.5),
+        -3px 1px 0 0 rgba(255,255,255,0.4);
+    animation: cloudFlow 5s ease-in-out 1s infinite;
 }
 .cloud-3 {
     width: 8px; height: 3px;
-    top: 20px; right: 11px;
-    border-radius: 5px;
+    top: 22px; right: 7px;
+    border-radius: 50%;
+    opacity: 0.6;
     box-shadow:
-        3px -1px 0 0 rgba(255,255,255,0.6);
+        3px -1px 0 0 rgba(255,255,255,0.45);
+    animation: cloudFlow 4.5s ease-in-out 2s infinite;
+}
+@keyframes cloudFlow {
+    0%, 100% { transform: translateX(0) scale(1); }
+    50% { transform: translateX(-3px) scale(1.04); }
 }
 
-/* 夜间场景层 */
-.track-night {
-    opacity: 0;
-    transition: opacity 0.5s ease;
+/* 日间粒子 —— 微光漂浮点 */
+.day-particle {
+    position: absolute;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50%;
+    transition: opacity 0.7s ease;
 }
+.day-particle:nth-child(1) { width: 2px; height: 2px; top: 5px; left: 38px; opacity: 0.6; box-shadow: 0 0 2px rgba(255,255,200,0.5); animation: particleFloat 3s ease-in-out 0s infinite; }
+.day-particle:nth-child(2) { width: 1px; height: 1px; top: 12px; left: 44px; opacity: 0.45; box-shadow: 0 0 1px rgba(255,255,220,0.4); animation: particleFloat 3.5s ease-in-out 0.8s infinite; }
+.day-particle:nth-child(3) { width: 2px; height: 2px; top: 20px; left: 36px; opacity: 0.5; box-shadow: 0 0 2px rgba(255,255,200,0.45); animation: particleFloat 4s ease-in-out 1.5s infinite; }
+@keyframes particleFloat {
+    0%, 100% { transform: translateY(0) translateX(0); opacity: 0.5; }
+    50% { transform: translateY(-2px) translateX(1px); opacity: 0.9; }
+}
+
+/* ---- 夜间场景 ---- */
+.track-night { opacity: 0; }
 [data-theme="dark"] .track-night { opacity: 1; }
 
-/* 星星 —— 静态自然散落，柔和微光 */
+/* 星尘 —— 层次丰富的粒子星光 */
 .star-dot {
     position: absolute;
-    background: white;
     border-radius: 50%;
-    transition: opacity 0.6s ease;
+    background: white;
+    transition: opacity 0.7s ease;
 }
-.star-dot:nth-child(1) { width: 2px; height: 2px; top: 7px;  left: 18px; opacity: 0.9;  box-shadow: 0 0 3px rgba(255,255,255,0.6); }
-.star-dot:nth-child(2) { width: 2px; height: 2px; top: 13px; left: 27px; opacity: 0.7;  box-shadow: 0 0 2px rgba(255,255,255,0.5); }
-.star-dot:nth-child(3) { width: 1px; height: 1px; top: 5px;  left: 14px; opacity: 0.55; box-shadow: 0 0 1px rgba(255,255,255,0.45); }
-.star-dot:nth-child(4) { width: 2px; height: 2px; top: 19px; left: 33px; opacity: 0.8;  box-shadow: 0 0 3px rgba(255,255,255,0.55); }
-.star-dot:nth-child(5) { width: 1px; height: 1px; top: 15px; left: 10px; opacity: 0.5;  box-shadow: 0 0 1px rgba(255,255,255,0.4); }
+/* 明亮主星 */
+.star-dot:nth-child(1) {
+    width: 3px; height: 3px; top: 8px; left: 18px;
+    opacity: 0.95;
+    box-shadow:
+        0 0 4px rgba(255,255,255,0.8),
+        0 0 8px rgba(200,210,255,0.5),
+        0 0 14px rgba(180,200,255,0.25);
+}
+/* 次级亮星 */
+.star-dot:nth-child(2) {
+    width: 2px; height: 2px; top: 14px; left: 28px;
+    opacity: 0.8;
+    box-shadow:
+        0 0 3px rgba(255,255,255,0.7),
+        0 0 7px rgba(200,210,255,0.4);
+}
+/* 微小星点 */
+.star-dot:nth-child(3) {
+    width: 1px; height: 1px; top: 4px; left: 13px;
+    opacity: 0.55;
+    box-shadow: 0 0 2px rgba(255,255,255,0.5);
+}
+/* 中型星 */
+.star-dot:nth-child(4) {
+    width: 2px; height: 2px; top: 20px; left: 34px;
+    opacity: 0.75;
+    box-shadow:
+        0 0 3px rgba(255,255,255,0.65),
+        0 0 6px rgba(200,210,255,0.35);
+}
+/* 微小星点 */
+.star-dot:nth-child(5) {
+    width: 1px; height: 1px; top: 16px; left: 8px;
+    opacity: 0.45;
+    box-shadow: 0 0 2px rgba(255,255,255,0.4);
+}
+/* 额外星尘 */
+.star-dot:nth-child(6) {
+    width: 2px; height: 2px; top: 10px; left: 40px;
+    opacity: 0.7;
+    box-shadow: 0 0 3px rgba(200,190,255,0.5), 0 0 6px rgba(180,170,240,0.3);
+}
+.star-dot:nth-child(7) {
+    width: 1px; height: 1px; top: 24px; left: 22px;
+    opacity: 0.5;
+    box-shadow: 0 0 1px rgba(255,255,255,0.45);
+}
 
-/* ===== 滑块 ===== */
+/* 星闪烁 */
+.star-dot:nth-child(1) { animation: starShimmer 3.5s ease-in-out 0s infinite; }
+.star-dot:nth-child(2) { animation: starShimmer 4s ease-in-out 0.6s infinite; }
+.star-dot:nth-child(4) { animation: starShimmer 3s ease-in-out 1.2s infinite; }
+.star-dot:nth-child(6) { animation: starShimmer 3.8s ease-in-out 1.8s infinite; }
+@keyframes starShimmer {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+}
+
+/* ===== 滑块 —— 有机光球 ===== */
 .theme-thumb {
     position: absolute;
     top: 3px;
     left: 3px;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #fff7d6 0%, #fcd34d 50%, #f59e0b 100%);
-    box-shadow: 0 0 16px rgba(252, 211, 77, 0.7), 0 2px 6px rgba(0,0,0,0.08);
-    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    /* 日间暖阳：多层径向渐变模拟体积光 */
+    background:
+        radial-gradient(circle at 38% 32%, #ffffff 0%, rgba(255,255,255,0) 18%),
+        radial-gradient(circle at 42% 38%, #fef9c3 0%, #fde68a 30%, #fbbf24 60%, #f59e0b 100%);
+    box-shadow:
+        0 0 6px rgba(255,255,255,0.8),
+        0 0 20px rgba(252,211,77,0.55),
+        0 0 36px rgba(245,158,11,0.3),
+        0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
                 background 0.5s ease,
                 box-shadow 0.5s ease;
     z-index: 2;
 }
 
-/* 日间滑块静态光晕 */
+/* 日间光晕环 */
 .theme-thumb::after {
     content: '';
     position: absolute;
-    top: -5px; left: -5px; right: -5px; bottom: -5px;
+    top: -6px; left: -6px; right: -6px; bottom: -6px;
     border-radius: 50%;
-    background: transparent;
-    box-shadow: 0 0 22px rgba(252, 211, 77, 0.45);
+    background:
+        radial-gradient(circle, rgba(252,211,77,0.2) 40%, transparent 70%);
     z-index: -1;
-    transition: box-shadow 0.6s ease;
+    transition: background 0.5s ease;
 }
 
 /* ===== 夜间滑块 ===== */
 [data-theme="dark"] .theme-thumb {
-    transform: translateX(34px);
-    background: radial-gradient(circle at 55% 40%, #eef2ff 0%, #c7d2fe 45%, #a5b4fc 100%);
-    box-shadow: 0 0 18px rgba(165, 180, 252, 0.7), 0 2px 6px rgba(0,0,0,0.10);
+    transform: translateX(36px);
+    /* 月华：冷白紫光有机球体 */
+    background:
+        radial-gradient(circle at 52% 38%, #ffffff 0%, rgba(255,255,255,0) 15%),
+        radial-gradient(circle at 48% 42%, #f0f4ff 0%, #d8e0ff 25%, #b8c8ff 55%, #9098e8 100%);
+    box-shadow:
+        0 0 8px rgba(255,255,255,0.7),
+        0 0 24px rgba(180,200,255,0.55),
+        0 0 40px rgba(140,160,240,0.3),
+        0 2px 8px rgba(0,0,0,0.12);
 }
 [data-theme="dark"] .theme-thumb::after {
-    box-shadow: 0 0 22px rgba(165, 180, 252, 0.5);
-    transition: box-shadow 0.6s ease;
+    background:
+        radial-gradient(circle, rgba(180,200,255,0.22) 40%, transparent 70%);
 }
 
-/* ===== 夜间轨道配色 ===== */
+/* ===== 夜间轨道底色 ===== */
 [data-theme="dark"] .theme-toggle {
-    background: linear-gradient(135deg, #4338ca 0%, #312e81 45%, #1e1b4b 100%);
-    box-shadow: 0 2px 16px rgba(67, 56, 202, 0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+    background:
+        radial-gradient(ellipse at 25% 45%, rgba(255,255,255,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 55%, rgba(140,150,240,0.12) 0%, transparent 45%),
+        linear-gradient(160deg, #2e2a5e 0%, #1e1b4b 40%, #131030 100%);
+    box-shadow:
+        0 0 24px rgba(30, 27, 75, 0.35),
+        0 3px 16px rgba(0,0,0,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        inset 0 -1px 0 rgba(0,0,0,0.08);
 }
 [data-theme="dark"] .theme-toggle:hover {
-    box-shadow: 0 4px 24px rgba(67, 56, 202, 0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+    box-shadow:
+        0 0 35px rgba(46, 42, 94, 0.5),
+        0 6px 24px rgba(0,0,0,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
 /* ===== 主页内容 ===== */
