@@ -133,118 +133,88 @@ body {
     user-select: none;
 }
 
-/* ===== 创意主题切换按钮 ===== */
+/* ===== 主题切换按钮 ===== */
 .theme-toggle {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    border: none;
-    background: var(--color-primary-light);
+    border: 1.5px solid var(--color-border);
+    background: transparent;
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    transition: background 0.4s ease, transform 0.2s ease;
+    transition: border-color 0.3s ease, background 0.3s ease;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .theme-toggle:hover {
-    transform: scale(1.1);
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
 }
 
-.theme-toggle:active {
-    transform: scale(0.95);
-}
-
-/* 太阳/月亮图标：纯 CSS */
+/* 图标容器 */
 .theme-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 20px;
-    height: 20px;
-    transform: translate(-50%, -50%);
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 日间：太阳 */
-.theme-icon-sun {
-    width: 20px;
-    height: 20px;
-    background: #f59e0b;
-    border-radius: 50%;
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 太阳光芒 */
-.theme-icon-sun::before {
-    content: '';
-    position: absolute;
-    top: -4px; left: -4px; right: -4px; bottom: -4px;
-    border-radius: 50%;
-    border: 2px solid #f59e0b;
-    opacity: 0.3;
-    animation: pulse-ring 2s ease-in-out infinite;
-}
-
-@keyframes pulse-ring {
-    0%, 100% { transform: scale(1); opacity: 0.3; }
-    50% { transform: scale(1.3); opacity: 0; }
-}
-
-/* 夜间：月亮 */
-.theme-icon-moon {
     width: 18px;
     height: 18px;
-    background: #c4b5fd;
+    position: relative;
+}
+
+/* 日间：太阳圆 */
+.theme-icon-sun {
+    width: 14px;
+    height: 14px;
+    background: #f59e0b;
     border-radius: 50%;
-    box-shadow: 0 0 14px rgba(196, 181, 253, 0.4), inset -5px -1px 0 #6366f1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+}
+
+/* 夜间：月牙（圆被阴影切出月牙形） */
+.theme-icon-moon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    box-shadow: inset 4px -2px 0 var(--color-bg);
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
 }
 
-/* 主题状态切换 */
+/* 覆盖层：点击时遮罩旋转动画 */
+.theme-toggle::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--color-primary);
+    opacity: 0;
+    transform: scale(0);
+    transition: transform 0.4s ease, opacity 0.4s ease;
+}
+.theme-toggle:active::after {
+    transform: scale(2.5);
+    opacity: 0.12;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+/* 主题状态 */
 [data-theme="dark"] .theme-icon-sun {
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
 }
 [data-theme="dark"] .theme-icon-moon {
     transform: translate(-50%, -50%) scale(1);
-}
-[data-theme="dark"] .theme-icon-sun::before {
-    animation: none;
-    opacity: 0;
-}
-
-/* 星星点缀（夜间） */
-.stars {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-[data-theme="dark"] .stars { opacity: 1; }
-.star {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: white;
-    border-radius: 50%;
-}
-.star:nth-child(1) { top: 8px; left: 10px; animation: twinkle 1.5s ease-in-out 0s infinite; }
-.star:nth-child(2) { top: 14px; right: 8px; animation: twinkle 1.5s ease-in-out 0.3s infinite; }
-.star:nth-child(3) { bottom: 10px; left: 12px; animation: twinkle 1.5s ease-in-out 0.6s infinite; }
-@keyframes twinkle {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
+    opacity: 1;
 }
 
 /* ===== 主页内容 ===== */
