@@ -17,3 +17,9 @@
 新增 settings 表与 /api/settings 端点，实现页面设置的可视化管理；时间：2026/05/10；
 后台管理页新增"页面设置"面板，含实时预览，修改即时生效并自动清除 CDN 缓存；时间：2026/05/10；
 重构 CSS 为设计变量体系（:root 变量），便于后续全局调整主题；时间：2026/05/10；
+添加页面左上角实时时钟，精确到秒；时间：2026/05/10；
+修复图标加载：去除被屏蔽的 Google Favicon API，改为 emoji 兜底 + 客户端异步获取 favicon.ico + 2s 超时降级；时间：2026/05/10；
+优化缓存策略：max-age 从 0 改为 600，减少浏览器无意义的重验证请求；时间：2026/05/10；
+清理废弃代码：删除根目录旧版 HTML/CSS/JSON 文件，关闭 GitHub Pages，统一入口为 Cloudflare Pages；时间：2026/05/10；
+迁移至新域名 ayoow.pages.dev，旧 ayoo 项目和 GitHub Pages 已关闭；时间：2026/05/10；
+全架构安全加固：新增 /api/auth 端点修复登录验证绕过漏洞；添加 API 输入验证（title/url/desc 长度与格式校验）；settings 添加 key 白名单；提取共享 lib/response.js 模块；修复 CSS 变量循环引用和多余括号；添加 .dev.vars 到 .gitignore；修复 DELETE 静默成功问题；添加 updated_at 列迁移；修复 sort_order 语义问题；修复外部链接 noopener；隐藏错误详情防止信息泄露；sql 查询添加分页 LIMIT；时间：2026/05/10；
