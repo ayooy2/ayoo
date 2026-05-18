@@ -1,0 +1,65 @@
+import { json, error } from '../lib/response.js';
+
+// GET: 文章列表（公开，支持分页和排序）
+// POST: 创建文章（需认证）
+export async function onRequest(context) {
+  const { request, env } = context;
+  const method = request.method;
+
+  if (method === 'GET') {
+    return listArticles(env, new URL(request.url).searchParams);
+  }
+
+  if (method === 'POST') {
+    const auth = request.headers.get('Authorization');
+    if (!auth || auth !== `Bearer ${env.ADMIN_PASSWORD}`) {
+      return error('Unauthorized', 401);
+    }
+    return createArticle(env, await request.json());
+  }
+
+  return error('Method not allowed', 405);
+}
+
+async function listArticles(env, params) {
+  const page = Math.max(1, parseInt(params.get('page')) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(params.get('limit')) || 10));
+  const offset = (page - 1) * limit;
+  const publishedOnly = params.get('all') !== '1';
+
+  let where = publishedOnly ? 'WHERE is_published = 1' : '';
+  const countResult = await env.DB.prepare(`SELECT COUNT(*) as total FROM articles ${where}`).first();
+  const total = countResult.total;
+
+  const { results } = await env.DB.prepare(
+    `SELECT id, title, slug, summary, cover_image, author, tags, is_published, created_at, updated_at FROM articles ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+  ).bind(limit, offset).all();
+
+  for (const row of results || []) {
+    const likeResult = await env.DB.prepare('SELECT COUNT(*) as c FROM likes WHERE article_id = ?').bind(row.id).first();
+    row.likes = likeResult.c;
+    const commentResult = await env.DB.prepare('SELECT COUNT(*) as c FROM comments WHERE article_id = ?').bind(row.id).first();
+    row.comments = commentResult.c;
+  }
+
+  return json({ articles: results || [], total, page, limit });
+}
+
+async function createArticle(env, data) {
+  const title = (data.title || '').trim();
+  if (!title) return error('Title is required', 400);
+
+  const slug = (data.slug || '').trim() || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const content_md = data.content_md || '';
+  const summary = (data.summary || '').trim();
+  const cover_image = (data.cover_image || '').trim();
+  const author = (data.author || 'Admin').trim();
+  const tags = (data.tags || '').trim();
+  const is_published = data.is_published ? 1 : 0;
+
+  const result = await env.DB.prepare(
+    'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
+  ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published).first();
+
+  return json(result, 201);
+}
