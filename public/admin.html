@@ -160,6 +160,14 @@
             transition: opacity 0.3s;
         }
         .save-hint.show { opacity: 1; }
+        .md-btn {
+            padding: 0.25rem 0.5rem; border: 1px solid var(--color-border);
+            background: var(--color-bg); color: var(--color-text-secondary);
+            border-radius: 4px; cursor: pointer; font-size: 0.78rem;
+            font-weight: 600; transition: all 0.15s;
+        }
+        .md-btn:hover { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); }
+        .md-upload { display: inline-flex; align-items: center; gap: 0.2rem; }
     </style>
 </head>
 <body>
@@ -284,7 +292,28 @@
                 <div class="form-group"><label>摘要</label><input type="text" id="article-summary"></div>
                 <div class="form-group"><label>封面图片 URL</label><input type="url" id="article-cover"></div>
                 <div class="form-group"><label style="display:flex;justify-content:space-between;align-items:center;"><span>正文（Markdown）</span><small id="md-status" style="color:var(--color-text-muted);">编辑中...</small></label>
-                    <textarea id="article-content-md" style="min-height:300px;font-family:var(--font-mono);font-size:0.85rem;line-height:1.6;" placeholder="支持 Markdown 语法：标题、列表、代码块、表格、图片等"></textarea>
+                    <div class="md-toolbar" style="display:flex;flex-wrap:wrap;gap:0.25rem;margin-bottom:0.4rem;">
+                        <button type="button" class="md-btn" onclick="insertMD('**','**','加粗')" title="加粗 Ctrl+B">B</button>
+                        <button type="button" class="md-btn" onclick="insertMD('*','*','斜体')" title="斜体 Ctrl+I"><i>I</i></button>
+                        <button type="button" class="md-btn" onclick="insertMD('~~','~~','删除线')" title="删除线"><s>S</s></button>
+                        <button type="button" class="md-btn" onclick="insertMD('# ','','标题')" title="标题">H1</button>
+                        <button type="button" class="md-btn" onclick="insertMD('## ','','二级标题')" title="二级标题">H2</button>
+                        <button type="button" class="md-btn" onclick="insertMD('### ','','三级标题')" title="三级标题">H3</button>
+                        <button type="button" class="md-btn" onclick="insertMD('> ','','引用')" title="引用">「」</button>
+                        <button type="button" class="md-btn" onclick="insertMD('- ','','列表')" title="无序列表">•</button>
+                        <button type="button" class="md-btn" onclick="insertMD('1. ','','有序列表')" title="有序列表">1.</button>
+                        <button type="button" class="md-btn" onclick="insertMD('`','`','代码')" title="行内代码">&lt;/&gt;</button>
+                        <button type="button" class="md-btn" onclick="insertMD('\n```\n','\n```\n','代码块')" title="代码块">{ }</button>
+                        <button type="button" class="md-btn" onclick="insertMD('[','](url)','链接')" title="链接">🔗</button>
+                        <button type="button" class="md-btn" onclick="insertMD('\n| 列1 | 列2 |\n|-----|-----|\n| ',' |\n','表格')" title="表格">⊞</button>
+                        <button type="button" class="md-btn" onclick="insertMD('\n---\n','','分割线')" title="分割线">—</button>
+                        <span style="flex:1;"></span>
+                        <label class="md-btn md-upload" title="上传图片" style="cursor:pointer;background:var(--color-primary-light);color:var(--color-primary);">
+                            📷 上传图片
+                            <input type="file" accept="image/*" onchange="uploadMDImage(this)" style="display:none;">
+                        </label>
+                    </div>
+                    <textarea id="article-content-md" style="min-height:280px;font-family:var(--font-mono);font-size:0.85rem;line-height:1.7;" placeholder="支持 Markdown 语法：标题、列表、代码块、表格、图片等"></textarea>
                 </div>
                 <div class="form-group"><label>预览</label><div id="article-preview" style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:1rem;min-height:80px;font-size:0.9rem;line-height:1.7;max-height:300px;overflow-y:auto;"></div></div>
                 <div class="form-group"><label>作者</label><input type="text" id="article-author" value="Admin"></div>
@@ -697,6 +726,48 @@
         }
 
         function editArticle(id) { openArticleEditor(id); }
+
+        // Markdown 快速插入
+        function insertMD(before, after, placeholder) {
+            var ta = document.getElementById('article-content-md');
+            var start = ta.selectionStart, end = ta.selectionEnd;
+            var sel = ta.value.substring(start, end) || placeholder;
+            var text = before + sel + after;
+            ta.setRangeText(text, start, end, 'select');
+            ta.focus();
+            updateArticlePreview();
+        }
+
+        // 图片上传并插入 base64
+        function uploadMDImage(input) {
+            var file = input.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { alert('图片不能超过 5MB'); input.value = ''; return; }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    var maxW = 1200, maxH = 800;
+                    var w = img.width, h = img.height;
+                    if (w > maxW) { h = h * maxW / w; w = maxW; }
+                    if (h > maxH) { w = w * maxH / h; h = maxH; }
+                    canvas.width = Math.round(w); canvas.height = Math.round(h);
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    var base64 = canvas.toDataURL('image/jpeg', 0.8);
+                    var mdImg = '\n![' + (file.name || '图片') + '](' + base64 + ')\n';
+                    var ta = document.getElementById('article-content-md');
+                    var start = ta.selectionStart;
+                    ta.setRangeText(mdImg, start, start, 'end');
+                    ta.focus();
+                    updateArticlePreview();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            input.value = '';
+        }
 
         function updateArticlePreview() {
             var md = document.getElementById('article-content-md').value || '';
