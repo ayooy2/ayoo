@@ -509,7 +509,8 @@ body::before {
     height: 100%;
     object-fit: cover;
 }
-.card-emoji { line-height: 1; }
+.card-emoji { line-height: 1; display:flex; align-items:center; justify-content:center; }
+.card-emoji svg { color: var(--color-text-muted); }
 
 .card-text {
     flex: 1;

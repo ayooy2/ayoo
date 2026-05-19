@@ -760,18 +760,36 @@
                     canvas.width = Math.round(w); canvas.height = Math.round(h);
                     var ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    var base64 = canvas.toDataURL('image/jpeg', 0.8);
-                    var mdImg = '\n![' + (file.name || '图片') + '](' + base64 + ')\n';
-                    var ta = document.getElementById('article-content-md');
-                    var start = ta.selectionStart;
-                    ta.setRangeText(mdImg, start, start, 'end');
-                    ta.focus();
-                    updateArticlePreview();
+                    var base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1]; // 去掉 data:xxx;base64, 前缀
+                    uploadToServer(file.name, 'image/jpeg', base64);
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
             input.value = '';
+        }
+
+        async function uploadToServer(filename, mime, data) {
+            try {
+                var res = await fetch('/api/images', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ filename: filename, mime_type: mime, data: data })
+                });
+                if (res.ok) {
+                    var result = await res.json();
+                    var mdImg = '\n![' + filename + '](' + result.url + ')\n';
+                    var ta = document.getElementById('article-content-md');
+                    var start = ta.selectionStart;
+                    ta.setRangeText(mdImg, start, start, 'end');
+                    ta.focus();
+                    updateArticlePreview();
+                } else {
+                    alert('图片上传失败');
+                }
+            } catch(e) {
+                alert('图片上传失败: ' + e.message);
+            }
         }
 
         function updateArticlePreview() {
