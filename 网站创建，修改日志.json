@@ -34,3 +34,4 @@
 时间：2026/05/12 --清理站点内容仅保留音乐电台；后台图标改为本地上传（canvas 裁剪 64x64 + base64 存储）+ 实时预览；卡片图标铺满容器；
 时间：2026/05/12 --强化亚克力材质：body SVG 噪点纹理 + 三光斑柔光背景 + 导航栏 blur(32px) saturate(200%)；
 时间：2026/05/18 --新增博客系统：articles / comments / likes 三表；/api/articles CRUD + 分页排序 + /api/comments 树形回复 + /api/likes 切换点赞；/blog 列表页 + /blog/:slug 详情页（marked.js 渲染 Markdown + highlight.js 代码高亮）；后台新增文章管理 tab，含标题/slug/摘要/封面/标签/发布状态编辑器和字符计数；
+时间：2026/05/18 --文章编辑器新增 Markdown 快捷工具栏（14 个格式化按钮：加粗/斜体/删除线/H1-H3/引用/列表/代码/链接/表格/分割线）；新增图片上传功能（canvas 缩放至 1200x800 + JPEG 压缩 + base64 内联插入 Markdown）；修复文章详情页 JS 求值冲突导致的 500 错误；
