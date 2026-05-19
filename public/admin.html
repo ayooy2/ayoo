@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>后台管理</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         .login-box {
             max-width: 360px;
@@ -312,10 +313,14 @@
                             📷 上传图片
                             <input type="file" accept="image/*" onchange="uploadMDImage(this)" style="display:none;">
                         </label>
+                        <label class="md-btn md-upload" title="导入 Markdown 文件" style="cursor:pointer;background:var(--color-success-bg);color:var(--color-success-text);">
+                            📄 导入 MD
+                            <input type="file" accept=".md,.txt,.markdown,text/markdown,text/plain" onchange="importMDFile(this)" style="display:none;">
+                        </label>
                     </div>
-                    <textarea id="article-content-md" style="min-height:280px;font-family:var(--font-mono);font-size:0.85rem;line-height:1.7;" placeholder="支持 Markdown 语法：标题、列表、代码块、表格、图片等"></textarea>
+                    <textarea id="article-content-md" style="min-height:280px;font-family:var(--font-mono);font-size:0.85rem;line-height:1.7;" placeholder="支持 Markdown 语法。可从工具栏快速插入格式，或点击 📄 导入 .md 文件，点击 📷 上传图片。"></textarea>
                 </div>
-                <div class="form-group"><label>预览</label><div id="article-preview" style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:1rem;min-height:80px;font-size:0.9rem;line-height:1.7;max-height:300px;overflow-y:auto;"></div></div>
+                <div class="form-group"><label>预览（实时渲染）</label><div id="article-preview" style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:1rem;min-height:80px;font-size:0.9rem;line-height:1.7;max-height:350px;overflow-y:auto;"></div></div>
                 <div class="form-group"><label>作者</label><input type="text" id="article-author" value="Admin"></div>
                 <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="article-tags"></div>
                 <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" id="article-published" checked> 发布</label></div>
@@ -771,8 +776,45 @@
 
         function updateArticlePreview() {
             var md = document.getElementById('article-content-md').value || '';
-            document.getElementById('article-preview').innerHTML = md ? '<em style="color:var(--color-text-muted);">预览：将 Markdown 渲染为 rich text...</em>' : '';
             document.getElementById('md-status').textContent = md ? md.length + ' 字符' : '空';
+            var preview = document.getElementById('article-preview');
+            if (!md) { preview.innerHTML = ''; return; }
+            try {
+                if (typeof marked !== 'undefined' && marked.parse) {
+                    preview.innerHTML = marked.parse(md);
+                } else {
+                    preview.innerHTML = '<em style="color:var(--color-text-muted);">marked.js 加载中...</em>';
+                    setTimeout(updateArticlePreview, 300);
+                }
+            } catch(e) {
+                preview.innerHTML = '<em style="color:var(--color-danger);">Markdown 解析错误</em>';
+            }
+        }
+
+        // 导入 .md 文件
+        function importMDFile(input) {
+            var file = input.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { alert('文件不能超过 2MB'); input.value = ''; return; }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var ta = document.getElementById('article-content-md');
+                // 如果有已有内容则追加，否则直接填充
+                var existing = ta.value;
+                var imported = e.target.result;
+                if (existing && !confirm('当前编辑器已有内容，导入会覆盖。确定继续？')) { input.value = ''; return; }
+                ta.value = imported;
+                // 尝试从文件名提取标题
+                var titleEl = document.getElementById('article-title');
+                if (!titleEl.value) {
+                    var name = file.name.replace(/\.(md|txt|markdown)$/i, '');
+                    titleEl.value = name;
+                    document.getElementById('article-slug').value = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                }
+                updateArticlePreview();
+            };
+            reader.readAsText(file);
+            input.value = '';
         }
         document.getElementById('article-content-md').addEventListener('input', updateArticlePreview);
 
