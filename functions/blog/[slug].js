@@ -88,7 +88,9 @@ function renderArticle(a, likes) {
   html += 'var fp = localStorage.getItem("fp") || (function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp",f);return f;})();';
   html += 'var liked = false; var replyTo = null;';
   html += 'function initPage(){';
-  html += 'if(typeof marked!=="undefined"&&typeof hljs!=="undefined"){marked.setOptions({highlight:function(code,lang){if(lang&&hljs.getLanguage(lang)){return hljs.highlight(code,{language:lang}).value;}return code;}});document.getElementById("content").innerHTML=marked.parse(' + mdEscaped + ');}else{setTimeout(initPage,100);}';
+  html += 'if(typeof marked==="undefined"){setTimeout(initPage,100);return;}';
+  html += 'if(typeof hljs!=="undefined"){marked.setOptions({highlight:function(code,lang){if(lang&&hljs.getLanguage(lang)){return hljs.highlight(code,{language:lang}).value;}return code;}});}';
+  html += 'document.getElementById("content").innerHTML=marked.parse(' + mdEscaped + ');';
   html += '}';
   html += 'initPage();loadComments();updateLikeState();';
   html += 'function postComment(parentId){var content=document.getElementById("comment-input").value.trim();var name=document.getElementById("comment-name").value.trim()||"匿名";if(!content)return;var body=JSON.stringify({article_id:articleId,parent_id:parentId||null,author_name:name,content:content});fetch("/api/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:body}).then(function(r){return r.json();}).then(function(){document.getElementById("comment-input").value="";replyTo=null;updateReplyHint();loadComments();});}';
