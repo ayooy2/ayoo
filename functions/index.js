@@ -1,189 +1,36 @@
-// 首页 Edge SSR -- 从 D1 读取配置和网站数据，渲染完整 HTML，CDN 缓存
+// 首页 Edge SSR —— 极简留白风
 export async function onRequestGet(context) {
   const { env } = context;
-
-  const [settingsResult, sitesResult] = await Promise.all([
+  const [sRes, siteRes] = await Promise.all([
     env.DB.prepare('SELECT key, value FROM settings').all(),
     env.DB.prepare('SELECT id, title, url, icon, description FROM sites ORDER BY sort_order ASC, id ASC LIMIT 200').all()
   ]);
-
   var settings = {};
-  for (var i = 0; i < (settingsResult.results || []).length; i++) {
-    var row = settingsResult.results[i];
-    settings[row.key] = row.value;
+  for (var i = 0; i < (sRes.results || []).length; i++) {
+    settings[sRes.results[i].key] = sRes.results[i].value;
   }
-
-  var html = renderPage(settings, sitesResult.results || []);
-
+  var html = render(settings, siteRes.results || []);
   return new Response(html, {
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'public, max-age=600, s-maxage=86400, stale-while-revalidate=3600'
-    }
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=86400' }
   });
 }
 
-function renderPage(settings, sites) {
-  var t = escapeHtml(settings.title || '我的导航主页');
-  var s = escapeHtml(settings.subtitle || '');
-  var f = escapeHtml(settings.footer || '© 2026');
+function render(s, sites) {
+  var t = esc(s.title || '我的自留地');
+  var sub = esc(s.subtitle || '');
+  var foot = esc(s.footer || '');
 
   var cards = '';
   for (var i = 0; i < sites.length; i++) {
-    cards += renderCard(sites[i]);
+    cards += card(sites[i]);
   }
-  if (!cards) {
-    cards = '<p class="empty">暂无网站。</p>';
-  }
+  if (!cards) cards = '<p class="empty">暂无链接</p>';
 
-  return [
-    '<!DOCTYPE html>',
-    '<html lang="zh-CN">',
-    '<head>',
-    '    <meta charset="UTF-8">',
-    '    <meta name="viewport" content="width=device-width, initial-scale=1.0">',
-    '    <title>' + t + '</title>',
-    '    <link rel="stylesheet" href="/style.css">',
-    '</head>',
-    '<body>',
-    '    <nav class="navbar">',
-    '        <div class="nav-inner">',
-    '            <span class="nav-brand">' + t + '</span>',
-    '            <a href="/blog" class="nav-link" title="博客"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></a>',
-'            <div class="nav-spacer"></div>',
-    '            <span class="nav-clock" id="clock">--:--:--</span>',
-    '            <button class="theme-toggle" id="theme-toggle" aria-label="切换主题" title="切换日间/夜间模式">',
-    '                <div class="track-scene track-day">',
-    '                    <span class="day-beam day-beam-1"></span>',
-    '                    <span class="day-beam day-beam-2"></span>',
-    '                    <span class="cloud cloud-1"></span>',
-    '                    <span class="cloud cloud-2"></span>',
-    '                    <span class="cloud cloud-3"></span>',
-    '                    <span class="day-particle"></span>',
-    '                    <span class="day-particle"></span>',
-    '                    <span class="day-particle"></span>',
-    '                </div>',
-    '                <div class="track-scene track-night">',
-    '                    <span class="star-dot"></span>',
-    '                    <span class="star-dot"></span>',
-    '                    <span class="star-dot"></span>',
-    '                    <span class="star-dot"></span>',
-    '                    <span class="star-dot"></span>',
-    '                    <span class="star-dot"></span>',
-    '                    <span class="star-dot"></span>',
-    '                </div>',
-    '                <div class="theme-thumb"></div>',
-    '            </button>',
-    '        </div>',
-    '    </nav>',
-    '',
-    '    <div class="page-wrapper">',
-    '        <div class="page-header">',
-    '            <p class="subtitle">' + s + '</p>',
-    '        </div>',
-    '',
-    '        <main class="content">',
-    '            <div id="sites-grid" class="sites-grid">',
-    '                ' + cards,
-    '            </div>',
-    '        </main>',
-    '',
-    '        <footer class="page-footer">',
-    '            <span class="footer-text">' + f + '</span>',
-    '        </footer>',
-    '    </div>',
-    '',
-    '    <script>',
-    '        (function() {',
-    '            var TIMEOUT = 2000;',
-    '',
-    '            function updateClock() {',
-    '                var now = new Date();',
-    '                var h = String(now.getHours()).padStart(2, "0");',
-    '                var m = String(now.getMinutes()).padStart(2, "0");',
-    '                var s = String(now.getSeconds()).padStart(2, "0");',
-    '                document.getElementById("clock").textContent = h + ":" + m + ":" + s;',
-    '            }',
-    '            updateClock();',
-    '            setInterval(updateClock, 1000);',
-    '',
-    '            var themeBtn = document.getElementById("theme-toggle");',
-    '            var saved = localStorage.getItem("theme") || "light";',
-    '            if (saved === "dark") document.documentElement.setAttribute("data-theme", "dark");',
-    '            themeBtn.addEventListener("click", function() {',
-    '                var isDark = document.documentElement.getAttribute("data-theme") === "dark";',
-    '                if (isDark) {',
-    '                    document.documentElement.removeAttribute("data-theme");',
-    '                    localStorage.setItem("theme", "light");',
-    '                } else {',
-    '                    document.documentElement.setAttribute("data-theme", "dark");',
-    '                    localStorage.setItem("theme", "dark");',
-    '                }',
-    '            });',
-    '',
-    '            document.querySelectorAll(".site-card").forEach(function(card) {',
-    '                card.addEventListener("dblclick", function() {',
-    '                    var url = card.dataset.url;',
-    '                    if (url) window.open(url, "_blank", "noopener,noreferrer");',
-    '                });',
-    '            });',
-    '',
-    '            document.querySelectorAll(".site-card").forEach(function(card) {',
-    '                tryLoadIcon(card);',
-    '            });',
-    '',
-    '            function tryLoadIcon(card) {',
-    '                var container = card.querySelector(".card-icon");',
-    '                var customIcon = card.dataset.icon;',
-    '                var url = card.dataset.url;',
-    '                var iconUrl = null;',
-    '                if (customIcon) {',
-    '                    iconUrl = customIcon;',
-    '                } else if (url) {',
-    '                    try { iconUrl = "https://" + new URL(url).hostname + "/favicon.ico"; } catch(e) {}',
-    '                }',
-    '                if (!iconUrl) return;',
-    '                var img = new Image();',
-    '                var done = false;',
-    '                var timer = setTimeout(function() {',
-    '                    if (!done) { done = true; img.src = ""; }',
-    '                }, TIMEOUT);',
-    '                img.onload = function() {',
-    '                    if (done) return;',
-    '                    done = true; clearTimeout(timer);',
-    '                    container.innerHTML = "";',
-    '                    var el = document.createElement("img");',
-    '                    el.src = iconUrl; el.alt = "";',
-    '                    container.appendChild(el);',
-    '                };',
-    '                img.onerror = function() {',
-    '                    if (done) return;',
-    '                    done = true; clearTimeout(timer);',
-    '                };',
-    '                img.src = iconUrl;',
-    '            }',
-    '        })();',
-    '    </script>',
-    '</body>',
-    '</html>'
-  ].join('\n');
+  return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + t + '</title>\n<link rel="stylesheet" href="/style.css">\n</head>\n<body>\n<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">' + t + '</a><a href="/blog" class="nav-link"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></a><div class="nav-spacer"></div><span class="nav-clock" id="clock">--:--:--</span><button class="theme-toggle" id="theme-toggle" aria-label="切换主题">☽</button></div></nav>\n<div class="page-wrapper"><div class="page-header"><h1 class="page-title">' + t + '</h1><p class="subtitle">' + sub + '</p></div>\n<main class="content"><div id="sites-grid" class="sites-grid">' + cards + '</div></main>\n<footer class="page-footer"><span class="footer-text">' + foot + '</span></footer></div>\n<script>(function(){function c(){var n=new Date();document.getElementById("clock").textContent=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")+":"+String(n.getSeconds()).padStart(2,"0")}c();setInterval(c,1e3);var b=document.getElementById("theme-toggle"),st=localStorage.getItem("theme")||"light";if(st==="dark")document.documentElement.setAttribute("data-theme","dark");b.textContent=st==="dark"?"☀":"☽";b.addEventListener("click",function(){var d=document.documentElement.getAttribute("data-theme")==="dark";if(d){document.documentElement.removeAttribute("data-theme");localStorage.setItem("theme","light");b.textContent="☽"}else{document.documentElement.setAttribute("data-theme","dark");localStorage.setItem("theme","dark");b.textContent="☀"}});document.querySelectorAll(".site-card").forEach(function(x){x.addEventListener("dblclick",function(){var u=x.dataset.url;if(u)window.open(u,"_blank","noopener,noreferrer")})});document.querySelectorAll(".site-card").forEach(function(x){loadIcon(x)});function loadIcon(x){var ic=x.querySelector(".card-icon"),ci=x.dataset.icon,url=x.dataset.url,iu=null;if(ci)iu=ci;else if(url)try{iu="https://"+new URL(url).hostname+"/favicon.ico"}catch(e){}if(!iu)return;var img=new Image(),done=false,timer=setTimeout(function(){if(!done){done=true;img.src=""}},2e3);img.onload=function(){if(done)return;done=true;clearTimeout(timer);ic.innerHTML="";var el=document.createElement("img");el.src=iu;el.alt="";ic.appendChild(el)};img.onerror=function(){if(done)return;done=true;clearTimeout(timer)};img.src=iu}})()</script>\n</body>\n</html>';
 }
 
-function renderCard(site) {
-  return [
-    '        <div class="site-card" data-url="' + escapeHtml(site.url) + '" data-icon="' + escapeHtml(site.icon || '') + '" title="双击打开：' + escapeHtml(site.title) + '">',
-    '          <div class="card-icon">',
-    '            <span class="card-emoji"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>',
-    '          </div>',
-    '          <div class="card-text">',
-    '            <h3 class="card-title">' + escapeHtml(site.title) + '</h3>',
-    '            <p class="card-desc">' + escapeHtml(site.description || '') + '</p>',
-    '          </div>',
-    '        </div>'
-  ].join('\n');
+function card(site) {
+  return '<div class="site-card" data-url="' + esc(site.url) + '" data-icon="' + esc(site.icon || '') + '" title="' + esc(site.title) + '"><div class="card-icon"><span class="card-emoji"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></span></div><div class="card-text"><h3 class="card-title">' + esc(site.title) + '</h3><p class="card-desc">' + esc(site.description || '') + '</p></div></div>';
 }
 
-function escapeHtml(text) {
-  var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-  return String(text || '').replace(/[&<>"']/g, function(c) { return map[c]; });
-}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

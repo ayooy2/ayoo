@@ -1,109 +1,48 @@
 export async function onRequestGet(context) {
   try {
     const { env, params } = context;
-    const url = new URL(context.request.url);
-    const slug = params.slug || url.pathname.replace('/blog/', '').replace(/\/$/, '');
-
-    const article = await env.DB.prepare(
-      'SELECT * FROM articles WHERE slug = ? AND is_published = 1'
-    ).bind(slug).first();
-    if (!article) return new Response('Not found', { status: 404 });
-
-    const lRes = await env.DB.prepare('SELECT COUNT(*) as c FROM likes WHERE article_id=?').bind(article.id).first();
-    const likes = lRes.c;
-
-    const html = renderArticle(article, likes);
-    return new Response(html, {
+    const slug = params.slug || new URL(context.request.url).pathname.replace('/blog/', '').replace(/\/$/, '');
+    const a = await env.DB.prepare('SELECT * FROM articles WHERE slug=? AND is_published=1').bind(slug).first();
+    if (!a) return new Response('Not found', { status: 404 });
+    const l = await env.DB.prepare('SELECT COUNT(*) as c FROM likes WHERE article_id=?').bind(a.id).first();
+    return new Response(render(a, l.c), {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=3600' }
     });
-  } catch (e) {
-    return new Response('Internal error: ' + e.message, { status: 500 });
-  }
+  } catch (e) { return new Response('Error', { status: 500 }); }
 }
 
-function renderArticle(a, likes) {
+function render(a, likes) {
   var time = (a.created_at || '').replace('T', ' ').slice(0, 16);
-  var tagsHtml = '';
-  var tags = (a.tags || '').split(',').filter(Boolean);
-  for (var ti = 0; ti < tags.length; ti++) {
-    tagsHtml += '<span style="display:inline-block;background:var(--color-primary-light);color:var(--color-primary);padding:0.15rem 0.5rem;border-radius:10px;font-size:0.75rem;margin-right:0.4rem;">' + esc(tags[ti].trim()) + '</span>';
-  }
+  var tags = '', ts = (a.tags || '').split(',').filter(Boolean);
+  for (var i = 0; i < ts.length; i++) tags += '<span class="blog-tag">#' + esc(ts[i].trim()) + '</span>';
 
-  var mdEscaped = JSON.stringify(a.content_md || '');
+  var md = JSON.stringify(a.content_md || '');
 
-  var html = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>' + esc(a.title) + '</title><link rel="stylesheet" href="/style.css">';
-  html += '<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>';
-  html += '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github-dark.min.css">';
-  html += '<script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/highlight.min.js"><\/script>';
-  html += '<style>';
-  html += '.article-wrapper{max-width:800px;margin:0 auto;padding:5rem 1.5rem 2rem;}';
-  html += '.article-content{line-height:1.8;font-size:1rem;color:var(--color-text);}';
-  html += '.article-content h1{font-size:1.8rem;margin:1.5rem 0 0.8rem;}';
-  html += '.article-content h2{font-size:1.4rem;margin:1.3rem 0 0.6rem;padding-bottom:0.3rem;border-bottom:1px solid var(--color-border);}';
-  html += '.article-content h3{font-size:1.15rem;margin:1rem 0 0.4rem;}';
-  html += '.article-content p{margin:0.6rem 0;}';
-  html += '.article-content pre{background:var(--color-bg);border-radius:12px;padding:1rem;overflow-x:auto;margin:0.8rem 0;border:1px solid var(--color-border);}';
-  html += '.article-content code{font-family:var(--font-mono);font-size:0.85rem;}';
-  html += '.article-content p code{background:var(--color-primary-light);padding:0.15rem 0.4rem;border-radius:4px;color:var(--color-primary);}';
-  html += '.article-content pre code{background:none;padding:0;color:var(--color-text);}';
-  html += '.article-content table{width:100%;border-collapse:collapse;margin:0.8rem 0;}';
-  html += '.article-content th,.article-content td{border:1px solid var(--color-border);padding:0.5rem 0.8rem;text-align:left;}';
-  html += '.article-content th{background:var(--color-bg-subtle);font-weight:600;}';
-  html += '.article-content img{max-width:100%;border-radius:12px;margin:0.5rem 0;}';
-  html += '.article-content blockquote{border-left:3px solid var(--color-primary);padding:0.5rem 1rem;margin:0.8rem 0;background:var(--color-primary-light);border-radius:0 8px 8px 0;color:var(--color-text-secondary);}';
-  html += '.article-content ul,.article-content ol{padding-left:1.5rem;margin:0.5rem 0;}';
-  html += '.article-content li{margin:0.2rem 0;}';
-  html += '.article-content a{color:var(--color-primary);}';
-  html += '.article-content hr{border:none;border-top:1px solid var(--color-border);margin:1.5rem 0;}';
-  html += '.comment-box{background:var(--color-glass-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:var(--radius-xl);padding:1.2rem;border:1px solid var(--color-glass-border);margin-top:0.8rem;}';
-  html += '.comment-input{width:100%;padding:0.6rem 0.8rem;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-text);font-size:0.9rem;font-family:inherit;resize:vertical;min-height:60px;}';
-  html += '.comment-input:focus{outline:none;border-color:var(--color-primary);}';
-  html += '.btn-submit{padding:0.4rem 1rem;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:0.85rem;margin-top:0.5rem;}';
-  html += '.btn-submit:hover{background:var(--color-primary-hover);}';
-  html += '.btn-like{background:none;border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:0.3rem 0.8rem;cursor:pointer;font-size:0.85rem;color:var(--color-text-secondary);transition:all 0.2s;}';
-  html += '.btn-like:hover{border-color:var(--color-primary);color:var(--color-primary);}';
-  html += '.btn-like.liked{background:var(--color-primary);color:#fff;border-color:var(--color-primary);}';
-  html += '.reply-link{font-size:0.78rem;color:var(--color-primary);cursor:pointer;margin-left:0.5rem;text-decoration:none;}';
-  html += '.reply-link:hover{text-decoration:underline;}';
-  html += '.meta-line{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;font-size:0.85rem;color:var(--color-text-placeholder);margin:0.8rem 0 1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--color-border);}';
-  html += '</style></head><body>';
-  html += '<nav class="navbar"><div class="nav-inner"><a href="/" style="text-decoration:none;"><span class="nav-brand">' + esc(a.title) + '</span></a><div class="nav-spacer"></div><a href="/blog" style="color:var(--color-text-muted);text-decoration:none;font-size:0.9rem;">← 博客列表</a></div></nav>';
-  html += '<div class="article-wrapper">';
-  if (a.cover_image) html += '<img src="' + esc(a.cover_image) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:16px;margin-bottom:1rem;" alt="">';
-  html += '<h1 style="font-size:2rem;margin-bottom:0.3rem;color:var(--color-text);">' + esc(a.title) + '</h1>';
-  html += '<div class="meta-line"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + esc(a.author) + '</span><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ' + time + '</span>' + tagsHtml + '<span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> <span id="like-count">' + likes + '</span></span></div>';
-  html += '<div class="article-content" id="content"></div>';
-  html += '<div style="margin:1.5rem 0;display:flex;align-items:center;gap:0.5rem;">';
-  html += '<button class="btn-like" id="like-btn" onclick="toggleLike()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 点赞</button>';
-  html += '<span style="font-size:0.85rem;color:var(--color-text-muted);" id="like-text"></span>';
-  html += '</div>';
-  html += '<h3 style="margin:2rem 0 1rem;color:var(--color-text);">评论 (<span id="comment-count">0</span>)</h3>';
-  html += '<div id="comments-area"></div>';
-  html += '<div class="comment-box"><textarea class="comment-input" id="comment-input" placeholder="写下你的评论..."></textarea>';
-  html += '<input class="comment-input" id="comment-name" placeholder="昵称（可选）" style="min-height:auto;height:auto;margin-top:0.4rem;">';
-  html += '<button class="btn-submit" onclick="postComment()">发表评论</button></div>';
-  html += '</div>';
-  html += '<script>';
-  html += 'var articleId = ' + a.id + ';';
-  html += 'var fp = localStorage.getItem("fp") || (function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp",f);return f;})();';
-  html += 'var liked = false; var replyTo = null;';
-  html += 'function initPage(){';
-  html += 'if(typeof marked==="undefined"){setTimeout(initPage,100);return;}';
-  html += 'if(typeof hljs!=="undefined"){marked.setOptions({highlight:function(code,lang){if(lang&&hljs.getLanguage(lang)){return hljs.highlight(code,{language:lang}).value;}return code;}});}';
-  html += 'document.getElementById("content").innerHTML=marked.parse(' + mdEscaped + ');';
-  html += '}';
-  html += 'initPage();loadComments();updateLikeState();';
-  html += 'function postComment(parentId){var content=document.getElementById("comment-input").value.trim();var name=document.getElementById("comment-name").value.trim()||"匿名";if(!content)return;var body=JSON.stringify({article_id:articleId,parent_id:parentId||null,author_name:name,content:content});fetch("/api/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:body}).then(function(r){return r.json();}).then(function(){document.getElementById("comment-input").value="";replyTo=null;updateReplyHint();loadComments();});}';
-  html += 'function loadComments(){fetch("/api/comments?article_id="+articleId).then(function(r){return r.json();}).then(function(comments){document.getElementById("comment-count").textContent=countAll(comments);document.getElementById("comments-area").innerHTML=renderComments(comments);});}';
-  html += 'function countAll(list){var n=0;for(var i=0;i<list.length;i++){n++;if(list[i].replies)n+=countAll(list[i].replies);}return n;}';
-  html += 'function rc(list,depth){depth=depth||0;var h="";for(var i=0;i<list.length;i++){var c=list[i];h+=' + JSON.stringify('<div class="comment-box" style="margin-left:IDXpx;margin-bottom:0.5rem;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;"><strong style="font-size:0.9rem;color:var(--color-text);">NAME</strong><span style="font-size:0.75rem;color:var(--color-text-placeholder);">TIME</span></div><p style="font-size:0.9rem;color:var(--color-text-secondary);margin:0.3rem 0;">BODY</p><a class="reply-link" onclick="replyTo=CID;updateReplyHint();document.getElementById(\'comment-input\').focus();">回复</a></div>') + '.replace("IDX",depth*20).replace("NAME",esc(c.author_name)).replace("TIME",(c.created_at||"").slice(0,16).replace("T"," ")).replace("BODY",esc(c.content)).replace("CID",c.id);if(c.replies&&c.replies.length)h+=rc(c.replies,depth+1);}return h;}';
-  html += 'function updateReplyHint(){document.getElementById("comment-input").placeholder=replyTo?"回复评论 #"+replyTo+"...":"写下你的评论...";}';
-  html += 'function toggleLike(){fetch("/api/likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:articleId,fingerprint:fp})}).then(function(r){return r.json();}).then(function(d){document.getElementById("like-count").textContent=d.likes;liked=d.liked;updateLikeState();});}';
-  html += 'function updateLikeState(){var btn=document.getElementById("like-btn");fetch("/api/likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:articleId,fingerprint:fp})}).then(function(r){return r.json();}).then(function(d){liked=d.liked;btn.textContent=liked?"♥ 已赞":"♥ 点赞";if(liked)btn.classList.add("liked");else btn.classList.remove("liked");});}';
-  html += 'function esc(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}';
-  html += '<\/script></body></html>';
-
-  return html;
+  var h = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>' + esc(a.title) + '</title><link rel="stylesheet" href="/style.css">';
+  h += '<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>';
+  h += '</head><body>';
+  h += '<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">' + esc(a.title) + '</a><div class="nav-spacer"></div><a href="/blog" class="nav-link">← 笔记</a></div></nav>';
+  h += '<div class="article-wrapper"><article>';
+  if (a.cover_image) h += '<img src="' + esc(a.cover_image) + '" class="article-cover" alt="">';
+  h += '<header class="article-header"><h1 class="article-title">' + esc(a.title) + '</h1>';
+  h += '<div class="article-meta"><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + esc(a.author) + '</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ' + time + '</span>' + tags + '<span>' + likes + ' 喜欢</span></div></header>';
+  h += '<div class="article-body" id="content"></div>';
+  h += '<div class="article-actions"><button class="btn-like" id="like-btn" onclick="toggleLike()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> 喜欢</button><span style="font-size:0.85rem;color:var(--color-text-muted);" id="like-text"></span></div>';
+  h += '<section class="comment-section"><h3>评论 (<span id="cc">0</span>)</h3><div id="comments-area"></div>';
+  h += '<textarea class="comment-input" id="comment-input" placeholder="写下想法..."></textarea>';
+  h += '<input class="comment-input" id="comment-name" placeholder="昵称" style="min-height:auto;height:auto;margin-top:0.4rem;width:auto;min-width:160px;">';
+  h += '<button class="btn-submit" onclick="postComment()">发表</button></section></article></div>';
+  h += '<script>var aid=' + a.id + ',fp=localStorage.getItem("fp")||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp",f);return f;})(),replyTo=null;';
+  h += 'function init(){if(typeof marked==="undefined"){setTimeout(init,100);return;}document.getElementById("content").innerHTML=marked.parse(' + md + ');}init();loadComments();updateLikeState();';
+  h += 'function postComment(pid){var c=document.getElementById("comment-input").value.trim(),n=document.getElementById("comment-name").value.trim()||"匿名";if(!c)return;fetch("/api/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,parent_id:pid||null,author_name:n,content:c})}).then(function(r){return r.json()}).then(function(){document.getElementById("comment-input").value="";replyTo=null;loadComments()})}';
+  h += 'function loadComments(){fetch("/api/comments?article_id="+aid).then(function(r){return r.json()}).then(function(cs){document.getElementById("cc").textContent=countAll(cs);document.getElementById("comments-area").innerHTML=rc(cs)})}';
+  h += 'function countAll(list){var n=0;for(var i=0;i<list.length;i++){n++;if(list[i].replies)n+=countAll(list[i].replies)}return n}';
+  h += 'function rc(list,d){d=d||0;var h="";for(var i=0;i<list.length;i++){var c=list[i];h+=' + JSON.stringify('<div class="comment-box" style="margin-left:IDXpx"><div style="display:flex;justify-content:space-between;margin-bottom:0.2rem"><strong style="font-size:0.85rem">NAME</strong><span style="font-size:0.72rem;color:var(--color-text-muted)">TIME</span></div><p style="font-size:0.9rem;color:var(--color-text-secondary);margin:0.2rem 0">BODY</p><a class="reply-link" onclick="replyTo=CID;document.getElementById(\'comment-input\').focus()">回复</a></div>') + '.replace("IDX",d*16).replace("NAME",esc(c.author_name)).replace("TIME",(c.created_at||"").slice(0,16).replace("T"," ")).replace("BODY",esc(c.content)).replace("CID",c.id);if(c.replies&&c.replies.length)h+=rc(c.replies,d+1)}return h}';
+  h += 'function toggleLike(){fetch("/api/likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,fingerprint:fp})}).then(function(r){return r.json()}).then(function(d){document.getElementById("like-count");updateLikeState()})}';
+  h += 'function updateLikeState(){var b=document.getElementById("like-btn");fetch("/api/likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,fingerprint:fp})}).then(function(r){return r.json()}).then(function(d){b.innerHTML=d.liked?\'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> 已喜欢\':\'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> 喜欢\';if(d.liked)b.classList.add("liked");else b.classList.remove("liked")})}';
+  h += 'function esc(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML}';
+  h += '<\/script></body></html>';
+  return h;
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
