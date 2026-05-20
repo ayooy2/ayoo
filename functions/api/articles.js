@@ -51,7 +51,7 @@ async function createArticle(env, data) {
 
   let slug = (data.slug || '').trim();
   if (!slug) {
-    slug = title.toLowerCase().replace(/[^a-z0-9一-鿿]+/g, '-').replace(/^-|-$/g, '');
+    slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').replace(/-+/g, '-');
     if (!slug || slug.length < 2) slug = 'article-' + Date.now().toString(36);
   }
   const content_md = data.content_md || '';
