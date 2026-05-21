@@ -272,8 +272,8 @@ body {
 .article-body {
   font-size: 1rem; line-height: 2; color: var(--color-text);
   letter-spacing: 0.02em;
-  font-variant-numeric: normal;
-  font-feature-settings: "tnum";
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum", "tnum";
 }
 
 .article-body h1 { font-size: 1.4rem; margin: 2.5rem 0 0.8rem; font-weight: 500; }
@@ -302,7 +302,7 @@ body {
   font-size: 0.7rem; color: var(--color-text-placeholder); letter-spacing: 0.03em;
 }
 [data-theme="dark"] .code-block-bar { background: rgba(255,255,255,0.03); }
-.code-block-lang { flex: 1; text-transform: uppercase; font-weight: 500; color: var(--color-text-muted); }
+.code-block-lang { text-transform: uppercase; font-weight: 500; color: var(--color-text-muted); white-space: nowrap; }
 .code-block-btn {
   background: none; border: none; cursor: pointer; color: var(--color-text-placeholder);
   padding: 0.15rem 0.3rem; border-radius: 3px; transition: all 0.15s;
@@ -319,11 +319,12 @@ body {
 /* 行号 */
 .line-numbers {
   flex-shrink: 0; text-align: right; user-select: none;
-  padding-right: 1rem; border-right: 1px solid var(--color-border);
-  color: var(--color-text-placeholder); font-size: 0.75rem;
+  padding: 1rem 1rem 1rem 0.8rem; border-right: 1px solid var(--color-border);
+  color: var(--color-text-placeholder); font-size: 0.8rem;
   line-height: 1.7; white-space: pre; overflow: hidden;
-  min-width: 2rem;
+  font-family: var(--font-mono); min-width: 2.5rem;
 }
+.code-block-wrapper.fullscreen pre { padding: 1rem 1.2rem 1rem 0; }
 .code-block-wrapper pre code { flex: 1; }
 
 /* 全屏模式 */
