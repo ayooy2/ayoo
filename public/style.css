@@ -272,6 +272,8 @@ body {
 .article-body {
   font-size: 1rem; line-height: 2; color: var(--color-text);
   letter-spacing: 0.02em;
+  font-variant-numeric: normal;
+  font-feature-settings: "tnum";
 }
 
 .article-body h1 { font-size: 1.4rem; margin: 2.5rem 0 0.8rem; font-weight: 500; }
@@ -313,15 +315,31 @@ body {
   max-height: 24em; overflow-y: auto;
 }
 .code-block-wrapper pre.expanded { max-height: none; }
-.code-block-wrapper code { font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text); }
-.code-block-wrapper pre code { background: none; padding: 0; }
+
+/* 行号 */
+.line-numbers {
+  flex-shrink: 0; text-align: right; user-select: none;
+  padding-right: 1rem; border-right: 1px solid var(--color-border);
+  color: var(--color-text-placeholder); font-size: 0.75rem;
+  line-height: 1.7; white-space: pre; overflow: hidden;
+  min-width: 2rem;
+}
+.code-block-wrapper pre code { flex: 1; }
 
 /* 全屏模式 */
 .code-block-wrapper.fullscreen {
   position: fixed; inset: 0; z-index: 200; margin: 0; border-radius: 0;
-  display: flex; flex-direction: column;
+  display: flex; flex-direction: column; background: var(--color-bg);
 }
-.code-block-wrapper.fullscreen pre { flex: 1; max-height: none; font-size: 0.9rem; }
+.code-block-wrapper.fullscreen .code-block-bar {
+  flex-shrink: 0; padding: 0.6rem 1rem; font-size: 0.75rem;
+}
+.code-block-wrapper.fullscreen pre {
+  flex: 1; max-height: none; font-size: 0.9rem;
+  margin: 0; border-radius: 0;
+}
+.code-block-wrapper code { font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text); }
+.code-block-wrapper pre code { background: none; padding: 0; }
 
 /* 行内代码 */
 .article-body p code { background: var(--color-accent-light); padding: 0.1rem 0.35rem; border-radius: 3px; color: var(--color-accent); }
