@@ -26,7 +26,7 @@ function render(a, likes) {
     a.cover_image ? '<img src="' + esc(a.cover_image) + '" class="article-cover" alt="">' : '',
     '<header class="article-header"><h1 class="article-title">' + esc(a.title) + '</h1>',
     '<div class="article-meta"><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + esc(a.author) + '</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ' + time + '</span>' + tags + '<span>' + likes + ' 喜欢</span></div></header>',
-    '<div class="article-body" id="content"></div>',
+    '<div class="article-body" id="content">' + simpleMarkdown(a.content_md || '') + '</div>',
     '<div class="article-actions"><button class="btn-like" id="like-btn" onclick="toggleLike()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> 喜欢</button></div>',
     '<section class="comment-section"><h3>评论 (<span id="cc">0</span>)</h3><div id="comments-area"></div>',
     '<textarea class="comment-input" id="comment-input" placeholder="写下想法..."></textarea>',
@@ -45,7 +45,9 @@ function buildScript(aid, md) {
     '<button class="code-block-btn" title="全屏" onclick="var w=this.parentElement.parentElement;w.classList.toggle(\'fullscreen\');var pre=w.querySelector(\'pre\');if(w.classList.contains(\'fullscreen\')){document.body.style.overflow=\'hidden\';if(!pre.querySelector(\'.line-numbers\')){var lines=pre.textContent.split(\'\\n\');var nums=\'\';var lc=0;for(var li=0;li<lines.length;li++){if(lines[li].trim()||li<lines.length-1)nums+=(++lc)+\'\\n\'}var ln=document.createElement(\'div\');ln.className=\'line-numbers\';ln.textContent=nums;pre.insertBefore(ln,pre.firstChild);pre.style.display=\'flex\';pre.style.alignItems=\'flex-start\'}}else{document.body.style.overflow=\'\'}function escFn(e){if(e.key===\'Escape\'){w.classList.remove(\'fullscreen\');document.body.style.overflow=\'\';document.removeEventListener(\'keydown\',escFn)}}document.addEventListener(\'keydown\',escFn)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>';
 
   return '<script>var aid=' + aid + ',fp=localStorage.getItem("fp")||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp",f);return f;})(),replyTo=null;' +
-    'function init(){if(typeof marked==="undefined"){setTimeout(init,100);return;}document.getElementById("content").innerHTML=marked.parse(' + md + ');enhanceCB();}init();loadComments();updateLikeState();' +
+    'function init(){if(typeof marked==="undefined"){setTimeout(init,100);return;}document.getElementById("content").innerHTML=marked.parse(' + md + ');enhanceCB();}' +
+    'setTimeout(function(){if(typeof marked==="undefined")document.getElementById("content").style.opacity="1"},3000);' +
+    'init();loadComments();updateLikeState();' +
     'function enhanceCB(){var pres=document.querySelectorAll(".article-body pre");for(var i=0;i<pres.length;i++){var pre=pres[i];var code=pre.querySelector("code");var lang="";if(code){var m=(code.className||"").match(/language-(\\w+)/);if(m)lang=m[1];}var w=document.createElement("div");w.className="code-block-wrapper";var bar=document.createElement("div");bar.className="code-block-bar";bar.innerHTML=' + JSON.stringify(BAR) + ';bar.querySelector(".code-block-lang").textContent=lang||"text";pre.parentNode.insertBefore(w,pre);w.appendChild(bar);w.appendChild(pre)}}' +
     'function postComment(pid){var c=document.getElementById("comment-input").value.trim(),n=document.getElementById("comment-name").value.trim()||"匿名";if(!c)return;fetch("/api/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,parent_id:pid||null,author_name:n,content:c})}).then(function(r){return r.json()}).then(function(){document.getElementById("comment-input").value="";replyTo=null;loadComments()})}' +
     'function loadComments(){fetch("/api/comments?article_id="+aid).then(function(r){return r.json()}).then(function(cs){document.getElementById("cc").textContent=countAll(cs);document.getElementById("comments-area").innerHTML=rc(cs)})}' +
@@ -58,3 +60,50 @@ function buildScript(aid, md) {
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function simpleMarkdown(md) {
+  var text = String(md || '');
+  // Save code blocks before any processing
+  var cbs = [];
+  text = text.replace(/```\s*([^\n]*)\s*\n([\s\S]*?)```/g, function(_, lang, code) {
+    cbs.push({lang: lang.trim(), code: code.replace(/\n$/, '')});
+    return '\x00CB' + (cbs.length - 1) + '\x00';
+  });
+  // Escape
+  var html = esc(text);
+  // Restore code blocks with wrapper
+  html = html.replace(/\x00CB(\d+)\x00/g, function(_, idx) {
+    var cb = cbs[parseInt(idx)];
+    return '<div class="code-block-wrapper"><div class="code-block-bar"><span class="code-block-lang">' + (cb.lang || 'text') + '</span><span style="flex:1"></span></div><pre><code>' + esc(cb.code) + '</code></pre></div>';
+  });
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Bold & italic
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Links & images
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  // Headers
+  html = html.replace(/\n### (.+)/g, '\n<h3>$1</h3>');
+  html = html.replace(/\n## (.+)/g, '\n<h2>$1</h2>');
+  html = html.replace(/\n# (.+)/g, '\n<h1>$1</h1>');
+  // Blockquotes, hr, lists
+  html = html.replace(/\n&gt; (.+)/g, '\n<blockquote>$1</blockquote>');
+  html = html.replace(/\n---/g, '\n<hr>');
+  html = html.replace(/\n- (.+)/g, '\n<li>$1</li>');
+  // Convert newlines to paragraphs
+  var parts = html.split('\n\n');
+  html = '';
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i].trim();
+    if (!p) continue;
+    // Check if this block starts with a block-level tag
+    if (/^<(h[123]|div|blockquote|hr|li|ul|pre|img)/.test(p)) {
+      html += p;
+    } else {
+      html += '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+    }
+  }
+  return html;
+}
