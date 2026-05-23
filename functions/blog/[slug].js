@@ -32,7 +32,7 @@ function render(a, likes) {
     '<button class="btn-submit" onclick="postComment()">发表</button></section></article></div>' +
     '<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>' +
     '<script>var aid=' + a.id + ',fp=localStorage.getItem("fp")||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp",f);return f;})(),replyTo=null;' +
-    'function init(){if(typeof marked=="undefined"){setTimeout(init,100);return;}document.getElementById("content").innerHTML=marked.parse(' + md + ');wrapCB();}' +
+    'function init(){if(typeof marked=="undefined"){setTimeout(init,100);return;}var raw=' + md + '.replace(/\\\\n/g,"\\n");document.getElementById("content").innerHTML=marked.parse(raw);wrapCB();}' +
     'setTimeout(function(){document.getElementById("content").style.opacity="1"},3000);init();loadComments();updateLikeState();' +
     'function barHTML(l){return' + JSON.stringify('<span class="code-block-lang">X</span><button class="code-block-btn" data-a="expand" title="展开"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><span style="flex:1"></span><button class="code-block-btn" data-a="copy" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="code-block-btn" data-a="fullscreen" title="全屏"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>') + '.replace("X",l)}' +
     'function wrapCB(){var pres=document.querySelectorAll("#content pre:not(.code-block-wrapper pre)");for(var i=0;i<pres.length;i++){var pre=pres[i],code=pre.querySelector("code"),lang="";if(code){var m=(code.className||"").match(/language-(\\w+)/);if(m)lang=m[1];}var w=document.createElement("div");w.className="code-block-wrapper";var bar=document.createElement("div");bar.className="code-block-bar";bar.innerHTML=barHTML(lang||"text");pre.parentNode.insertBefore(w,pre);w.appendChild(bar);w.appendChild(pre)}}' +
@@ -51,22 +51,35 @@ function render(a, likes) {
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function simpleMD(md) {
-  var t = String(md || ''), cbs = [];
-  t = t.replace(/```\s*([^\n]*)\s*\n([\s\S]*?)```/g, function(_, lang, code) {
-    cbs.push({l: lang.trim(), c: code.replace(/\n$/, '')});
-    return '\x00B' + (cbs.length - 1) + '\x00';
-  });
+  var t = String(md || '');
+  // Convert literal \n to actual newlines
+  t = t.replace(/\\n/g, '\n');
+  var cbs = [], i, j;
+  // Manually extract code blocks
+  while ((i = t.indexOf('```')) >= 0) {
+    var start = i + 3;
+    var nl = t.indexOf('\n', start);
+    if (nl < 0) break;
+    var lang = t.slice(start, nl).trim();
+    var end = t.indexOf('\n```', nl);
+    if (end < 0) { end = t.indexOf('```', nl + 1); if (end < 0) break; }
+    var code = t.slice(nl + 1, end);
+    cbs.push({l: lang, c: code});
+    t = t.slice(0, i) + '__CB' + (cbs.length - 1) + '__' + t.slice(end + 4);
+  }
   t = esc(t);
-  t = t.replace(/\x00B(\d+)\x00/g, function(_, i) {
-    var cb = cbs[parseInt(i)], l = esc(cb.l || 'text'), c = esc(cb.c);
-    return '<div class="code-block-wrapper"><div class="code-block-bar">' +
+  // Restore code blocks
+  for (var n = 0; n < cbs.length; n++) {
+    var cb = cbs[n], l = esc(cb.l || 'text'), c = esc(cb.c);
+    var html = '<div class="code-block-wrapper"><div class="code-block-bar">' +
       '<span class="code-block-lang">' + l + '</span>' +
       '<button class="code-block-btn" data-a="expand" title="展开"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>' +
       '<span style="flex:1"></span>' +
       '<button class="code-block-btn" data-a="copy" title="复制"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>' +
       '<button class="code-block-btn" data-a="fullscreen" title="全屏"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>' +
       '</div><pre><code>' + c + '</code></pre></div>';
-  });
+    t = t.replace('__CB' + n + '__', html);
+  }
   t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
   t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   t = t.replace(/\*(?!\*)(.+?)\*/g, '<em>$1</em>');
@@ -78,8 +91,8 @@ function simpleMD(md) {
   t = t.replace(/\n&gt; (.+)/g, '\n<blockquote>$1</blockquote>');
   t = t.replace(/\n---/g, '\n<hr>');
   var parts = t.split('\n\n'), out = '';
-  for (var i = 0; i < parts.length; i++) {
-    var p = parts[i].trim(); if (!p) continue;
+  for (var k = 0; k < parts.length; k++) {
+    var p = parts[k].trim(); if (!p) continue;
     if (/^<(h[123]|div|blockquote|hr|li|img)/.test(p)) out += p;
     else out += '<p>' + p.replace(/\n/g, '<br>') + '</p>';
   }
