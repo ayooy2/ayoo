@@ -35,3 +35,7 @@
 时间：2026/05/12 --强化亚克力材质：body SVG 噪点纹理 + 三光斑柔光背景 + 导航栏 blur(32px) saturate(200%)；
 时间：2026/05/18 --新增博客系统：articles / comments / likes 三表；/api/articles CRUD + 分页排序 + /api/comments 树形回复 + /api/likes 切换点赞；/blog 列表页 + /blog/:slug 详情页（marked.js 渲染 Markdown + highlight.js 代码高亮）；后台新增文章管理 tab，含标题/slug/摘要/封面/标签/发布状态编辑器和字符计数；
 时间：2026/05/18 --文章编辑器新增 Markdown 快捷工具栏（14 个格式化按钮：加粗/斜体/删除线/H1-H3/引用/列表/代码/链接/表格/分割线）；新增图片上传功能（canvas 缩放至 1200x800 + JPEG 压缩 + base64 内联插入 Markdown）；修复文章详情页 JS 求值冲突导致的 500 错误；
+时间：2026/05/20 --新增图片独立存储 API（/api/images），文章图片改为 URL 引用而非 base64 内联，避免数据丢失；修复中文标题 slug 为空导致文章 404；全面 UI 图标替换为 Feather 风格 SVG 线条图标；
+时间：2026/05/20 --全站视觉重设计为极简留白风个人博客：衬线字体、低饱和度暖色纸感配色、大量留白、去除毛玻璃和噪点纹理、去除 hover 动画、导航栏改为纯色底 border-bottom、主题切换简化为 ☽/☀ 文字按钮、卡片改为列表式线条布局；
+时间：2026/05/20 --文章代码块增强：语言标识标签、复制按钮、折叠按钮（display:none 完全隐藏代码区仅保留标签栏）、全屏按钮（含行号）、折叠时顶栏缩小且隐藏操作按钮；采用顶栏内联 onclick + nextElementSibling 实现可靠折叠；SSR 服务端降级渲染确保 marked.js CDN 不可用时内容仍可见；数字字体统一为等高线型数字（lining-nums tabular-nums）；
+时间：2026/05/24 --修复 D1 存储换行为字面量 \\n 导致 SSR 代码块不渲染的根因（replace(/\\n/g, '\n') 转换）；部署流程中去掉 --branch main 解决 Cloudflare API 8000000 错误；
