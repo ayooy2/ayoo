@@ -304,7 +304,7 @@ body {
 }
 [data-theme="dark"] .code-block-bar { background: rgba(255,255,255,0.02); }
 .code-block-lang { text-transform: uppercase; font-weight: 500; color: var(--color-text-muted); white-space: nowrap; }
-.lang-arrow { font-size: 0.7rem; color: var(--color-text-placeholder); transition: transform 0.2s; display: inline-block; }
+.lang-arrow { font-size: 0.85rem; color: var(--color-text-muted); transition: transform 0.2s; display: inline-block; vertical-align: -1px; }
 .code-block-wrapper.folded .lang-arrow { transform: rotate(180deg); }
 .code-block-wrapper.folded .code-block-bar { border-bottom: none; padding: 0.12rem 0.5rem; font-size: 0.6rem; }
 .code-block-wrapper.folded .code-block-btn { display: none; }
