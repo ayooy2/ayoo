@@ -169,6 +169,45 @@
         }
         .md-btn:hover { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); }
         .md-upload { display: inline-flex; align-items: center; gap: 0.2rem; }
+        /* 壁纸选择器 */
+        .wallpaper-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 0.75rem;
+            margin: 0.75rem 0;
+        }
+        .wallpaper-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            padding: 0.4rem;
+            border-radius: var(--radius-sm);
+            border: 2px solid transparent;
+            transition: border-color 0.2s, transform 0.15s;
+        }
+        .wallpaper-item:hover {
+            transform: translateY(-2px);
+        }
+        .wallpaper-item.active {
+            border-color: var(--color-primary);
+        }
+        .wallpaper-thumb {
+            width: 72px;
+            height: 48px;
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        .wallpaper-item span {
+            font-size: 0.78rem;
+            color: var(--color-text-secondary);
+        }
+        .wallpaper-item.active span {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -241,6 +280,37 @@
                             <label>页脚文字</label>
                             <input type="text" id="set-footer" placeholder="例如：© 2026">
                             <p class="form-hint">显示在页面底部</p>
+                        </div>
+                        <div class="form-group">
+                            <label>背景壁纸</label>
+                            <div class="wallpaper-grid">
+                                <div class="wallpaper-item active" data-bg="" onclick="selectWallpaper(this)">
+                                    <div class="wallpaper-thumb" style="background:#faf9f7"></div>
+                                    <span>无</span>
+                                </div>
+                                <div class="wallpaper-item" data-bg="/assets/wallpapers/dawn.svg" onclick="selectWallpaper(this)">
+                                    <div class="wallpaper-thumb" style="background:linear-gradient(#fdf6f0,#e8d5c4)"></div>
+                                    <span>晨曦</span>
+                                </div>
+                                <div class="wallpaper-item" data-bg="/assets/wallpapers/mist.svg" onclick="selectWallpaper(this)">
+                                    <div class="wallpaper-thumb" style="background:linear-gradient(#e8edf2,#d0d8e0)"></div>
+                                    <span>薄雾</span>
+                                </div>
+                                <div class="wallpaper-item" data-bg="/assets/wallpapers/ink.svg" onclick="selectWallpaper(this)">
+                                    <div class="wallpaper-thumb" style="background:radial-gradient(#f0ebe6,#d8cec3)"></div>
+                                    <span>水墨</span>
+                                </div>
+                                <div class="wallpaper-item" data-bg="/assets/wallpapers/dusk.svg" onclick="selectWallpaper(this)">
+                                    <div class="wallpaper-thumb" style="background:linear-gradient(#2c2c2c,#151311)"></div>
+                                    <span>黄昏</span>
+                                </div>
+                                <div class="wallpaper-item" data-bg="/assets/wallpapers/night.svg" onclick="selectWallpaper(this)">
+                                    <div class="wallpaper-thumb" style="background:linear-gradient(#1a1820,#100e14)"></div>
+                                    <span>深夜</span>
+                                </div>
+                            </div>
+                            <input type="text" id="set-bg-image" placeholder="或输入自定义图片URL">
+                            <p class="form-hint">选择预设壁纸或输入外部图片链接</p>
                         </div>
                         <div class="modal-actions">
                             <button type="submit" class="btn btn-primary">保存设置</button>
@@ -591,6 +661,12 @@
                 document.getElementById('set-title').value = data.title || '';
                 document.getElementById('set-subtitle').value = data.subtitle || '';
                 document.getElementById('set-footer').value = data.footer || '';
+                var bg = data.bg_image || '';
+                document.getElementById('set-bg-image').value = bg;
+                // 激活对应壁纸项
+                document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                    el.classList.toggle('active', el.dataset.bg === bg);
+                });
                 updatePreview();
             } catch (e) { /* ignore */ }
         }
@@ -615,12 +691,27 @@
             });
         });
 
+        function selectWallpaper(el) {
+            document.querySelectorAll('.wallpaper-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            el.classList.add('active');
+            document.getElementById('set-bg-image').value = el.dataset.bg || '';
+        }
+
         async function saveSettings(e) {
             e.preventDefault();
+            var bgVal = document.getElementById('set-bg-image').value.trim();
+            // 如果有预设选中且自定义为空，用预设值
+            if (!bgVal) {
+                var active = document.querySelector('.wallpaper-item.active');
+                if (active) bgVal = active.dataset.bg || '';
+            }
             const body = {
                 title: document.getElementById('set-title').value.trim(),
                 subtitle: document.getElementById('set-subtitle').value.trim(),
-                footer: document.getElementById('set-footer').value.trim()
+                footer: document.getElementById('set-footer').value.trim(),
+                bg_image: bgVal
             };
             const res = await fetch(API_SETTINGS, {
                 method: 'PUT',

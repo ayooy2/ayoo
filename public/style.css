@@ -80,6 +80,23 @@ body {
   transition: background 0.5s ease, border-color 0.5s ease;
 }
 
+/* 背景图模式 */
+body[style*="background-image"] .navbar {
+  background: rgba(250,249,247,0.85);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+[data-theme="dark"] body[style*="background-image"] .navbar {
+  background: rgba(29,27,24,0.85);
+}
+body[style*="background-image"] .page-wrapper {
+  background: rgba(250,249,247,0.75);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+[data-theme="dark"] body[style*="background-image"] .page-wrapper {
+  background: rgba(29,27,24,0.75);
+}
+
 .nav-inner {
   max-width: var(--content-max-width);
   margin: 0 auto;
