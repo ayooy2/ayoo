@@ -830,6 +830,15 @@
             if (content) scheduleAutoSave();
         }
 
+        // 控制台调试：testMD('bold') 验证命令是否正常工作
+        window.testMD = function(type) {
+            var ta = document.getElementById('article-content-md');
+            console.log('Before:', JSON.stringify(ta.value), 'sel:', ta.selectionStart, '-', ta.selectionEnd);
+            insertMD(type);
+            console.log('After:', JSON.stringify(ta.value), 'sel:', ta.selectionStart, '-', ta.selectionEnd);
+            console.log('Preview:', document.getElementById('article-preview').innerHTML.substring(0, 100));
+        };
+
         async function saveArticle(e) {
             e.preventDefault();
             var id = document.getElementById('article-edit-id').value;
@@ -867,57 +876,81 @@
         function editArticle(id) { openArticleEditor(id); }
 
         // Markdown 快速插入
-        // Markdown 工具栏命令表
+        // 工具栏命令表：before=前缀, after=后缀, placeholder=无选中时的占位文本
+        // block=true 表示行级命令（标题/列表/引用等），需要确保在行首
         var MD_CMDS = {
-            bold:       { before: '**',     after: '**',        placeholder: '加粗文字',     inline: true },
-            italic:     { before: '*',      after: '*',         placeholder: '斜体文字',     inline: true },
-            strike:     { before: '~~',     after: '~~',        placeholder: '删除线文字',   inline: true },
-            code:       { before: '`',      after: '`',         placeholder: '代码',         inline: true },
-            link:       { before: '[',      after: '](url)',    placeholder: '链接文字',     inline: true },
-            image:      { before: '![',     after: '](url)',    placeholder: '图片描述',     inline: true },
-            h1:         { before: '# ',     after: '',          placeholder: '标题',         block: true },
-            h2:         { before: '## ',    after: '',          placeholder: '二级标题',     block: true },
-            h3:         { before: '### ',   after: '',          placeholder: '三级标题',     block: true },
-            quote:      { before: '> ',     after: '',          placeholder: '引用内容',     block: true },
-            ul:         { before: '- ',     after: '',          placeholder: '列表项',       block: true },
-            ol:         { before: '1. ',    after: '',          placeholder: '列表项',       block: true },
-            codeblock:  { before: '```\n',  after: '\n```',     placeholder: '代码',         block: true },
-            table:      { before: '| 列1 | 列2 |\n|-----|-----|\n| ', after: ' |\n', placeholder: '内容', block: true },
-            hr:         { before: '\n---\n', after: '',         placeholder: '',             block: true }
+            bold:       { before: '**',     after: '**',        ph: '加粗文字',   inline: true },
+            italic:     { before: '*',      after: '*',         ph: '斜体文字',   inline: true },
+            strike:     { before: '~~',     after: '~~',        ph: '删除线文字', inline: true },
+            code:       { before: '`',      after: '`',         ph: '代码',       inline: true },
+            link:       { before: '[',      after: '](url)',    ph: '链接文字',   inline: true },
+            image:      { before: '![',     after: '](url)',    ph: '图片描述',   inline: true },
+            h1:         { before: '# ',     after: '',          ph: '标题',       block: true },
+            h2:         { before: '## ',    after: '',          ph: '二级标题',   block: true },
+            h3:         { before: '### ',   after: '',          ph: '三级标题',   block: true },
+            quote:      { before: '> ',     after: '',          ph: '引用内容',   block: true },
+            ul:         { before: '- ',     after: '',          ph: '列表项',     block: true },
+            ol:         { before: '1. ',    after: '',          ph: '列表项',     block: true },
+            codeblock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true },
+            table:      { before: '| 列1 | 列2 |\n| ----- | ----- |\n| ', after: ' |\n', ph: '内容', block: true },
+            hr:         { before: '\n---\n', after: '',         ph: '',           block: true }
         };
 
         function insertMD(type) {
             var cmd = MD_CMDS[type];
-            if (!cmd) return;
-            var ta = document.getElementById('article-content-md');
-            var start = ta.selectionStart, end = ta.selectionEnd;
-            var val = ta.value;
-            var sel = val.substring(start, end) || cmd.placeholder;
+            if (!cmd) { console.warn('Unknown MD command:', type); return; }
+            try { _insertMD(cmd); } catch(err) { console.error('insertMD error:', err); }
+        }
 
-            // block 级命令：确保在行首插入
+        function _insertMD(cmd) {
+            var ta = document.getElementById('article-content-md');
+            // 保存并恢复焦点，确保 selectionStart/End 可靠
+            ta.focus();
+            var s = ta.selectionStart, e = ta.selectionEnd;
+            var val = ta.value;
+            var sel = val.substring(s, e);
+            var hasSelection = s !== e;
+            var text = sel || cmd.ph;
+
             if (cmd.block) {
-                // 找到当前行的起始位置
-                var lineStart = val.lastIndexOf('\n', start - 1) + 1;
-                // 如果选区跨越多行，对每行添加前缀
-                if (start !== end && sel.indexOf('\n') !== -1) {
+                // ── block 级命令 ──
+                // 找当前行首
+                var ls = val.lastIndexOf('\n', s - 1) + 1;
+                var lineBefore = val.substring(ls, s);
+
+                if (hasSelection && sel.indexOf('\n') !== -1) {
+                    // 多行选区：每行加前缀
                     var lines = sel.split('\n');
-                    var prefixed = lines.map(function(l) { return cmd.before + l; }).join('\n');
-                    var text = prefixed + cmd.after;
-                    ta.setRangeText(text, start, end, 'end');
+                    var result = lines.map(function(l) { return cmd.before + l; }).join('\n') + cmd.after;
+                    ta.value = val.substring(0, s) + result + val.substring(e);
+                    ta.selectionStart = ta.selectionEnd = s + result.length;
+                } else if (lineBefore.trim() === '') {
+                    // 行首（或只有空白）：直接插入
+                    var result = cmd.before + text + cmd.after;
+                    ta.value = val.substring(0, s) + result + val.substring(e);
+                    ta.selectionStart = ta.selectionEnd = s + result.length;
                 } else {
-                    // 单行：在行首补前缀（如果光标不在行首）
-                    var pad = (start > lineStart && val.charAt(lineStart) !== '\n') ? '\n' : '';
-                    var text = pad + cmd.before + sel + cmd.after;
-                    ta.setRangeText(text, start, end, 'end');
+                    // 行中间：换行后插入
+                    var result = '\n' + cmd.before + text + cmd.after;
+                    ta.value = val.substring(0, s) + result + val.substring(e);
+                    ta.selectionStart = ta.selectionEnd = s + result.length;
                 }
             } else {
-                // inline 级：直接包裹选区
-                var text = cmd.before + sel + cmd.after;
-                ta.setRangeText(text, start, end, 'end');
+                // ── inline 级命令 ──
+                var result = cmd.before + text + cmd.after;
+                ta.value = val.substring(0, s) + result + val.substring(e);
+                if (hasSelection) {
+                    // 选区包裹后，光标放在后缀之后
+                    ta.selectionStart = ta.selectionEnd = s + result.length;
+                } else {
+                    // 无选区（占位），光标选中占位文本方便用户直接输入
+                    ta.selectionStart = s + cmd.before.length;
+                    ta.selectionEnd = s + cmd.before.length + text.length;
+                }
             }
-            ta.focus();
-            updateArticlePreview();
-            scheduleAutoSave();
+
+            // 触发 input 事件让预览和自动保存同步
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         // 图片上传并插入 base64
@@ -957,11 +990,11 @@
                     var result = await res.json();
                     var mdImg = '\n![' + filename + '](' + result.url + ')\n';
                     var ta = document.getElementById('article-content-md');
-                    var start = ta.selectionStart;
-                    ta.setRangeText(mdImg, start, start, 'end');
                     ta.focus();
-                    updateArticlePreview();
-                    scheduleAutoSave();
+                    var pos = ta.selectionStart;
+                    ta.value = ta.value.substring(0, pos) + mdImg + ta.value.substring(ta.selectionEnd);
+                    ta.selectionStart = ta.selectionEnd = pos + mdImg.length;
+                    ta.dispatchEvent(new Event('input', { bubbles: true }));
                 } else {
                     alert('图片上传失败');
                 }
