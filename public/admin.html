@@ -169,6 +169,18 @@
         }
         .md-btn:hover { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); }
         .md-upload { display: inline-flex; align-items: center; gap: 0.2rem; }
+        /* 编辑器分栏布局 */
+        .editor-split { display: flex; gap: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; min-height: 320px; }
+        .editor-split .editor-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .editor-split .editor-pane:first-child { border-right: 1px solid var(--color-border); }
+        .editor-split textarea { flex: 1; border: none; border-radius: 0; resize: none; min-height: 280px; padding: 0.75rem; font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.7; background: var(--color-bg); color: var(--color-text); outline: none; }
+        .editor-split .preview-pane { flex: 1; overflow-y: auto; padding: 0.75rem; background: var(--color-surface); font-size: 0.88rem; line-height: 1.7; }
+        .editor-split .preview-pane:empty::before { content: '预览区域'; color: var(--color-text-placeholder); font-style: italic; }
+        .editor-pane-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); padding: 0.3rem 0.75rem; background: var(--color-bg); border-bottom: 1px solid var(--color-border); user-select: none; }
+        .md-status-bar { display: flex; justify-content: space-between; align-items: center; padding: 0.25rem 0; font-size: 0.75rem; color: var(--color-text-muted); }
+        .md-status-bar .auto-save-hint { color: var(--color-success-text); opacity: 0; transition: opacity 0.3s; }
+        .md-status-bar .auto-save-hint.show { opacity: 1; }
+        @media (max-width: 768px) { .editor-split { flex-direction: column; } .editor-split .editor-pane:first-child { border-right: none; border-bottom: 1px solid var(--color-border); } }
         /* 壁纸选择器 */
         .wallpaper-grid {
             display: grid;
@@ -362,35 +374,48 @@
                 <div class="form-group"><label>Slug（URL 标识，留空自动生成）</label><input type="text" id="article-slug"></div>
                 <div class="form-group"><label>摘要</label><input type="text" id="article-summary"></div>
                 <div class="form-group"><label>封面图片 URL</label><input type="url" id="article-cover"></div>
-                <div class="form-group"><label style="display:flex;justify-content:space-between;align-items:center;"><span>正文（Markdown）</span><small id="md-status" style="color:var(--color-text-muted);">编辑中...</small></label>
+                <div class="form-group"><label>正文（Markdown）</label>
                     <div class="md-toolbar" style="display:flex;flex-wrap:wrap;gap:0.25rem;margin-bottom:0.4rem;">
-                        <button type="button" class="md-btn" onclick="insertMD('**','**','加粗')" title="加粗 Ctrl+B">B</button>
-                        <button type="button" class="md-btn" onclick="insertMD('*','*','斜体')" title="斜体 Ctrl+I"><i>I</i></button>
-                        <button type="button" class="md-btn" onclick="insertMD('~~','~~','删除线')" title="删除线"><s>S</s></button>
-                        <button type="button" class="md-btn" onclick="insertMD('# ','','标题')" title="标题">H1</button>
-                        <button type="button" class="md-btn" onclick="insertMD('## ','','二级标题')" title="二级标题">H2</button>
-                        <button type="button" class="md-btn" onclick="insertMD('### ','','三级标题')" title="三级标题">H3</button>
-                        <button type="button" class="md-btn" onclick="insertMD('> ','','引用')" title="引用">「」</button>
-                        <button type="button" class="md-btn" onclick="insertMD('- ','','列表')" title="无序列表">•</button>
-                        <button type="button" class="md-btn" onclick="insertMD('1. ','','有序列表')" title="有序列表">1.</button>
-                        <button type="button" class="md-btn" onclick="insertMD('`','`','代码')" title="行内代码">&lt;/&gt;</button>
-                        <button type="button" class="md-btn" onclick="insertMD('\n```\n','\n```\n','代码块')" title="代码块">{ }</button>
-                        <button type="button" class="md-btn" onclick="insertMD('[','](url)','链接')" title="链接">🔗</button>
-                        <button type="button" class="md-btn" onclick="insertMD('\n| 列1 | 列2 |\n|-----|-----|\n| ',' |\n','表格')" title="表格">⊞</button>
-                        <button type="button" class="md-btn" onclick="insertMD('\n---\n','','分割线')" title="分割线">—</button>
+                        <button type="button" class="md-btn" onclick="insertMD('bold')" title="加粗 Ctrl+B"><b>B</b></button>
+                        <button type="button" class="md-btn" onclick="insertMD('italic')" title="斜体 Ctrl+I"><i>I</i></button>
+                        <button type="button" class="md-btn" onclick="insertMD('strike')" title="删除线"><s>S</s></button>
+                        <button type="button" class="md-btn" onclick="insertMD('h1')" title="标题">H1</button>
+                        <button type="button" class="md-btn" onclick="insertMD('h2')" title="二级标题">H2</button>
+                        <button type="button" class="md-btn" onclick="insertMD('h3')" title="三级标题">H3</button>
+                        <button type="button" class="md-btn" onclick="insertMD('quote')" title="引用">「」</button>
+                        <button type="button" class="md-btn" onclick="insertMD('ul')" title="无序列表">•</button>
+                        <button type="button" class="md-btn" onclick="insertMD('ol')" title="有序列表">1.</button>
+                        <button type="button" class="md-btn" onclick="insertMD('code')" title="行内代码">&lt;/&gt;</button>
+                        <button type="button" class="md-btn" onclick="insertMD('codeblock')" title="代码块">{ }</button>
+                        <button type="button" class="md-btn" onclick="insertMD('link')" title="链接">🔗</button>
+                        <button type="button" class="md-btn" onclick="insertMD('image')" title="图片">🖼</button>
+                        <button type="button" class="md-btn" onclick="insertMD('table')" title="表格">⊞</button>
+                        <button type="button" class="md-btn" onclick="insertMD('hr')" title="分割线">—</button>
                         <span style="flex:1;"></span>
                         <label class="md-btn md-upload" title="上传图片" style="cursor:pointer;background:var(--color-primary-light);color:var(--color-primary);">
-                            📷 上传图片
+                            📷 上传
                             <input type="file" accept="image/*" onchange="uploadMDImage(this)" style="display:none;">
                         </label>
                         <label class="md-btn md-upload" title="导入 Markdown 文件" style="cursor:pointer;background:var(--color-success-bg);color:var(--color-success-text);">
-                            📄 导入 MD
+                            📄 导入
                             <input type="file" accept=".md,.txt,.markdown,text/markdown,text/plain" onchange="importMDFile(this)" style="display:none;">
                         </label>
                     </div>
-                    <textarea id="article-content-md" style="min-height:280px;font-family:var(--font-mono);font-size:0.85rem;line-height:1.7;" placeholder="支持 Markdown 语法。可从工具栏快速插入格式，或点击 📄 导入 .md 文件，点击 📷 上传图片。"></textarea>
+                    <div class="editor-split">
+                        <div class="editor-pane">
+                            <div class="editor-pane-label">编辑</div>
+                            <textarea id="article-content-md" placeholder="支持 Markdown 语法，Ctrl+B 加粗，Ctrl+I 斜体，Ctrl+S 保存"></textarea>
+                        </div>
+                        <div class="editor-pane">
+                            <div class="editor-pane-label">预览</div>
+                            <div class="preview-pane" id="article-preview"></div>
+                        </div>
+                    </div>
+                    <div class="md-status-bar">
+                        <span id="md-status">就绪</span>
+                        <span class="auto-save-hint" id="auto-save-hint">✓ 已自动保存</span>
+                    </div>
                 </div>
-                <div class="form-group"><label>预览（实时渲染）</label><div id="article-preview" style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:1rem;min-height:80px;font-size:0.9rem;line-height:1.7;max-height:350px;overflow-y:auto;"></div></div>
                 <div class="form-group"><label>作者</label><input type="text" id="article-author" value="Admin"></div>
                 <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="article-tags"></div>
                 <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" id="article-published" checked> 发布</label></div>
@@ -766,7 +791,9 @@
             document.getElementById('article-published').checked = true;
             document.getElementById('article-preview').innerHTML = '';
             document.getElementById('article-modal-title').textContent = '写文章';
+
             if (id) {
+                // 编辑已有文章
                 document.getElementById('article-modal-title').textContent = '编辑文章';
                 fetch('/api/articles/' + id).then(function(r){return r.json();}).then(function(a){
                     document.getElementById('article-edit-id').value = a.id;
@@ -780,11 +807,27 @@
                     document.getElementById('article-published').checked = !!a.is_published;
                     updateArticlePreview();
                 });
+            } else {
+                // 新建文章：检查是否有未保存的草稿
+                var draft = loadDraft();
+                if (draft && draft.content && draft.ts) {
+                    var age = Date.now() - draft.ts;
+                    var mins = Math.floor(age / 60000);
+                    var ageText = mins < 1 ? '刚才' : mins < 60 ? mins + ' 分钟前' : Math.floor(mins / 60) + ' 小时前';
+                    if (confirm('发现 ' + ageText + ' 的未保存草稿，是否恢复？')) {
+                        restoreDraft(draft);
+                    } else {
+                        clearDraft();
+                    }
+                }
             }
         }
 
         function closeArticleEditor() {
             document.getElementById('article-modal').classList.remove('active');
+            // 关闭时如果有内容，自动保存一次草稿
+            var content = document.getElementById('article-content-md').value;
+            if (content) scheduleAutoSave();
         }
 
         async function saveArticle(e) {
@@ -806,7 +849,7 @@
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                 body: JSON.stringify(body)
             });
-            if (res.ok) { closeArticleEditor(); loadArticles(); }
+            if (res.ok) { clearDraft(); closeArticleEditor(); loadArticles(); }
             else if (res.status === 401) { alert('登录已过期'); logout(); }
             else { alert('保存失败: ' + ((await res.json()).error || '')); }
         }
@@ -824,14 +867,57 @@
         function editArticle(id) { openArticleEditor(id); }
 
         // Markdown 快速插入
-        function insertMD(before, after, placeholder) {
+        // Markdown 工具栏命令表
+        var MD_CMDS = {
+            bold:       { before: '**',     after: '**',        placeholder: '加粗文字',     inline: true },
+            italic:     { before: '*',      after: '*',         placeholder: '斜体文字',     inline: true },
+            strike:     { before: '~~',     after: '~~',        placeholder: '删除线文字',   inline: true },
+            code:       { before: '`',      after: '`',         placeholder: '代码',         inline: true },
+            link:       { before: '[',      after: '](url)',    placeholder: '链接文字',     inline: true },
+            image:      { before: '![',     after: '](url)',    placeholder: '图片描述',     inline: true },
+            h1:         { before: '# ',     after: '',          placeholder: '标题',         block: true },
+            h2:         { before: '## ',    after: '',          placeholder: '二级标题',     block: true },
+            h3:         { before: '### ',   after: '',          placeholder: '三级标题',     block: true },
+            quote:      { before: '> ',     after: '',          placeholder: '引用内容',     block: true },
+            ul:         { before: '- ',     after: '',          placeholder: '列表项',       block: true },
+            ol:         { before: '1. ',    after: '',          placeholder: '列表项',       block: true },
+            codeblock:  { before: '```\n',  after: '\n```',     placeholder: '代码',         block: true },
+            table:      { before: '| 列1 | 列2 |\n|-----|-----|\n| ', after: ' |\n', placeholder: '内容', block: true },
+            hr:         { before: '\n---\n', after: '',         placeholder: '',             block: true }
+        };
+
+        function insertMD(type) {
+            var cmd = MD_CMDS[type];
+            if (!cmd) return;
             var ta = document.getElementById('article-content-md');
             var start = ta.selectionStart, end = ta.selectionEnd;
-            var sel = ta.value.substring(start, end) || placeholder;
-            var text = before + sel + after;
-            ta.setRangeText(text, start, end, 'select');
+            var val = ta.value;
+            var sel = val.substring(start, end) || cmd.placeholder;
+
+            // block 级命令：确保在行首插入
+            if (cmd.block) {
+                // 找到当前行的起始位置
+                var lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                // 如果选区跨越多行，对每行添加前缀
+                if (start !== end && sel.indexOf('\n') !== -1) {
+                    var lines = sel.split('\n');
+                    var prefixed = lines.map(function(l) { return cmd.before + l; }).join('\n');
+                    var text = prefixed + cmd.after;
+                    ta.setRangeText(text, start, end, 'end');
+                } else {
+                    // 单行：在行首补前缀（如果光标不在行首）
+                    var pad = (start > lineStart && val.charAt(lineStart) !== '\n') ? '\n' : '';
+                    var text = pad + cmd.before + sel + cmd.after;
+                    ta.setRangeText(text, start, end, 'end');
+                }
+            } else {
+                // inline 级：直接包裹选区
+                var text = cmd.before + sel + cmd.after;
+                ta.setRangeText(text, start, end, 'end');
+            }
             ta.focus();
             updateArticlePreview();
+            scheduleAutoSave();
         }
 
         // 图片上传并插入 base64
@@ -875,6 +961,7 @@
                     ta.setRangeText(mdImg, start, start, 'end');
                     ta.focus();
                     updateArticlePreview();
+                    scheduleAutoSave();
                 } else {
                     alert('图片上传失败');
                 }
@@ -885,7 +972,9 @@
 
         function updateArticlePreview() {
             var md = document.getElementById('article-content-md').value || '';
-            document.getElementById('md-status').textContent = md ? md.length + ' 字符' : '空';
+            var chars = md.length;
+            var words = md.trim() ? md.trim().split(/\s+/).length : 0;
+            document.getElementById('md-status').textContent = chars + ' 字符 · ' + words + ' 词';
             var preview = document.getElementById('article-preview');
             if (!md) { preview.innerHTML = ''; return; }
             try {
@@ -900,6 +989,73 @@
             }
         }
 
+        // ── 自动保存 ──
+        var _autoSaveTimer = null;
+        var AUTOSAVE_KEY = 'ayoo_draft';
+
+        function scheduleAutoSave() {
+            clearTimeout(_autoSaveTimer);
+            _autoSaveTimer = setTimeout(autoSave, 2000);
+        }
+
+        function autoSave() {
+            var data = {
+                editId: document.getElementById('article-edit-id').value,
+                title: document.getElementById('article-title').value,
+                slug: document.getElementById('article-slug').value,
+                summary: document.getElementById('article-summary').value,
+                cover: document.getElementById('article-cover').value,
+                content: document.getElementById('article-content-md').value,
+                author: document.getElementById('article-author').value,
+                tags: document.getElementById('article-tags').value,
+                published: document.getElementById('article-published').checked,
+                ts: Date.now()
+            };
+            try {
+                localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+                var hint = document.getElementById('auto-save-hint');
+                hint.classList.add('show');
+                setTimeout(function() { hint.classList.remove('show'); }, 1500);
+            } catch(e) { /* localStorage 满了就忽略 */ }
+        }
+
+        function loadDraft() {
+            try {
+                var raw = localStorage.getItem(AUTOSAVE_KEY);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch(e) { return null; }
+        }
+
+        function clearDraft() {
+            localStorage.removeItem(AUTOSAVE_KEY);
+        }
+
+        function restoreDraft(draft) {
+            if (!draft) return;
+            document.getElementById('article-edit-id').value = draft.editId || '';
+            document.getElementById('article-title').value = draft.title || '';
+            document.getElementById('article-slug').value = draft.slug || '';
+            document.getElementById('article-summary').value = draft.summary || '';
+            document.getElementById('article-cover').value = draft.cover || '';
+            document.getElementById('article-content-md').value = draft.content || '';
+            document.getElementById('article-author').value = draft.author || 'Admin';
+            document.getElementById('article-tags').value = draft.tags || '';
+            document.getElementById('article-published').checked = draft.published !== false;
+            updateArticlePreview();
+        }
+
+        // 监听所有表单字段的输入，触发自动保存
+        function bindAutoSaveListeners() {
+            var fields = ['article-title','article-slug','article-summary','article-cover','article-content-md','article-author','article-tags'];
+            fields.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.addEventListener('input', scheduleAutoSave);
+            });
+            var cb = document.getElementById('article-published');
+            if (cb) cb.addEventListener('change', scheduleAutoSave);
+        }
+
         // 导入 .md 文件
         function importMDFile(input) {
             var file = input.files[0];
@@ -908,12 +1064,9 @@
             var reader = new FileReader();
             reader.onload = function(e) {
                 var ta = document.getElementById('article-content-md');
-                // 如果有已有内容则追加，否则直接填充
                 var existing = ta.value;
-                var imported = e.target.result;
                 if (existing && !confirm('当前编辑器已有内容，导入会覆盖。确定继续？')) { input.value = ''; return; }
-                ta.value = imported;
-                // 尝试从文件名提取标题
+                ta.value = e.target.result;
                 var titleEl = document.getElementById('article-title');
                 if (!titleEl.value) {
                     var name = file.name.replace(/\.(md|txt|markdown)$/i, '');
@@ -921,11 +1074,29 @@
                     document.getElementById('article-slug').value = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
                 }
                 updateArticlePreview();
+                scheduleAutoSave();
             };
             reader.readAsText(file);
             input.value = '';
         }
-        document.getElementById('article-content-md').addEventListener('input', updateArticlePreview);
+
+        // 监听 textarea 输入更新预览
+        document.getElementById('article-content-md').addEventListener('input', function() {
+            updateArticlePreview();
+            scheduleAutoSave();
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            // 只在编辑器打开时生效
+            if (!document.getElementById('article-modal').classList.contains('active')) return;
+            var mod = e.ctrlKey || e.metaKey;
+            if (mod && e.key === 'b') { e.preventDefault(); insertMD('bold'); }
+            else if (mod && e.key === 'i') { e.preventDefault(); insertMD('italic'); }
+            else if (mod && e.key === 's') { e.preventDefault(); document.getElementById('article-form').requestSubmit(); }
+        });
+
+        bindAutoSaveListeners();
 
         document.getElementById('article-modal').addEventListener('click', function(e) {
             if (e.target.id === 'article-modal') closeArticleEditor();
