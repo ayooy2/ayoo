@@ -166,14 +166,17 @@
             background: var(--color-bg); color: var(--color-text-secondary);
             border-radius: 4px; cursor: pointer; font-size: 0.78rem;
             font-weight: 600; transition: all 0.15s;
+            -webkit-user-select: none; user-select: none;
         }
         .md-btn:hover { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); }
+        .md-btn:active { transform: scale(0.95); background: var(--color-primary-light); border-color: var(--color-primary); }
         .md-upload { display: inline-flex; align-items: center; gap: 0.2rem; }
         /* 编辑器分栏布局 */
         .editor-split { display: flex; gap: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; min-height: 320px; }
         .editor-split .editor-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .editor-split .editor-pane:first-child { border-right: 1px solid var(--color-border); }
         .editor-split textarea { flex: 1; border: none; border-radius: 0; resize: none; min-height: 280px; padding: 0.75rem; font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.7; background: var(--color-bg); color: var(--color-text); outline: none; }
+        .editor-split textarea:focus { box-shadow: inset 0 0 0 2px var(--color-primary); }
         .editor-split .preview-pane { flex: 1; overflow-y: auto; padding: 0.75rem; background: var(--color-surface); font-size: 0.88rem; line-height: 1.7; }
         .editor-split .preview-pane:empty::before { content: '预览区域'; color: var(--color-text-placeholder); font-style: italic; }
         .editor-pane-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); padding: 0.3rem 0.75rem; background: var(--color-bg); border-bottom: 1px solid var(--color-border); user-select: none; }
@@ -806,6 +809,8 @@
                     document.getElementById('article-tags').value = a.tags || '';
                     document.getElementById('article-published').checked = !!a.is_published;
                     updateArticlePreview();
+                    // 自动聚焦到编辑器
+                    document.getElementById('article-content-md').focus();
                 });
             } else {
                 // 新建文章：检查是否有未保存的草稿
@@ -899,58 +904,64 @@
         function insertMD(type) {
             var cmd = MD_CMDS[type];
             if (!cmd) { console.warn('Unknown MD command:', type); return; }
-            try { _insertMD(cmd); } catch(err) { console.error('insertMD error:', err); }
-        }
-
-        function _insertMD(cmd) {
             var ta = document.getElementById('article-content-md');
-            // 保存并恢复焦点，确保 selectionStart/End 可靠
+            if (!ta) { console.error('Textarea not found'); return; }
+
+            // 核心：先聚焦 textarea，确保 selectionStart/End 可靠
             ta.focus();
-            var s = ta.selectionStart, e = ta.selectionEnd;
-            var val = ta.value;
-            var sel = val.substring(s, e);
-            var hasSelection = s !== e;
-            var text = sel || cmd.ph;
 
-            if (cmd.block) {
-                // ── block 级命令 ──
-                // 找当前行首
-                var ls = val.lastIndexOf('\n', s - 1) + 1;
-                var lineBefore = val.substring(ls, s);
+            // 等焦点稳定后再操作（解决某些浏览器的异步焦点问题）
+            requestAnimationFrame(function() {
+                try {
+                    var s = ta.selectionStart, e = ta.selectionEnd;
+                    var val = ta.value;
+                    var sel = val.substring(s, e);
+                    var hasSel = s !== e;
+                    var text = sel || cmd.ph;
+                    var result;
 
-                if (hasSelection && sel.indexOf('\n') !== -1) {
-                    // 多行选区：每行加前缀
-                    var lines = sel.split('\n');
-                    var result = lines.map(function(l) { return cmd.before + l; }).join('\n') + cmd.after;
-                    ta.value = val.substring(0, s) + result + val.substring(e);
-                    ta.selectionStart = ta.selectionEnd = s + result.length;
-                } else if (lineBefore.trim() === '') {
-                    // 行首（或只有空白）：直接插入
-                    var result = cmd.before + text + cmd.after;
-                    ta.value = val.substring(0, s) + result + val.substring(e);
-                    ta.selectionStart = ta.selectionEnd = s + result.length;
-                } else {
-                    // 行中间：换行后插入
-                    var result = '\n' + cmd.before + text + cmd.after;
-                    ta.value = val.substring(0, s) + result + val.substring(e);
-                    ta.selectionStart = ta.selectionEnd = s + result.length;
+                    if (cmd.block) {
+                        // ── block 级命令（标题/列表/引用/代码块等）──
+                        var ls = val.lastIndexOf('\n', s - 1) + 1;
+                        var lineBefore = val.substring(ls, s);
+
+                        if (hasSel && sel.indexOf('\n') !== -1) {
+                            // 多行选区：每行加前缀
+                            result = sel.split('\n').map(function(l) { return cmd.before + l; }).join('\n') + cmd.after;
+                        } else if (lineBefore.trim() === '') {
+                            // 行首：直接插入
+                            result = cmd.before + text + cmd.after;
+                        } else {
+                            // 行中间：先换行再插入
+                            result = '\n' + cmd.before + text + cmd.after;
+                        }
+                    } else {
+                        // ── inline 级命令（加粗/斜体/代码/链接等）──
+                        result = cmd.before + text + cmd.after;
+                    }
+
+                    // 直接拼接 value（比 setRangeText 跨浏览器兼容性更好）
+                    var newVal = val.substring(0, s) + result + val.substring(e);
+                    ta.value = newVal;
+
+                    // 设置光标位置
+                    if (cmd.inline && !hasSel) {
+                        // inline 无选区：选中占位文本，方便用户直接打字替换
+                        ta.selectionStart = s + cmd.before.length;
+                        ta.selectionEnd = s + cmd.before.length + text.length;
+                    } else {
+                        // 其他情况：光标放在插入内容末尾
+                        ta.selectionStart = ta.selectionEnd = s + result.length;
+                    }
+
+                    // 手动触发 input 事件（直接改 value 不会自动触发）
+                    ta.dispatchEvent(new Event('input', { bubbles: true }));
+
+                } catch(err) {
+                    console.error('insertMD error:', err);
+                    alert('工具栏操作失败: ' + err.message);
                 }
-            } else {
-                // ── inline 级命令 ──
-                var result = cmd.before + text + cmd.after;
-                ta.value = val.substring(0, s) + result + val.substring(e);
-                if (hasSelection) {
-                    // 选区包裹后，光标放在后缀之后
-                    ta.selectionStart = ta.selectionEnd = s + result.length;
-                } else {
-                    // 无选区（占位），光标选中占位文本方便用户直接输入
-                    ta.selectionStart = s + cmd.before.length;
-                    ta.selectionEnd = s + cmd.before.length + text.length;
-                }
-            }
-
-            // 触发 input 事件让预览和自动保存同步
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
+            });
         }
 
         // 图片上传并插入 base64
@@ -1075,7 +1086,7 @@
             document.getElementById('article-author').value = draft.author || 'Admin';
             document.getElementById('article-tags').value = draft.tags || '';
             document.getElementById('article-published').checked = draft.published !== false;
-            updateArticlePreview();
+            document.getElementById('article-content-md').dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         // 监听所有表单字段的输入，触发自动保存
@@ -1083,7 +1094,13 @@
             var fields = ['article-title','article-slug','article-summary','article-cover','article-content-md','article-author','article-tags'];
             fields.forEach(function(id) {
                 var el = document.getElementById(id);
-                if (el) el.addEventListener('input', scheduleAutoSave);
+                if (!el) return;
+                if (id === 'article-content-md') {
+                    // textarea 同时触发预览更新 + 自动保存
+                    el.addEventListener('input', function() { updateArticlePreview(); scheduleAutoSave(); });
+                } else {
+                    el.addEventListener('input', scheduleAutoSave);
+                }
             });
             var cb = document.getElementById('article-published');
             if (cb) cb.addEventListener('change', scheduleAutoSave);
@@ -1100,6 +1117,7 @@
                 var existing = ta.value;
                 if (existing && !confirm('当前编辑器已有内容，导入会覆盖。确定继续？')) { input.value = ''; return; }
                 ta.value = e.target.result;
+                ta.dispatchEvent(new Event('input', { bubbles: true }));
                 var titleEl = document.getElementById('article-title');
                 if (!titleEl.value) {
                     var name = file.name.replace(/\.(md|txt|markdown)$/i, '');
@@ -1113,20 +1131,19 @@
             input.value = '';
         }
 
-        // 监听 textarea 输入更新预览
-        document.getElementById('article-content-md').addEventListener('input', function() {
-            updateArticlePreview();
-            scheduleAutoSave();
-        });
+        // textarea 输入监听（合并到 bindAutoSaveListeners 统一管理，避免重复绑定）
 
-        // 键盘快捷键
+        // 键盘快捷键（只在编辑器打开且焦点在 textarea 时生效）
         document.addEventListener('keydown', function(e) {
-            // 只在编辑器打开时生效
             if (!document.getElementById('article-modal').classList.contains('active')) return;
             var mod = e.ctrlKey || e.metaKey;
-            if (mod && e.key === 'b') { e.preventDefault(); insertMD('bold'); }
-            else if (mod && e.key === 'i') { e.preventDefault(); insertMD('italic'); }
-            else if (mod && e.key === 's') { e.preventDefault(); document.getElementById('article-form').requestSubmit(); }
+            if (!mod) return;
+            var k = e.key.toLowerCase();
+            if (k === 'b') { e.preventDefault(); insertMD('bold'); }
+            else if (k === 'i') { e.preventDefault(); insertMD('italic'); }
+            else if (k === 'd') { e.preventDefault(); insertMD('code'); }
+            else if (k === 's') { e.preventDefault(); document.getElementById('article-form').requestSubmit(); }
+            else if (k === 'k') { e.preventDefault(); insertMD('link'); }
         });
 
         bindAutoSaveListeners();
