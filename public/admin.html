@@ -901,73 +901,67 @@
             hr:         { before: '\n---\n', after: '',         ph: '',           block: true }
         };
 
-        // 用 execCommand 插入文本，保留浏览器原生 Ctrl+Z 撤销历史
-        function _execInsert(ta, text) {
-            // execCommand 保留撤销栈，直接设 value 不保留
-            if (!document.execCommand('insertText', false, text)) {
-                // 极少数浏览器不支持 execCommand，fallback
-                var s = ta.selectionStart;
-                ta.value = ta.value.substring(0, s) + text + ta.value.substring(ta.selectionEnd);
-                ta.selectionStart = ta.selectionEnd = s + text.length;
-            }
-        }
-
         function insertMD(type) {
             var cmd = MD_CMDS[type];
             if (!cmd) { console.warn('Unknown MD command:', type); return; }
             var ta = document.getElementById('article-content-md');
             if (!ta) { console.error('Textarea not found'); return; }
 
-            // 先聚焦 textarea，确保 selection 可靠
+            // 核心：先聚焦 textarea，确保 selectionStart/End 可靠
             ta.focus();
 
-            try {
-                var s = ta.selectionStart, e = ta.selectionEnd;
-                var val = ta.value;
-                var sel = val.substring(s, e);
-                var hasSel = s !== e;
-                var text = sel || cmd.ph;
+            // 等焦点稳定后再操作（解决某些浏览器的异步焦点问题）
+            requestAnimationFrame(function() {
+                try {
+                    var s = ta.selectionStart, e = ta.selectionEnd;
+                    var val = ta.value;
+                    var sel = val.substring(s, e);
+                    var hasSel = s !== e;
+                    var text = sel || cmd.ph;
+                    var result;
 
-                if (cmd.block) {
-                    // ── block 级命令（标题/列表/引用/代码块等）──
-                    var ls = val.lastIndexOf('\n', s - 1) + 1;
-                    var lineBefore = val.substring(ls, s);
-                    var le = val.indexOf('\n', s);
-                    if (le === -1) le = val.length;
-                    var lineContent = val.substring(ls, le);
+                    if (cmd.block) {
+                        // ── block 级命令（标题/列表/引用/代码块等）──
+                        var ls = val.lastIndexOf('\n', s - 1) + 1;
+                        var lineBefore = val.substring(ls, s);
 
-                    if (hasSel && sel.indexOf('\n') !== -1) {
-                        // 多行选区：每行加前缀，整体替换
-                        var prefixed = sel.split('\n').map(function(l) { return cmd.before + l; }).join('\n') + cmd.after;
-                        ta.setSelectionRange(s, e);
-                        _execInsert(ta, prefixed);
-                    } else if (lineBefore.trim() === '') {
-                        // 行首：插入前缀 + 内容 + 后缀
-                        var result = cmd.before + text + cmd.after;
-                        ta.setSelectionRange(s, e);
-                        _execInsert(ta, result);
+                        if (hasSel && sel.indexOf('\n') !== -1) {
+                            // 多行选区：每行加前缀
+                            result = sel.split('\n').map(function(l) { return cmd.before + l; }).join('\n') + cmd.after;
+                        } else if (lineBefore.trim() === '') {
+                            // 行首：直接插入
+                            result = cmd.before + text + cmd.after;
+                        } else {
+                            // 行中间：先换行再插入
+                            result = '\n' + cmd.before + text + cmd.after;
+                        }
                     } else {
-                        // 行中间：选中从行首到光标的文本，替换为 前缀+原文
-                        var before = val.substring(ls, s);
-                        ta.setSelectionRange(ls, s);
-                        _execInsert(ta, cmd.before + before);
+                        // ── inline 级命令（加粗/斜体/代码/链接等）──
+                        result = cmd.before + text + cmd.after;
                     }
-                } else {
-                    // ── inline 级命令（加粗/斜体/代码/链接等）──
-                    if (hasSel) {
-                        // 有选区：包裹选中文字
-                        var wrapped = cmd.before + sel + cmd.after;
-                        ta.setSelectionRange(s, e);
-                        _execInsert(ta, wrapped);
+
+                    // 直接拼接 value（比 setRangeText 跨浏览器兼容性更好）
+                    var newVal = val.substring(0, s) + result + val.substring(e);
+                    ta.value = newVal;
+
+                    // 设置光标位置
+                    if (cmd.inline && !hasSel) {
+                        // inline 无选区：选中占位文本，方便用户直接打字替换
+                        ta.selectionStart = s + cmd.before.length;
+                        ta.selectionEnd = s + cmd.before.length + text.length;
                     } else {
-                        // 无选区：插入占位文本并选中它，方便用户直接打字替换
-                        _execInsert(ta, text);
-                        ta.setSelectionRange(s + cmd.before.length, s + cmd.before.length + text.length);
+                        // 其他情况：光标放在插入内容末尾
+                        ta.selectionStart = ta.selectionEnd = s + result.length;
                     }
+
+                    // 手动触发 input 事件（直接改 value 不会自动触发）
+                    ta.dispatchEvent(new Event('input', { bubbles: true }));
+
+                } catch(err) {
+                    console.error('insertMD error:', err);
+                    alert('工具栏操作失败: ' + err.message);
                 }
-            } catch(err) {
-                console.error('insertMD error:', err);
-            }
+            });
         }
 
         // 图片上传并插入 base64
@@ -1008,7 +1002,10 @@
                     var mdImg = '\n![' + filename + '](' + result.url + ')\n';
                     var ta = document.getElementById('article-content-md');
                     ta.focus();
-                    _execInsert(ta, mdImg);
+                    var pos = ta.selectionStart;
+                    ta.value = ta.value.substring(0, pos) + mdImg + ta.value.substring(ta.selectionEnd);
+                    ta.selectionStart = ta.selectionEnd = pos + mdImg.length;
+                    ta.dispatchEvent(new Event('input', { bubbles: true }));
                 } else {
                     alert('图片上传失败');
                 }
