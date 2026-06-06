@@ -421,8 +421,22 @@
                 </div>
                 <div class="form-group"><label>作者</label><input type="text" id="article-author" value="Admin"></div>
                 <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="article-tags"></div>
-                <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" id="article-published" checked onchange="toggleScheduleField()"> 发布</label></div>
-                <div class="form-group hidden" id="schedule-group"><label>定时发布</label><input type="datetime-local" id="article-scheduled"><p class="form-hint">设置后文章将在指定时间自动发布，留空表示不定时</p></div>
+                <div class="form-group"><label>发布方式</label>
+                    <div style="display:flex;gap:1.5rem;margin-top:0.3rem;">
+                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-weight:normal;">
+                            <input type="radio" name="publish-mode" value="publish" checked onchange="onPublishModeChange()"> 立即发布
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-weight:normal;">
+                            <input type="radio" name="publish-mode" value="draft" onchange="onPublishModeChange()"> 存为草稿
+                        </label>
+                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-weight:normal;">
+                            <input type="radio" name="publish-mode" value="schedule" onchange="onPublishModeChange()"> 定时发布
+                        </label>
+                    </div>
+                    <div id="schedule-datetime" style="margin-top:0.5rem;display:none;">
+                        <input type="datetime-local" id="article-scheduled">
+                    </div>
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeArticleEditor()">取消</button>
                     <button type="submit" class="btn btn-primary">保存</button>
@@ -805,10 +819,9 @@
             document.getElementById('article-modal').classList.add('active');
             document.getElementById('article-form').reset();
             document.getElementById('article-edit-id').value = '';
-            document.getElementById('article-published').checked = true;
             document.getElementById('article-preview').innerHTML = '';
             document.getElementById('article-modal-title').textContent = '写文章';
-            toggleScheduleField(); // 默认隐藏定时发布
+            setPublishMode('publish');
 
             if (id) {
                 // 编辑已有文章
@@ -822,18 +835,18 @@
                     document.getElementById('article-content-md').value = a.content_md || '';
                     document.getElementById('article-author').value = a.author || 'Admin';
                     document.getElementById('article-tags').value = a.tags || '';
-                    document.getElementById('article-published').checked = !!a.is_published;
-                    // 定时发布：将 UTC 时间转为本地 datetime-local 格式
+                    // 设置发布方式
                     if (a.scheduled_at) {
                         var d = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
                         var pad = function(n) { return n < 10 ? '0' + n : n; };
                         document.getElementById('article-scheduled').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+                        setPublishMode('schedule');
+                    } else if (a.is_published) {
+                        setPublishMode('publish');
                     } else {
-                        document.getElementById('article-scheduled').value = '';
+                        setPublishMode('draft');
                     }
-                    toggleScheduleField();
                     updateArticlePreview();
-                    // 自动聚焦到编辑器
                     document.getElementById('article-content-md').focus();
                 });
             } else {
@@ -861,15 +874,28 @@
             console.log('Preview:', document.getElementById('article-preview').innerHTML.substring(0, 100));
         };
 
-        function toggleScheduleField() {
-            var published = document.getElementById('article-published').checked;
-            document.getElementById('schedule-group').classList.toggle('hidden', published);
-            if (published) document.getElementById('article-scheduled').value = '';
+        function onPublishModeChange() {
+            var mode = document.querySelector('input[name="publish-mode"]:checked').value;
+            document.getElementById('schedule-datetime').style.display = mode === 'schedule' ? 'block' : 'none';
+            if (mode !== 'schedule') document.getElementById('article-scheduled').value = '';
+        }
+
+        function getPublishMode() {
+            return document.querySelector('input[name="publish-mode"]:checked').value;
+        }
+
+        function setPublishMode(mode) {
+            var radios = document.querySelectorAll('input[name="publish-mode"]');
+            for (var i = 0; i < radios.length; i++) {
+                radios[i].checked = radios[i].value === mode;
+            }
+            onPublishModeChange();
         }
 
         async function saveArticle(e) {
             e.preventDefault();
             var id = document.getElementById('article-edit-id').value;
+            var mode = getPublishMode();
             var scheduledVal = document.getElementById('article-scheduled').value;
             var body = {
                 title: document.getElementById('article-title').value.trim(),
@@ -879,8 +905,8 @@
                 content_md: document.getElementById('article-content-md').value,
                 author: document.getElementById('article-author').value.trim(),
                 tags: document.getElementById('article-tags').value.trim(),
-                is_published: document.getElementById('article-published').checked,
-                scheduled_at: scheduledVal || null
+                is_published: mode === 'publish' ? 1 : 0,
+                scheduled_at: mode === 'schedule' && scheduledVal ? scheduledVal : null
             };
             var url = id ? '/api/articles/' + id : '/api/articles';
             var res = await fetch(url, {
@@ -1110,8 +1136,8 @@
         }
 
         function autoSave() {
+            var mode = getPublishMode();
             var data = {
-                editId: document.getElementById('article-edit-id').value,
                 title: document.getElementById('article-title').value,
                 slug: document.getElementById('article-slug').value,
                 summary: document.getElementById('article-summary').value,
@@ -1119,7 +1145,7 @@
                 content: document.getElementById('article-content-md').value,
                 author: document.getElementById('article-author').value,
                 tags: document.getElementById('article-tags').value,
-                published: document.getElementById('article-published').checked,
+                published: mode === 'publish',
                 scheduled: document.getElementById('article-scheduled').value,
                 ts: Date.now()
             };
@@ -1145,7 +1171,8 @@
 
         function restoreDraft(draft) {
             if (!draft) return;
-            document.getElementById('article-edit-id').value = draft.editId || '';
+            // 不恢复 editId，避免新建文章时误更新旧文章
+            document.getElementById('article-edit-id').value = '';
             document.getElementById('article-title').value = draft.title || '';
             document.getElementById('article-slug').value = draft.slug || '';
             document.getElementById('article-summary').value = draft.summary || '';
@@ -1153,9 +1180,14 @@
             document.getElementById('article-content-md').value = draft.content || '';
             document.getElementById('article-author').value = draft.author || 'Admin';
             document.getElementById('article-tags').value = draft.tags || '';
-            document.getElementById('article-published').checked = draft.published !== false;
-            document.getElementById('article-scheduled').value = draft.scheduled || '';
-            toggleScheduleField();
+            if (draft.scheduled) {
+                document.getElementById('article-scheduled').value = draft.scheduled;
+                setPublishMode('schedule');
+            } else if (draft.published === false) {
+                setPublishMode('draft');
+            } else {
+                setPublishMode('publish');
+            }
             document.getElementById('article-content-md').dispatchEvent(new Event('input', { bubbles: true }));
         }
 
@@ -1172,8 +1204,11 @@
                     el.addEventListener('input', scheduleAutoSave);
                 }
             });
-            var cb = document.getElementById('article-published');
-            if (cb) cb.addEventListener('change', scheduleAutoSave);
+            // 监听发布方式单选按钮
+            var radios = document.querySelectorAll('input[name="publish-mode"]');
+            for (var i = 0; i < radios.length; i++) {
+                radios[i].addEventListener('change', scheduleAutoSave);
+            }
         }
 
         // 导入 .md 文件
