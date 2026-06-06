@@ -813,17 +813,10 @@
                     document.getElementById('article-content-md').focus();
                 });
             } else {
-                // 新建文章：检查是否有未保存的草稿
+                // 新建文章：自动恢复未保存的草稿
                 var draft = loadDraft();
-                if (draft && draft.content && draft.ts) {
-                    var age = Date.now() - draft.ts;
-                    var mins = Math.floor(age / 60000);
-                    var ageText = mins < 1 ? '刚才' : mins < 60 ? mins + ' 分钟前' : Math.floor(mins / 60) + ' 小时前';
-                    if (confirm('发现 ' + ageText + ' 的未保存草稿，是否恢复？')) {
-                        restoreDraft(draft);
-                    } else {
-                        clearDraft();
-                    }
+                if (draft && draft.content) {
+                    restoreDraft(draft);
                 }
             }
         }
@@ -1081,7 +1074,7 @@
 
         function scheduleAutoSave() {
             clearTimeout(_autoSaveTimer);
-            _autoSaveTimer = setTimeout(autoSave, 2000);
+            _autoSaveTimer = setTimeout(autoSave, 300);
         }
 
         function autoSave() {
