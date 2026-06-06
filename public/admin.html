@@ -171,6 +171,29 @@
         .md-btn:hover { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); }
         .md-btn:active { transform: scale(0.95); background: var(--color-primary-light); border-color: var(--color-primary); }
         .md-upload { display: inline-flex; align-items: center; gap: 0.2rem; }
+        /* 发布方式选择 */
+        .publish-mode-group { display: flex; gap: 0; margin-top: 0.4rem; background: var(--color-bg); border-radius: var(--radius-sm); border: 1px solid var(--color-border); overflow: hidden; width: fit-content; }
+        .publish-mode-option { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; font-weight: normal; font-size: 0.82rem; padding: 0.4rem 0.8rem; border-right: 1px solid var(--color-border); transition: background 0.15s; color: var(--color-text-secondary); }
+        .publish-mode-option:last-child { border-right: none; }
+        .publish-mode-option:hover { background: var(--color-primary-light); }
+        .publish-mode-option input[type="radio"] { display: none; }
+        .publish-mode-option.active { background: var(--color-primary); color: var(--color-text-inverse); }
+        .schedule-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+        .schedule-row input[type="datetime-local"] { flex: 1; padding: 0.4rem 0.6rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.85rem; background: var(--color-bg); color: var(--color-text); }
+        /* 文章板块 */
+        .article-section { margin-bottom: 2rem; }
+        .article-section-title { font-size: 0.8rem; font-weight: 600; color: var(--color-text-secondary); letter-spacing: 0.06em; margin-bottom: 0.6rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 0.5rem; }
+        .article-section-title .count { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 10px; padding: 0.1rem 0.5rem; font-size: 0.72rem; font-weight: normal; color: var(--color-text-muted); }
+        .empty-hint { text-align: center; color: var(--color-text-placeholder); padding: 1.5rem; font-size: 0.85rem; }
+        .status-tag { font-size: 0.78rem; white-space: nowrap; }
+        .status-published { color: #48bb78; }
+        .status-scheduled { color: #ed8936; }
+        .status-draft { color: #a0aec0; }
+        .data-table .actions { white-space: nowrap; }
+        .data-table .actions .btn { margin-right: 0.3rem; }
+        .data-table .actions .btn:last-child { margin-right: 0; }
+        /* 工具栏按钮组 */
+        .toolbar .btn { font-size: 0.85rem; }
         /* 编辑器分栏布局 */
         .editor-split { display: flex; gap: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; min-height: 320px; }
         .editor-split .editor-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
@@ -361,10 +384,7 @@
         <div class="toolbar">
             <button class="btn btn-primary" onclick="openArticleEditor()">+ 写文章</button>
         </div>
-        <table class="data-table">
-            <thead><tr><th>标题</th><th>作者</th><th>状态</th><th>标签</th><th>日期</th><th style="width:140px;">操作</th></tr></thead>
-            <tbody id="article-table-body"></tbody>
-        </table>
+        <div id="article-list-area"></div>
     </div>
 
     <!-- 文章编辑模态框 -->
@@ -422,24 +442,19 @@
                 <div class="form-group"><label>作者</label><input type="text" id="article-author" value="Admin"></div>
                 <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="article-tags"></div>
                 <div class="form-group"><label>发布方式</label>
-                    <div style="display:flex;gap:1.5rem;margin-top:0.3rem;">
-                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-weight:normal;">
-                            <input type="radio" name="publish-mode" value="publish" checked onchange="onPublishModeChange()"> 立即发布
-                        </label>
-                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-weight:normal;">
-                            <input type="radio" name="publish-mode" value="draft" onchange="onPublishModeChange()"> 存为草稿
-                        </label>
-                        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-weight:normal;">
-                            <input type="radio" name="publish-mode" value="schedule" onchange="onPublishModeChange()"> 定时发布
-                        </label>
+                    <div class="publish-mode-group">
+                        <label class="publish-mode-option"><input type="radio" name="publish-mode" value="publish" checked onchange="onPublishModeChange()"> 立即发布</label>
+                        <label class="publish-mode-option"><input type="radio" name="publish-mode" value="draft" onchange="onPublishModeChange()"> 保存为草稿</label>
+                        <label class="publish-mode-option"><input type="radio" name="publish-mode" value="schedule" onchange="onPublishModeChange()"> 定时发布</label>
                     </div>
-                    <div id="schedule-datetime" style="margin-top:0.5rem;display:none;">
+                    <div id="schedule-datetime" class="schedule-row" style="display:none;">
                         <input type="datetime-local" id="article-scheduled">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSchedule()">确认定时</button>
                     </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeArticleEditor()">取消</button>
-                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">保存</button>
                 </div>
             </form>
         </div>
@@ -783,36 +798,84 @@
             try {
                 var res = await fetch('/api/articles?all=1');
                 var data = await res.json();
-                renderArticleTable(data.articles || []);
+                renderArticleList(data.articles || []);
             } catch(e) {
-                document.getElementById('article-table-body').innerHTML = '<tr><td colspan="6" style="text-align:center">加载失败</td></tr>';
+                document.getElementById('article-list-area').innerHTML = '<p style="text-align:center;color:var(--color-danger);padding:2rem;">加载失败</p>';
             }
         }
 
-        function renderArticleTable(articles) {
-            var tbody = document.getElementById('article-table-body');
+        function isArticlePublished(a) {
+            if (a.scheduled_at) {
+                var sd = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
+                return sd <= new Date() ? true : false;
+            }
+            return !!a.is_published;
+        }
+
+        function isArticleScheduled(a) {
+            if (!a.scheduled_at) return false;
+            var sd = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
+            return sd > new Date();
+        }
+
+        function formatArticleStatus(a) {
+            if (isArticleScheduled(a)) {
+                var sd = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
+                return '<span class="status-tag status-scheduled">⏰ ' + sd.toLocaleDateString('zh-CN') + ' ' + sd.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+            }
+            if (a.is_published) return '<span class="status-tag status-published">● 已发布</span>';
+            return '<span class="status-tag status-draft">○ 草稿</span>';
+        }
+
+        function buildArticleRow(a) {
+            var time = (a.created_at || '').slice(0, 10);
+            return '<tr><td><strong>' + escapeHtml(a.title) + '</strong></td><td>' + escapeHtml(a.author) + '</td><td>' + formatArticleStatus(a) + '</td><td>' + escapeHtml(a.tags||'') + '</td><td>' + time + '</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editArticle(' + a.id + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteArticle(' + a.id + ')">删除</button></td></tr>';
+        }
+
+        function renderArticleList(articles) {
+            var area = document.getElementById('article-list-area');
             if (!articles.length) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--color-text-placeholder);padding:2rem;">暂无文章</td></tr>';
+                area.innerHTML = '<p style="text-align:center;color:var(--color-text-placeholder);padding:2rem;">暂无文章，点击上方按钮写一篇</p>';
                 return;
             }
-            tbody.innerHTML = articles.map(function(a) {
-                var time = (a.created_at || '').slice(0, 10);
-                var status;
-                if (a.scheduled_at) {
-                    var sd = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
-                    var now = new Date();
-                    if (sd > now) {
-                        status = '<span style="color:#ed8936;">⏰ ' + sd.toLocaleDateString('zh-CN') + ' ' + sd.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}) + '</span>';
-                    } else {
-                        status = '<span style="color:#48bb78;">● 已发布</span>';
-                    }
-                } else if (a.is_published) {
-                    status = '<span style="color:#48bb78;">● 已发布</span>';
+
+            var published = [], drafts = [];
+            for (var i = 0; i < articles.length; i++) {
+                if (isArticlePublished(articles[i]) || isArticleScheduled(articles[i])) {
+                    published.push(articles[i]);
                 } else {
-                    status = '<span style="color:#a0aec0;">○ 草稿</span>';
+                    drafts.push(articles[i]);
                 }
-                return '<tr><td><strong>' + escapeHtml(a.title) + '</strong></td><td>' + escapeHtml(a.author) + '</td><td>' + status + '</td><td>' + escapeHtml(a.tags||'') + '</td><td>' + time + '</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editArticle(' + a.id + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteArticle(' + a.id + ')">删除</button></td></tr>';
-            }).join('');
+            }
+
+            var html = '';
+            var thead = '<thead><tr><th>标题</th><th>作者</th><th>状态</th><th>标签</th><th>日期</th><th style="width:140px;">操作</th></tr></thead>';
+
+            // 已发布 + 定时发布
+            html += '<div class="article-section"><div class="article-section-title">已发布 <span class="count">' + published.length + '</span></div>';
+            if (published.length) {
+                html += '<table class="data-table">' + thead + '<tbody>' + published.map(buildArticleRow).join('') + '</tbody></table>';
+            } else {
+                html += '<p class="empty-hint">暂无已发布文章</p>';
+            }
+            html += '</div>';
+
+            // 草稿
+            html += '<div class="article-section"><div class="article-section-title">草稿 <span class="count">' + drafts.length + '</span></div>';
+            if (drafts.length) {
+                html += '<table class="data-table">' + thead + '<tbody>' + drafts.map(buildArticleRow).join('') + '</tbody></table>';
+            } else {
+                html += '<p class="empty-hint">暂无草稿</p>';
+            }
+            html += '</div>';
+
+            area.innerHTML = html;
+        }
+
+        function confirmSchedule() {
+            var scheduledVal = document.getElementById('article-scheduled').value;
+            if (!scheduledVal) { alert('请先选择发布时间'); return; }
+            document.getElementById('article-form').requestSubmit();
         }
 
         function openArticleEditor(id) {
@@ -865,17 +928,13 @@
             if (content) scheduleAutoSave();
         }
 
-        // 控制台调试：testMD('bold') 验证命令是否正常工作
-        window.testMD = function(type) {
-            var ta = document.getElementById('article-content-md');
-            console.log('Before:', JSON.stringify(ta.value), 'sel:', ta.selectionStart, '-', ta.selectionEnd);
-            insertMD(type);
-            console.log('After:', JSON.stringify(ta.value), 'sel:', ta.selectionStart, '-', ta.selectionEnd);
-            console.log('Preview:', document.getElementById('article-preview').innerHTML.substring(0, 100));
-        };
-
         function onPublishModeChange() {
-            var mode = document.querySelector('input[name="publish-mode"]:checked').value;
+            var radios = document.querySelectorAll('input[name="publish-mode"]');
+            var mode = '';
+            for (var i = 0; i < radios.length; i++) {
+                radios[i].closest('.publish-mode-option').classList.toggle('active', radios[i].checked);
+                if (radios[i].checked) mode = radios[i].value;
+            }
             document.getElementById('schedule-datetime').style.display = mode === 'schedule' ? 'block' : 'none';
             if (mode !== 'schedule') document.getElementById('article-scheduled').value = '';
         }
@@ -888,6 +947,7 @@
             var radios = document.querySelectorAll('input[name="publish-mode"]');
             for (var i = 0; i < radios.length; i++) {
                 radios[i].checked = radios[i].value === mode;
+                radios[i].closest('.publish-mode-option').classList.toggle('active', radios[i].value === mode);
             }
             onPublishModeChange();
         }
