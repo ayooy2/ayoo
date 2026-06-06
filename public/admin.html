@@ -901,6 +901,44 @@
             hr:         { before: '\n---\n', after: '',         ph: '',           block: true }
         };
 
+        // ── 撤销栈：解决直接设 ta.value 不进浏览器撤销栈的问题 ──
+        var _undoStack = [];
+        var _redoStack = [];
+        var _lastSavedValue = null;
+
+        function _saveUndoState(ta) {
+            var current = ta.value;
+            // 避免重复保存相同内容
+            if (current === _lastSavedValue) return;
+            _undoStack.push({ value: current, selStart: ta.selectionStart, selEnd: ta.selectionEnd });
+            if (_undoStack.length > 50) _undoStack.shift(); // 最多 50 步
+            _redoStack = []; // 新操作清空 redo 栈
+            _lastSavedValue = current;
+        }
+
+        function _undo(ta) {
+            if (!_undoStack.length) return;
+            // 保存当前状态到 redo 栈
+            _redoStack.push({ value: ta.value, selStart: ta.selectionStart, selEnd: ta.selectionEnd });
+            var state = _undoStack.pop();
+            ta.value = state.value;
+            ta.selectionStart = state.selStart;
+            ta.selectionEnd = state.selEnd;
+            _lastSavedValue = state.value;
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function _redo(ta) {
+            if (!_redoStack.length) return;
+            _undoStack.push({ value: ta.value, selStart: ta.selectionStart, selEnd: ta.selectionEnd });
+            var state = _redoStack.pop();
+            ta.value = state.value;
+            ta.selectionStart = state.selStart;
+            ta.selectionEnd = state.selEnd;
+            _lastSavedValue = state.value;
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
         function insertMD(type) {
             var cmd = MD_CMDS[type];
             if (!cmd) { console.warn('Unknown MD command:', type); return; }
@@ -939,6 +977,9 @@
                         // ── inline 级命令（加粗/斜体/代码/链接等）──
                         result = cmd.before + text + cmd.after;
                     }
+
+                    // 保存撤销状态
+                    _saveUndoState(ta);
 
                     // 直接拼接 value（比 setRangeText 跨浏览器兼容性更好）
                     var newVal = val.substring(0, s) + result + val.substring(e);
@@ -1002,6 +1043,7 @@
                     var mdImg = '\n![' + filename + '](' + result.url + ')\n';
                     var ta = document.getElementById('article-content-md');
                     ta.focus();
+                    _saveUndoState(ta);
                     var pos = ta.selectionStart;
                     ta.value = ta.value.substring(0, pos) + mdImg + ta.value.substring(ta.selectionEnd);
                     ta.selectionStart = ta.selectionEnd = pos + mdImg.length;
@@ -1133,17 +1175,27 @@
 
         // textarea 输入监听（合并到 bindAutoSaveListeners 统一管理，避免重复绑定）
 
-        // 键盘快捷键（只在编辑器打开且焦点在 textarea 时生效）
+        // 键盘快捷键（只在编辑器打开时生效）
         document.addEventListener('keydown', function(e) {
             if (!document.getElementById('article-modal').classList.contains('active')) return;
             var mod = e.ctrlKey || e.metaKey;
             if (!mod) return;
             var k = e.key.toLowerCase();
-            if (k === 'b') { e.preventDefault(); insertMD('bold'); }
+            if (k === 'z' && !e.shiftKey) {
+                // Ctrl+Z：撤销（用自定义栈覆盖浏览器原生行为）
+                e.preventDefault();
+                var ta = document.getElementById('article-content-md');
+                if (ta && document.activeElement === ta) _undo(ta);
+            } else if ((k === 'z' && e.shiftKey) || k === 'y') {
+                // Ctrl+Shift+Z 或 Ctrl+Y：重做
+                e.preventDefault();
+                var ta = document.getElementById('article-content-md');
+                if (ta && document.activeElement === ta) _redo(ta);
+            } else if (k === 'b') { e.preventDefault(); insertMD('bold'); }
             else if (k === 'i') { e.preventDefault(); insertMD('italic'); }
             else if (k === 'd') { e.preventDefault(); insertMD('code'); }
-            else if (k === 's') { e.preventDefault(); document.getElementById('article-form').requestSubmit(); }
             else if (k === 'k') { e.preventDefault(); insertMD('link'); }
+            else if (k === 's') { e.preventDefault(); document.getElementById('article-form').requestSubmit(); }
         });
 
         bindAutoSaveListeners();
