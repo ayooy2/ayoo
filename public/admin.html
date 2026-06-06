@@ -171,15 +171,18 @@
         .md-btn:hover { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); }
         .md-btn:active { transform: scale(0.95); background: var(--color-primary-light); border-color: var(--color-primary); }
         .md-upload { display: inline-flex; align-items: center; gap: 0.2rem; }
-        /* 发布方式选择 */
-        .publish-mode-group { display: flex; gap: 0; margin-top: 0.4rem; background: var(--color-bg); border-radius: var(--radius-sm); border: 1px solid var(--color-border); overflow: hidden; width: fit-content; }
-        .publish-mode-option { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; font-weight: normal; font-size: 0.82rem; padding: 0.4rem 0.8rem; border-right: 1px solid var(--color-border); transition: background 0.15s; color: var(--color-text-secondary); }
-        .publish-mode-option:last-child { border-right: none; }
-        .publish-mode-option:hover { background: var(--color-primary-light); }
-        .publish-mode-option input[type="radio"] { display: none; }
-        .publish-mode-option.active { background: var(--color-primary); color: var(--color-text-inverse); }
+        /* 发布方式按钮 */
+        .publish-actions { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+        .pub-btn { flex: 1; padding: 0.65rem 1rem; border: 2px solid; border-radius: var(--radius-sm); background: var(--color-surface); cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; text-align: center; }
+        .pub-btn-publish { color: #48bb78; border-color: #48bb78; }
+        .pub-btn-publish:hover { background: #48bb78; color: #fff; }
+        .pub-btn-draft { color: #a0aec0; border-color: #a0aec0; }
+        .pub-btn-draft:hover { background: #a0aec0; color: #fff; }
+        .pub-btn-schedule { color: #ed8936; border-color: #ed8936; }
+        .pub-btn-schedule:hover { background: #ed8936; color: #fff; }
+        .pub-btn:active { transform: scale(0.97); }
         .schedule-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
-        .schedule-row input[type="datetime-local"] { flex: 1; padding: 0.4rem 0.6rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.85rem; background: var(--color-bg); color: var(--color-text); }
+        .schedule-row input[type="datetime-local"] { flex: 1; padding: 0.45rem 0.7rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.85rem; background: var(--color-bg); color: var(--color-text); }
         /* 文章板块切换 */
         .article-tabs { display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 2px solid var(--color-border); }
         .article-tab { padding: 0.5rem 1.2rem; border: none; background: none; cursor: pointer; font-size: 0.85rem; color: var(--color-text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; display: flex; align-items: center; gap: 0.4rem; }
@@ -394,7 +397,7 @@
     <div class="modal-overlay" id="article-modal">
         <div class="modal" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto;">
             <h2 id="article-modal-title">写文章</h2>
-            <form id="article-form" onsubmit="saveArticle(event)">
+            <form id="article-form" onsubmit="return false">
                 <input type="hidden" id="article-edit-id">
                 <div class="form-group"><label>标题 *</label><input type="text" id="article-title" required></div>
                 <div class="form-group"><label>Slug（URL 标识，留空自动生成）</label><input type="text" id="article-slug"></div>
@@ -445,19 +448,18 @@
                 <div class="form-group"><label>作者</label><input type="text" id="article-author" value="Admin"></div>
                 <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="article-tags"></div>
                 <div class="form-group"><label>发布方式</label>
-                    <div class="publish-mode-group">
-                        <label class="publish-mode-option"><input type="radio" name="publish-mode" value="publish" checked onchange="onPublishModeChange()"> 立即发布</label>
-                        <label class="publish-mode-option"><input type="radio" name="publish-mode" value="draft" onchange="onPublishModeChange()"> 保存为草稿</label>
-                        <label class="publish-mode-option"><input type="radio" name="publish-mode" value="schedule" onchange="onPublishModeChange()"> 定时发布</label>
+                    <div class="publish-actions">
+                        <button type="button" class="pub-btn pub-btn-publish" onclick="doPublish('publish')">立即发布</button>
+                        <button type="button" class="pub-btn pub-btn-draft" onclick="doPublish('draft')">保存为草稿</button>
+                        <button type="button" class="pub-btn pub-btn-schedule" onclick="toggleSchedule()">定时发布</button>
                     </div>
                     <div id="schedule-datetime" class="schedule-row" style="display:none;">
                         <input type="datetime-local" id="article-scheduled">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="confirmSchedule()">确认定时</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="doPublish('schedule')">确认定时</button>
                     </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeArticleEditor()">取消</button>
-                    <button type="submit" class="btn btn-primary" id="submit-btn">保存</button>
                 </div>
             </form>
         </div>
@@ -882,11 +884,6 @@
             container.innerHTML = '<table class="data-table">' + thead + '<tbody>' + list.map(buildArticleRow).join('') + '</tbody></table>';
         }
 
-        function confirmSchedule() {
-            var scheduledVal = document.getElementById('article-scheduled').value;
-            if (!scheduledVal) { alert('请先选择发布时间'); return; }
-            document.getElementById('article-form').requestSubmit();
-        }
 
         function openArticleEditor(id) {
             document.getElementById('article-modal').classList.add('active');
@@ -894,10 +891,11 @@
             document.getElementById('article-edit-id').value = '';
             document.getElementById('article-preview').innerHTML = '';
             document.getElementById('article-modal-title').textContent = '写文章';
-            setPublishMode('publish');
+            document.getElementById('schedule-datetime').style.display = 'none';
+            // 清空撤销栈
+            _undoStack = []; _redoStack = []; _lastSavedValue = null;
 
             if (id) {
-                // 编辑已有文章
                 document.getElementById('article-modal-title').textContent = '编辑文章';
                 fetch('/api/articles/' + id).then(function(r){return r.json();}).then(function(a){
                     document.getElementById('article-edit-id').value = a.id;
@@ -908,22 +906,15 @@
                     document.getElementById('article-content-md').value = a.content_md || '';
                     document.getElementById('article-author').value = a.author || 'Admin';
                     document.getElementById('article-tags').value = a.tags || '';
-                    // 设置发布方式
                     if (a.scheduled_at) {
                         var d = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
                         var pad = function(n) { return n < 10 ? '0' + n : n; };
                         document.getElementById('article-scheduled').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-                        setPublishMode('schedule');
-                    } else if (a.is_published) {
-                        setPublishMode('publish');
-                    } else {
-                        setPublishMode('draft');
                     }
                     updateArticlePreview();
                     document.getElementById('article-content-md').focus();
                 });
             } else {
-                // 新建文章：自动恢复未保存的草稿
                 var draft = loadDraft();
                 if (draft && draft.content) {
                     restoreDraft(draft);
@@ -938,37 +929,20 @@
             if (content) scheduleAutoSave();
         }
 
-        function onPublishModeChange() {
-            var radios = document.querySelectorAll('input[name="publish-mode"]');
-            var mode = '';
-            for (var i = 0; i < radios.length; i++) {
-                radios[i].closest('.publish-mode-option').classList.toggle('active', radios[i].checked);
-                if (radios[i].checked) mode = radios[i].value;
-            }
-            document.getElementById('schedule-datetime').style.display = mode === 'schedule' ? 'block' : 'none';
-            if (mode !== 'schedule') document.getElementById('article-scheduled').value = '';
+        function toggleSchedule() {
+            var el = document.getElementById('schedule-datetime');
+            el.style.display = el.style.display === 'none' ? 'flex' : 'none';
         }
 
-        function getPublishMode() {
-            return document.querySelector('input[name="publish-mode"]:checked').value;
-        }
-
-        function setPublishMode(mode) {
-            var radios = document.querySelectorAll('input[name="publish-mode"]');
-            for (var i = 0; i < radios.length; i++) {
-                radios[i].checked = radios[i].value === mode;
-                radios[i].closest('.publish-mode-option').classList.toggle('active', radios[i].value === mode);
-            }
-            onPublishModeChange();
-        }
-
-        async function saveArticle(e) {
-            e.preventDefault();
+        async function doPublish(mode) {
+            var title = document.getElementById('article-title').value.trim();
+            if (!title) { alert('请填写标题'); return; }
             var id = document.getElementById('article-edit-id').value;
-            var mode = getPublishMode();
             var scheduledVal = document.getElementById('article-scheduled').value;
+            if (mode === 'schedule' && !scheduledVal) { alert('请选择定时发布时间'); return; }
+
             var body = {
-                title: document.getElementById('article-title').value.trim(),
+                title: title,
                 slug: document.getElementById('article-slug').value.trim(),
                 summary: document.getElementById('article-summary').value.trim(),
                 cover_image: document.getElementById('article-cover').value.trim(),
@@ -976,8 +950,9 @@
                 author: document.getElementById('article-author').value.trim(),
                 tags: document.getElementById('article-tags').value.trim(),
                 is_published: mode === 'publish' ? 1 : 0,
-                scheduled_at: mode === 'schedule' && scheduledVal ? scheduledVal : null
+                scheduled_at: mode === 'schedule' ? scheduledVal : null
             };
+
             var url = id ? '/api/articles/' + id : '/api/articles';
             var res = await fetch(url, {
                 method: id ? 'PUT' : 'POST',
@@ -986,7 +961,7 @@
             });
             if (res.ok) { clearDraft(); closeArticleEditor(); loadArticles(); }
             else if (res.status === 401) { alert('登录已过期'); logout(); }
-            else { alert('保存失败: ' + ((await res.json()).error || '')); }
+            else { alert('操作失败: ' + ((await res.json()).error || '')); }
         }
 
         async function deleteArticle(id) {
@@ -1206,7 +1181,6 @@
         }
 
         function autoSave() {
-            var mode = getPublishMode();
             var data = {
                 title: document.getElementById('article-title').value,
                 slug: document.getElementById('article-slug').value,
@@ -1215,7 +1189,6 @@
                 content: document.getElementById('article-content-md').value,
                 author: document.getElementById('article-author').value,
                 tags: document.getElementById('article-tags').value,
-                published: mode === 'publish',
                 scheduled: document.getElementById('article-scheduled').value,
                 ts: Date.now()
             };
@@ -1252,11 +1225,6 @@
             document.getElementById('article-tags').value = draft.tags || '';
             if (draft.scheduled) {
                 document.getElementById('article-scheduled').value = draft.scheduled;
-                setPublishMode('schedule');
-            } else if (draft.published === false) {
-                setPublishMode('draft');
-            } else {
-                setPublishMode('publish');
             }
             document.getElementById('article-content-md').dispatchEvent(new Event('input', { bubbles: true }));
         }
@@ -1274,11 +1242,6 @@
                     el.addEventListener('input', scheduleAutoSave);
                 }
             });
-            // 监听发布方式单选按钮
-            var radios = document.querySelectorAll('input[name="publish-mode"]');
-            for (var i = 0; i < radios.length; i++) {
-                radios[i].addEventListener('change', scheduleAutoSave);
-            }
         }
 
         // 导入 .md 文件
