@@ -31,7 +31,7 @@ export async function onRequest(context) {
 async function getArticle(env, id, slug) {
   let result;
   if (slug && slug !== 'undefined') {
-    result = await env.DB.prepare('SELECT * FROM articles WHERE slug = ? AND is_published = 1').bind(slug).first();
+    result = await env.DB.prepare("SELECT * FROM articles WHERE slug = ? AND is_published = 1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))").bind(slug).first();
   } else if (id && id !== 'new') {
     result = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
   }
@@ -55,10 +55,11 @@ async function updateArticle(env, id, data) {
   const author = (data.author || 'Admin').trim();
   const tags = (data.tags || '').trim();
   const is_published = data.is_published !== undefined ? (data.is_published ? 1 : 0) : existing.is_published;
+  const scheduled_at = data.scheduled_at !== undefined ? data.scheduled_at : existing.scheduled_at;
 
   const result = await env.DB.prepare(
-    `UPDATE articles SET title=?, slug=?, content_md=?, summary=?, cover_image=?, author=?, tags=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=? RETURNING *`
-  ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, id).first();
+    `UPDATE articles SET title=?, slug=?, content_md=?, summary=?, cover_image=?, author=?, tags=?, is_published=?, scheduled_at=?, updated_at=CURRENT_TIMESTAMP WHERE id=? RETURNING *`
+  ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at, id).first();
 
   return json(result);
 }

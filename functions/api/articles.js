@@ -27,12 +27,14 @@ async function listArticles(env, params) {
   const offset = (page - 1) * limit;
   const publishedOnly = params.get('all') !== '1';
 
-  let where = publishedOnly ? 'WHERE is_published = 1' : '';
+  let where = publishedOnly
+    ? "WHERE is_published = 1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))"
+    : '';
   const countResult = await env.DB.prepare(`SELECT COUNT(*) as total FROM articles ${where}`).first();
   const total = countResult.total;
 
   const { results } = await env.DB.prepare(
-    `SELECT id, title, slug, summary, cover_image, author, tags, is_published, created_at, updated_at FROM articles ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+    `SELECT id, title, slug, summary, cover_image, author, tags, is_published, scheduled_at, created_at, updated_at FROM articles ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
   ).bind(limit, offset).all();
 
   for (const row of results || []) {
@@ -60,10 +62,11 @@ async function createArticle(env, data) {
   const author = (data.author || 'Admin').trim();
   const tags = (data.tags || '').trim();
   const is_published = data.is_published ? 1 : 0;
+  const scheduled_at = data.scheduled_at || null;
 
   const result = await env.DB.prepare(
-    'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
-  ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published).first();
+    'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
+  ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at).first();
 
   return json(result, 201);
 }

@@ -421,7 +421,8 @@
                 </div>
                 <div class="form-group"><label>作者</label><input type="text" id="article-author" value="Admin"></div>
                 <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="article-tags"></div>
-                <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" id="article-published" checked> 发布</label></div>
+                <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;"><input type="checkbox" id="article-published" checked onchange="toggleScheduleField()"> 发布</label></div>
+                <div class="form-group hidden" id="schedule-group"><label>定时发布</label><input type="datetime-local" id="article-scheduled"><p class="form-hint">设置后文章将在指定时间自动发布，留空表示不定时</p></div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeArticleEditor()">取消</button>
                     <button type="submit" class="btn btn-primary">保存</button>
@@ -782,7 +783,20 @@
             }
             tbody.innerHTML = articles.map(function(a) {
                 var time = (a.created_at || '').slice(0, 10);
-                var status = a.is_published ? '<span style="color:#48bb78;">● 已发布</span>' : '<span style="color:#a0aec0;">○ 草稿</span>';
+                var status;
+                if (a.scheduled_at) {
+                    var sd = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
+                    var now = new Date();
+                    if (sd > now) {
+                        status = '<span style="color:#ed8936;">⏰ ' + sd.toLocaleDateString('zh-CN') + ' ' + sd.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+                    } else {
+                        status = '<span style="color:#48bb78;">● 已发布</span>';
+                    }
+                } else if (a.is_published) {
+                    status = '<span style="color:#48bb78;">● 已发布</span>';
+                } else {
+                    status = '<span style="color:#a0aec0;">○ 草稿</span>';
+                }
                 return '<tr><td><strong>' + escapeHtml(a.title) + '</strong></td><td>' + escapeHtml(a.author) + '</td><td>' + status + '</td><td>' + escapeHtml(a.tags||'') + '</td><td>' + time + '</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editArticle(' + a.id + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteArticle(' + a.id + ')">删除</button></td></tr>';
             }).join('');
         }
@@ -794,6 +808,7 @@
             document.getElementById('article-published').checked = true;
             document.getElementById('article-preview').innerHTML = '';
             document.getElementById('article-modal-title').textContent = '写文章';
+            toggleScheduleField(); // 默认隐藏定时发布
 
             if (id) {
                 // 编辑已有文章
@@ -808,6 +823,15 @@
                     document.getElementById('article-author').value = a.author || 'Admin';
                     document.getElementById('article-tags').value = a.tags || '';
                     document.getElementById('article-published').checked = !!a.is_published;
+                    // 定时发布：将 UTC 时间转为本地 datetime-local 格式
+                    if (a.scheduled_at) {
+                        var d = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
+                        var pad = function(n) { return n < 10 ? '0' + n : n; };
+                        document.getElementById('article-scheduled').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+                    } else {
+                        document.getElementById('article-scheduled').value = '';
+                    }
+                    toggleScheduleField();
                     updateArticlePreview();
                     // 自动聚焦到编辑器
                     document.getElementById('article-content-md').focus();
@@ -837,9 +861,16 @@
             console.log('Preview:', document.getElementById('article-preview').innerHTML.substring(0, 100));
         };
 
+        function toggleScheduleField() {
+            var published = document.getElementById('article-published').checked;
+            document.getElementById('schedule-group').classList.toggle('hidden', published);
+            if (published) document.getElementById('article-scheduled').value = '';
+        }
+
         async function saveArticle(e) {
             e.preventDefault();
             var id = document.getElementById('article-edit-id').value;
+            var scheduledVal = document.getElementById('article-scheduled').value;
             var body = {
                 title: document.getElementById('article-title').value.trim(),
                 slug: document.getElementById('article-slug').value.trim(),
@@ -848,7 +879,8 @@
                 content_md: document.getElementById('article-content-md').value,
                 author: document.getElementById('article-author').value.trim(),
                 tags: document.getElementById('article-tags').value.trim(),
-                is_published: document.getElementById('article-published').checked
+                is_published: document.getElementById('article-published').checked,
+                scheduled_at: scheduledVal || null
             };
             var url = id ? '/api/articles/' + id : '/api/articles';
             var res = await fetch(url, {
@@ -1088,6 +1120,7 @@
                 author: document.getElementById('article-author').value,
                 tags: document.getElementById('article-tags').value,
                 published: document.getElementById('article-published').checked,
+                scheduled: document.getElementById('article-scheduled').value,
                 ts: Date.now()
             };
             try {
@@ -1121,12 +1154,14 @@
             document.getElementById('article-author').value = draft.author || 'Admin';
             document.getElementById('article-tags').value = draft.tags || '';
             document.getElementById('article-published').checked = draft.published !== false;
+            document.getElementById('article-scheduled').value = draft.scheduled || '';
+            toggleScheduleField();
             document.getElementById('article-content-md').dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         // 监听所有表单字段的输入，触发自动保存
         function bindAutoSaveListeners() {
-            var fields = ['article-title','article-slug','article-summary','article-cover','article-content-md','article-author','article-tags'];
+            var fields = ['article-title','article-slug','article-summary','article-cover','article-content-md','article-author','article-tags','article-scheduled'];
             fields.forEach(function(id) {
                 var el = document.getElementById(id);
                 if (!el) return;

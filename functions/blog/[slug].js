@@ -2,7 +2,7 @@ export async function onRequestGet(context) {
   try {
     const { env, params } = context;
     const slug = params.slug || new URL(context.request.url).pathname.replace('/blog/', '').replace(/\/$/, '');
-    const a = await env.DB.prepare('SELECT * FROM articles WHERE slug=? AND is_published=1').bind(slug).first();
+    const a = await env.DB.prepare("SELECT * FROM articles WHERE slug=? AND is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))").bind(slug).first();
     if (!a) return new Response('Not found', { status: 404 });
     const l = await env.DB.prepare('SELECT COUNT(*) as c FROM likes WHERE article_id=?').bind(a.id).first();
     var h = render(a, l.c);

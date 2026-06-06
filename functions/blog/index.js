@@ -1,7 +1,7 @@
 export async function onRequestGet(context) {
   const { env } = context;
   const { results } = await env.DB.prepare(
-    'SELECT id, title, slug, summary, cover_image, author, tags, created_at FROM articles WHERE is_published=1 ORDER BY created_at DESC LIMIT 50'
+    "SELECT id, title, slug, summary, cover_image, author, tags, created_at FROM articles WHERE is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY created_at DESC LIMIT 50"
   ).all();
   const articles = results || [];
   for (const a of articles) {
