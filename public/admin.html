@@ -180,10 +180,13 @@
         .publish-mode-option.active { background: var(--color-primary); color: var(--color-text-inverse); }
         .schedule-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
         .schedule-row input[type="datetime-local"] { flex: 1; padding: 0.4rem 0.6rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.85rem; background: var(--color-bg); color: var(--color-text); }
-        /* 文章板块 */
-        .article-section { margin-bottom: 2rem; }
-        .article-section-title { font-size: 0.8rem; font-weight: 600; color: var(--color-text-secondary); letter-spacing: 0.06em; margin-bottom: 0.6rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 0.5rem; }
-        .article-section-title .count { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 10px; padding: 0.1rem 0.5rem; font-size: 0.72rem; font-weight: normal; color: var(--color-text-muted); }
+        /* 文章板块切换 */
+        .article-tabs { display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 2px solid var(--color-border); }
+        .article-tab { padding: 0.5rem 1.2rem; border: none; background: none; cursor: pointer; font-size: 0.85rem; color: var(--color-text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; display: flex; align-items: center; gap: 0.4rem; }
+        .article-tab:hover { color: var(--color-text); }
+        .article-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+        .tab-count { font-size: 0.72rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 10px; padding: 0.05rem 0.45rem; font-weight: normal; }
+        .article-tab.active .tab-count { border-color: var(--color-primary); color: var(--color-primary); }
         .empty-hint { text-align: center; color: var(--color-text-placeholder); padding: 1.5rem; font-size: 0.85rem; }
         .status-tag { font-size: 0.78rem; white-space: nowrap; }
         .status-published { color: #48bb78; }
@@ -832,6 +835,8 @@
             return '<tr><td><strong>' + escapeHtml(a.title) + '</strong></td><td>' + escapeHtml(a.author) + '</td><td>' + formatArticleStatus(a) + '</td><td>' + escapeHtml(a.tags||'') + '</td><td>' + time + '</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editArticle(' + a.id + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteArticle(' + a.id + ')">删除</button></td></tr>';
         }
 
+        var _articleData = { published: [], drafts: [] };
+
         function renderArticleList(articles) {
             var area = document.getElementById('article-list-area');
             if (!articles.length) {
@@ -839,37 +844,42 @@
                 return;
             }
 
-            var published = [], drafts = [];
+            _articleData.published = [];
+            _articleData.drafts = [];
             for (var i = 0; i < articles.length; i++) {
                 if (isArticlePublished(articles[i]) || isArticleScheduled(articles[i])) {
-                    published.push(articles[i]);
+                    _articleData.published.push(articles[i]);
                 } else {
-                    drafts.push(articles[i]);
+                    _articleData.drafts.push(articles[i]);
                 }
             }
 
-            var html = '';
-            var thead = '<thead><tr><th>标题</th><th>作者</th><th>状态</th><th>标签</th><th>日期</th><th style="width:140px;">操作</th></tr></thead>';
-
-            // 已发布 + 定时发布
-            html += '<div class="article-section"><div class="article-section-title">已发布 <span class="count">' + published.length + '</span></div>';
-            if (published.length) {
-                html += '<table class="data-table">' + thead + '<tbody>' + published.map(buildArticleRow).join('') + '</tbody></table>';
-            } else {
-                html += '<p class="empty-hint">暂无已发布文章</p>';
-            }
-            html += '</div>';
-
-            // 草稿
-            html += '<div class="article-section"><div class="article-section-title">草稿 <span class="count">' + drafts.length + '</span></div>';
-            if (drafts.length) {
-                html += '<table class="data-table">' + thead + '<tbody>' + drafts.map(buildArticleRow).join('') + '</tbody></table>';
-            } else {
-                html += '<p class="empty-hint">暂无草稿</p>';
-            }
-            html += '</div>';
+            var html = '<div class="article-tabs">'
+                + '<button class="article-tab active" onclick="switchArticleTab(this,\'published\')">已发布 <span class="tab-count">' + _articleData.published.length + '</span></button>'
+                + '<button class="article-tab" onclick="switchArticleTab(this,\'drafts\')">草稿 <span class="tab-count">' + _articleData.drafts.length + '</span></button>'
+                + '</div>'
+                + '<div id="article-tab-content"></div>';
 
             area.innerHTML = html;
+            renderArticleTabContent('published');
+        }
+
+        function switchArticleTab(btn, tab) {
+            var tabs = document.querySelectorAll('.article-tab');
+            for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+            btn.classList.add('active');
+            renderArticleTabContent(tab);
+        }
+
+        function renderArticleTabContent(tab) {
+            var list = _articleData[tab];
+            var container = document.getElementById('article-tab-content');
+            if (!list.length) {
+                container.innerHTML = '<p class="empty-hint">' + (tab === 'published' ? '暂无已发布文章' : '暂无草稿') + '</p>';
+                return;
+            }
+            var thead = '<thead><tr><th>标题</th><th>作者</th><th>状态</th><th>标签</th><th>日期</th><th style="width:140px;">操作</th></tr></thead>';
+            container.innerHTML = '<table class="data-table">' + thead + '<tbody>' + list.map(buildArticleRow).join('') + '</tbody></table>';
         }
 
         function confirmSchedule() {
