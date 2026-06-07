@@ -877,6 +877,7 @@ body[style*="background-image"] .page-wrapper {
   color: var(--text-primary);
   letter-spacing: -0.005em;
   font-variant-numeric: lining-nums tabular-nums;
+  overflow-x: hidden;
 }
 
 .article-body h1 {
@@ -906,9 +907,13 @@ body[style*="background-image"] .page-wrapper {
   border-radius: var(--radius-sm);
   padding: 1rem 1.2rem;
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 600px;
+  max-width: 100%;
   margin: 1em 0;
   font-size: 0.82rem;
   line-height: 1.7;
+  white-space: pre;
 }
 
 .article-body img {
@@ -979,7 +984,7 @@ body[style*="background-image"] .page-wrapper {
   font-size: 0.88em;
 }
 
-/* Code block wrapper */
+/* Code block wrapper — constrained to article width */
 .code-block-wrapper {
   margin: 1.2em 0;
   border: 1px solid var(--border);
@@ -987,6 +992,39 @@ body[style*="background-image"] .page-wrapper {
   overflow: hidden;
   background: var(--bg-secondary);
   transition: margin 0.35s var(--ease);
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Custom scrollbar for code blocks */
+.cb-body::-webkit-scrollbar,
+.article-body pre::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.cb-body::-webkit-scrollbar-track,
+.article-body pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cb-body::-webkit-scrollbar-thumb,
+.article-body pre::-webkit-scrollbar-thumb {
+  background: var(--text-placeholder);
+  border-radius: 3px;
+}
+.cb-body::-webkit-scrollbar-thumb:hover,
+.article-body pre::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+.cb-body::-webkit-scrollbar-corner,
+.article-body pre::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox scrollbar */
+.cb-body,
+.article-body pre {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-placeholder) transparent;
 }
 .code-block-wrapper pre {
   background: transparent;
@@ -1065,15 +1103,16 @@ body[style*="background-image"] .page-wrapper {
 
 .cb-body {
   border-top: 1px solid var(--border);
-  max-height: 3000px;
+  max-height: 600px;
   opacity: 1;
   transition: max-height 0.4s var(--ease), opacity 0.3s var(--ease), border-top-width 0.3s var(--ease);
-  overflow: hidden;
+  overflow: auto;
 }
 .cb-body.hidden {
   max-height: 0;
   opacity: 0;
   border-top-width: 0;
+  overflow: hidden;
 }
 .cb-body pre {
   margin: 0;
@@ -1081,7 +1120,7 @@ body[style*="background-image"] .page-wrapper {
   border-radius: 0;
   padding: 1rem 1.2rem;
   background: transparent;
-  overflow-x: auto;
+  overflow: visible;
 }
 
 .line-numbers {
@@ -1141,14 +1180,19 @@ body[style*="background-image"] .page-wrapper {
   font-family: var(--font-mono);
   font-size: 0.82rem;
   color: var(--text-primary);
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 .code-block-wrapper pre {
   font-size: 0.82rem;
   line-height: 1.7;
+  white-space: pre;
 }
 .code-block-wrapper pre code {
   background: none;
   padding: 0;
+  white-space: pre;
 }
 
 /* ===== TOC (Table of Contents) — Sidebar ===== */
