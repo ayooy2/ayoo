@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ayoow.pages.dev/sitemap.xml

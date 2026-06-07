@@ -34,7 +34,7 @@ async function listArticles(env, params) {
   const total = countResult.total;
 
   const { results } = await env.DB.prepare(
-    `SELECT id, title, slug, summary, cover_image, author, tags, is_published, scheduled_at, created_at, updated_at FROM articles ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+    `SELECT id, title, slug, summary, cover_image, author, tags, is_published, scheduled_at, created_at, updated_at, views FROM articles ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
   ).bind(limit, offset).all();
 
   for (const row of results || []) {

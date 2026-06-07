@@ -4,6 +4,9 @@ export async function onRequestGet(context) {
     const slug = params.slug || new URL(context.request.url).pathname.replace('/blog/', '').replace(/\/$/, '');
     const a = await env.DB.prepare("SELECT * FROM articles WHERE slug=? AND is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))").bind(slug).first();
     if (!a) return new Response('Not found', { status: 404 });
+    // 阅读量 +1
+    await env.DB.prepare('UPDATE articles SET views = views + 1 WHERE id = ?').bind(a.id).run();
+    a.views = (a.views || 0) + 1;
     const l = await env.DB.prepare('SELECT COUNT(*) as c FROM likes WHERE article_id=?').bind(a.id).first();
     var h = render(a, l.c);
     return new Response(h, {
@@ -17,22 +20,41 @@ function render(a, likes) {
   var tags = '', ts = (a.tags || '').split(',').filter(Boolean);
   for (var i = 0; i < ts.length; i++) tags += '<span class="blog-tag">#' + esc(ts[i].trim()) + '</span>';
   var md = JSON.stringify(a.content_md || '');
+  var desc = esc(a.summary || (a.content_md || '').slice(0, 160));
+  var kw = ts.map(function(t){ return esc(t.trim()); }).join(',');
+  var url = 'https://ayoow.pages.dev/blog/' + esc(a.slug);
+  var img = a.cover_image ? esc(a.cover_image) : '';
 
-  return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>' + esc(a.title) + '</title><link rel="stylesheet" href="/style.css"><\/head><body>' +
+  var seo = '<meta name="description" content="' + desc + '">'
+    + (kw ? '<meta name="keywords" content="' + kw + '">' : '')
+    + '<meta property="og:type" content="article">'
+    + '<meta property="og:title" content="' + esc(a.title) + '">'
+    + '<meta property="og:description" content="' + desc + '">'
+    + '<meta property="og:url" content="' + url + '">'
+    + (img ? '<meta property="og:image" content="' + img + '">' : '')
+    + '<meta name="twitter:card" content="summary_large_image">'
+    + '<meta name="twitter:title" content="' + esc(a.title) + '">'
+    + '<meta name="twitter:description" content="' + desc + '">'
+    + (img ? '<meta name="twitter:image" content="' + img + '">' : '')
+    + '<link rel="canonical" href="' + url + '">'
+    + '<link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml">';
+
+  return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>' + esc(a.title) + '</title>' + seo + '<link rel="stylesheet" href="/style.css"><\/head><body>' +
     '<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">' + esc(a.title) + '</a><div class="nav-spacer"></div><a href="/blog" class="nav-link">笔记</a></div></nav>' +
-    '<div class="article-wrapper"><article>' +
+    '<div class="article-wrapper"><article><div id="article-main">' +
     (a.cover_image ? '<img src="' + esc(a.cover_image) + '" class="article-cover" alt="">' : '') +
     '<header class="article-header"><h1 class="article-title">' + esc(a.title) + '</h1>' +
-    '<div class="article-meta"><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + esc(a.author) + '</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ' + time + '</span>' + tags + '<span>' + likes + ' 喜欢</span></div></header>' +
+    '<div class="article-meta"><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + esc(a.author) + '</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ' + time + '</span>' + tags + '<span>' + (a.views || 0) + ' 阅读</span><span>' + likes + ' 喜欢</span></div></header>' +
     '<div class="article-body" id="content">' + simpleMD(a.content_md || '') + '</div>' +
-    '<div class="article-actions"><button class="btn-like" id="like-btn" onclick="toggleLike()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> 喜欢</button></div>' +
+    '</div><div class="article-actions"><button class="btn-like" id="like-btn" onclick="toggleLike()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> 喜欢</button></div>' +
     '<section class="comment-section"><h3>评论 (<span id="cc">0</span>)</h3><div id="comments-area"></div>' +
     '<textarea class="comment-input" id="comment-input" placeholder="写下想法..."></textarea>' +
     '<input class="comment-input" id="comment-name" placeholder="昵称" style="min-height:auto;height:auto;margin-top:0.4rem;width:auto;min-width:160px;">' +
     '<button class="btn-submit" onclick="this.disabled=true;postComment(this)">发表</button></section></article></div>' +
     '<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>' +
     '<script>var aid=' + a.id + ',fp=localStorage.getItem("fp")||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp",f);return f;})(),replyTo=null;' +
-    'function init(){if(typeof marked=="undefined"){setTimeout(init,100);return;}var raw=' + md + '.replace(/\\\\n/g,"\\n");document.getElementById("content").innerHTML=marked.parse(raw);wrapCB();}' +
+    'function init(){if(typeof marked=="undefined"){setTimeout(init,100);return;}var raw=' + md + '.replace(/\\\\n/g,"\\n");document.getElementById("content").innerHTML=marked.parse(raw);wrapCB();buildTOC();}' +
+    'function buildTOC(){var c=document.getElementById("content"),hs=c.querySelectorAll("h2,h3");if(hs.length<2)return;var toc=document.createElement("nav");toc.className="toc";toc.innerHTML="<div class=\\"toc-title\\">目录</div>";var ol=document.createElement("ol");for(var i=0;i<hs.length;i++){var h=hs[i],id="h-"+i;h.id=id;var li=document.createElement("li");li.style.marginLeft=(h.tagName==="H3"?"1rem":"0");var a=document.createElement("a");a.href="#"+id;a.textContent=h.textContent;li.appendChild(a);ol.appendChild(li)}toc.appendChild(ol);var wrap=document.getElementById("article-main");if(wrap)wrap.insertBefore(toc,wrap.firstChild)}' +
     'function toggleCB(bar){var body=bar.nextElementSibling,wr=bar.parentElement,folded=wr.classList.toggle(\'folded\');body.classList.toggle(\'hidden\',folded);var arrow=bar.querySelector(\'.lang-arrow\');if(arrow)arrow.textContent=folded?\'\\u203A\':\'\\u2335\';bar.title=folded?\'展开\':\'收起\'}' +
     'setTimeout(function(){document.getElementById("content").style.opacity="1"},3000);init();loadComments();updateLikeState();' +
     'function barHTML(l){return' + JSON.stringify('<span class="code-block-lang">X ⌵</span><span style="flex:1"></span><button class="code-block-btn btn-copy" data-a="copy" title="复制" onclick="event.stopPropagation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="code-block-btn btn-fs" data-a="fullscreen" title="全屏" onclick="event.stopPropagation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>') + '.replace("X",l)}' +
