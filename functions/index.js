@@ -114,13 +114,16 @@ ${navbar(t)}
 ${mobileMenu()}
 <script>
 (function(){
-  /* Clock */
+  /* Clock — hero (HH:MM) + navbar (HH:MM:SS) */
   function updateClock(){
     var n=new Date();
     var h=String(n.getHours()).padStart(2,'0');
     var m=String(n.getMinutes()).padStart(2,'0');
-    var el=document.getElementById('time');
-    if(el) el.textContent=h+':'+m;
+    var s=String(n.getSeconds()).padStart(2,'0');
+    var hero=document.getElementById('time');
+    if(hero) hero.textContent=h+':'+m;
+    var nav=document.getElementById('clock');
+    if(nav) nav.textContent=h+':'+m+':'+s;
   }
   updateClock();
   setInterval(updateClock,1e3);

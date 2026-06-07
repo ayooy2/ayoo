@@ -325,6 +325,9 @@ function updateLikeState(){
 
 function escR(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
 
+/* Clock */
+(function(){function u(){var n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0');var el=document.getElementById('clock');if(el) el.textContent=h+':'+m+':'+s}u();setInterval(u,1e3)})();
+
 /* Theme toggle */
 var b=document.getElementById("theme-toggle"),st=localStorage.getItem("theme")||"light";
 if(st==="dark") document.documentElement.setAttribute("data-theme","dark");
