@@ -87,8 +87,12 @@
   --color-danger-bg:       var(--danger-bg);
   --color-danger-text:     var(--danger);
   --color-success-text:    var(--success);
+  --color-success-bg:      var(--success-bg);
   --color-primary:         var(--accent);
   --color-primary-hover:   var(--accent-hover);
+  --color-primary-light:   var(--accent-subtle);
+  --color-gradient:        linear-gradient(135deg, var(--accent), var(--accent-hover));
+  --color-bg-card-icon:    var(--bg-secondary);
   --color-text-inverse:    #ffffff;
   --color-danger:          var(--danger);
   --shadow-card:           var(--shadow-xs);
