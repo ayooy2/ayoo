@@ -106,12 +106,11 @@
             min-height: 200px;
         }
         .preview-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            background: var(--color-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--color-text);
             margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
         }
         .preview-subtitle {
             color: var(--color-text-placeholder);
@@ -268,12 +267,7 @@
         <header class="admin-header">
             <h1>后台管理</h1>
             <div style="display:flex;align-items:center;gap:0.8rem;">
-                <button class="theme-toggle" id="theme-toggle" aria-label="切换主题" title="切换日间/夜间模式" style="width:40px;height:40px;">
-                    <div class="theme-icon">
-                        <div class="theme-icon-sun"></div>
-                        <div class="theme-icon-moon"></div>
-                    </div>
-                </button>
+                <button class="theme-toggle" id="theme-toggle" aria-label="切换主题" title="切换日间/夜间模式" style="width:40px;height:40px;font-size:1.1rem;">☽</button>
                 <button class="btn btn-secondary" onclick="logout()">退出登录</button>
             </div>
         </header>
@@ -514,14 +508,17 @@
             if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
             var btn = document.getElementById('theme-toggle');
             if (btn) {
+                btn.textContent = saved === 'dark' ? '☀' : '☽';
                 btn.addEventListener('click', function() {
                     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                     if (isDark) {
                         document.documentElement.removeAttribute('data-theme');
                         localStorage.setItem('theme', 'light');
+                        btn.textContent = '☽';
                     } else {
                         document.documentElement.setAttribute('data-theme', 'dark');
                         localStorage.setItem('theme', 'dark');
+                        btn.textContent = '☀';
                     }
                 });
             }
