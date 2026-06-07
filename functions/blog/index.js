@@ -33,7 +33,7 @@ export async function onRequestGet(context) {
     + '<link rel="canonical" href="https://ayoow.pages.dev/blog">'
     + '<link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml">'
     + '<link rel="stylesheet" href="/style.css"></head><body>'
-    + '<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">笔记</a><div class="nav-spacer"></div><a href="/search" class="nav-link">搜索</a><a href="/archive" class="nav-link">归档</a><a href="/" class="nav-link">首页</a></div></nav>'
+    + '<nav class="navbar"><div class="nav-inner"><a href="/blog" class="nav-brand">笔记</a><div class="nav-spacer"></div><a href="/search" class="nav-link">搜索</a><a href="/archive" class="nav-link">归档</a><a href="/" class="nav-link">首页</a></div></nav>'
     + '<div class="article-wrapper"><h2 style="font-weight:400;margin-bottom:1.5rem;font-size:1.3rem;letter-spacing:0.04em;color:var(--color-text);">笔记</h2>'
     + '<div class="blog-list">' + items + '</div></div></body></html>';
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' } });

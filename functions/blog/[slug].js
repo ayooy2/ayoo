@@ -40,7 +40,7 @@ function render(a, likes) {
     + '<link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml">';
 
   return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>' + esc(a.title) + '</title>' + seo + '<link rel="stylesheet" href="/style.css"><\/head><body>' +
-    '<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">' + esc(a.title) + '</a><div class="nav-spacer"></div><a href="/blog" class="nav-link">笔记</a></div></nav>' +
+    '<nav class="navbar"><div class="nav-inner"><a href="/blog" class="nav-brand">笔记</a><div class="nav-spacer"></div><a href="/search" class="nav-link">搜索</a><a href="/archive" class="nav-link">归档</a><a href="/" class="nav-link">首页</a></div></nav>' +
     '<div class="article-wrapper"><article><div id="article-main">' +
     (a.cover_image ? '<img src="' + esc(a.cover_image) + '" class="article-cover" alt="">' : '') +
     '<header class="article-header"><h1 class="article-title">' + esc(a.title) + '</h1>' +
