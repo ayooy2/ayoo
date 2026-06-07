@@ -1,46 +1,95 @@
-// GET /archive — 归档页，按年月分组
+// GET /archive — 归档页，时间线布局
 export async function onRequestGet(context) {
   const { env } = context;
   const { results } = await env.DB.prepare(
     "SELECT id, title, slug, created_at, views FROM articles WHERE is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY created_at DESC"
   ).all();
 
-  // 按年月分组
-  var groups = {};
+  // Group by year, then by month
+  var years = {};
   for (var i = 0; i < (results || []).length; i++) {
     var a = results[i];
-    var ym = (a.created_at || '').slice(0, 7); // "2026-05"
-    if (!ym) ym = '未知';
-    if (!groups[ym]) groups[ym] = [];
-    groups[ym].push(a);
+    var ym = (a.created_at || '').slice(0, 7);
+    if (!ym) ym = '0000-00';
+    var year = ym.slice(0, 4);
+    var month = ym.slice(5, 7);
+    if (!years[year]) years[year] = {};
+    if (!years[year][month]) years[year][month] = [];
+    years[year][month].push(a);
   }
 
-  var html = '';
-  var ymKeys = Object.keys(groups).sort().reverse();
-  for (var g = 0; g < ymKeys.length; g++) {
-    var ym = ymKeys[g];
-    var parts = ym.split('-');
-    var label = parts[0] + '年' + (parts[1] ? parseInt(parts[1]) + '月' : '');
-    html += '<div class="archive-group"><h3 class="archive-month">' + esc(label) + ' <span class="count">' + groups[ym].length + '</span></h3><ul class="archive-list">';
-    for (var j = 0; j < groups[ym].length; j++) {
-      var a = groups[ym][j];
-      var day = (a.created_at || '').slice(8, 10);
-      html += '<li><span class="archive-day">' + esc(day) + '</span><a href="/blog/' + a.slug + '">' + esc(a.title) + '</a><span class="archive-views">' + (a.views || 0) + ' 阅读</span></li>';
+  var timeline = '';
+  var yearKeys = Object.keys(years).sort().reverse();
+  for (var y = 0; y < yearKeys.length; y++) {
+    var year = yearKeys[y];
+    timeline += '<div class="archive-year animate-in" style="animation-delay:' + (y * 100) + 'ms">' + year + '</div>';
+
+    var monthKeys = Object.keys(years[year]).sort().reverse();
+    for (var m = 0; m < monthKeys.length; m++) {
+      var month = monthKeys[m];
+      var articles = years[year][month];
+      var monthLabel = parseInt(month) + '月';
+      timeline += '<div class="archive-month">' + monthLabel + ' <span class="archive-month-count">' + articles.length + '</span></div>';
+      timeline += '<ul class="archive-list">';
+      for (var j = 0; j < articles.length; j++) {
+        var a = articles[j];
+        var day = (a.created_at || '').slice(8, 10);
+        timeline += '<li class="archive-item"><span class="archive-item-day">' + esc(day) + '</span><a href="/blog/' + a.slug + '">' + esc(a.title) + '</a><span class="archive-item-views">' + (a.views || 0) + '</span></li>';
+      }
+      timeline += '</ul>';
     }
-    html += '</ul></div>';
   }
-  if (!html) html = '<p class="empty">暂无文章</p>';
+  if (!timeline) timeline = '<div class="empty-state"><p class="empty-state-text">暂无文章</p></div>';
 
-  var page = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>归档</title>'
-    + '<meta name="description" content="所有文章归档">'
-    + '<link rel="stylesheet" href="/style.css"></head><body>'
-    + '<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">归档</a><div class="nav-spacer"></div><a href="/blog" class="nav-link">笔记</a><a href="/" class="nav-link">首页</a></div></nav>'
-    + '<div class="article-wrapper"><h2 style="font-weight:400;margin-bottom:1.5rem;font-size:1.3rem;color:var(--color-text);">归档 · ' + (results || []).length + ' 篇文章</h2>'
-    + html + '</div></body></html>';
-
-  return new Response(page, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=3600' }
+  return new Response(`<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>归档</title>
+<meta name="description" content="所有文章归档">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+${archiveNavbar()}
+<div class="page-wrapper">
+  <div class="page-header animate-in">
+    <h1 class="page-title">归档</h1>
+    <p class="page-subtitle">${(results || []).length} 篇文章</p>
+  </div>
+  <div class="content">
+    <div class="archive-timeline">
+      ${timeline}
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="footer-text"><a href="/">← 返回首页</a></span>
+  </footer>
+</div>
+<script>
+(function(){
+  var b=document.getElementById('theme-toggle'),st=localStorage.getItem('theme')||'light';
+  if(st==='dark') document.documentElement.setAttribute('data-theme','dark');
+  b.textContent=st==='dark'?'☀':'☽';
+  b.addEventListener('click',function(){
+    var d=document.documentElement.getAttribute('data-theme')==='dark';
+    if(d){document.documentElement.removeAttribute('data-theme');localStorage.setItem('theme','light');b.textContent='☽'}
+    else{document.documentElement.setAttribute('data-theme','dark');localStorage.setItem('theme','dark');b.textContent='☀'}
   });
+  var hamburger=document.getElementById('nav-hamburger');
+  var menu=document.getElementById('mobile-menu');
+  var closeBtn=document.getElementById('mobile-menu-close');
+  if(hamburger&&menu) hamburger.addEventListener('click',function(){menu.classList.add('active')});
+  if(closeBtn&&menu) closeBtn.addEventListener('click',function(){menu.classList.remove('active')});
+})()
+</script>
+</body>
+</html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=3600' } });
+}
+
+function archiveNavbar() {
+  return `<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">归档</a><div class="nav-links"><a href="/" class="nav-link"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>首页</a><a href="/blog" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>笔记</a><a href="/search" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>搜索</a></div><div class="nav-spacer"></div><button class="theme-toggle" id="theme-toggle" aria-label="切换主题">☽</button><button class="nav-hamburger" id="nav-hamburger" aria-label="菜单"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg></button></div></nav>
+<div class="mobile-menu" id="mobile-menu"><button class="mobile-menu-close" id="mobile-menu-close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button><div class="mobile-menu-links"><a href="/" class="mobile-menu-link">首页</a><a href="/blog" class="mobile-menu-link">笔记</a><a href="/search" class="mobile-menu-link">搜索</a><a href="/archive" class="mobile-menu-link">归档</a></div></div>`;
 }
 
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
