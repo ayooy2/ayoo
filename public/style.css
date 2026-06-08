@@ -993,11 +993,13 @@ body[style*="background-image"] .page-wrapper {
   margin: 1.2em 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  overflow: visible;
+  overflow: hidden;
   background: var(--bg-secondary);
   transition: margin 0.35s var(--ease);
+  width: 100%;
   max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Custom scrollbar for code blocks */
@@ -1124,9 +1126,10 @@ body[style*="background-image"] .page-wrapper {
   border-radius: 0;
   padding: 1rem 1.2rem;
   background: transparent;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: visible;
   min-width: 0;
+  max-width: none;
+  width: fit-content;
 }
 
 .line-numbers {
