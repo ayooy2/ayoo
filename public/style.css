@@ -1494,6 +1494,42 @@ body[style*="background-image"] .page-wrapper {
   color: var(--text-tertiary);
 }
 
+/* Search enhancements */
+.search-results mark {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+.search-recent {
+  margin-top: var(--space-xl);
+}
+.search-recent-title {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-sm);
+}
+.search-recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+.search-recent-item {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all var(--duration-fast) var(--ease);
+}
+.search-recent-item:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* ===== ARCHIVE PAGE ===== */
 .archive-timeline {
   position: relative;

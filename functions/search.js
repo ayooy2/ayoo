@@ -30,7 +30,25 @@ export async function onRequestGet(context) {
   if (q && !items) emptyHtml = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p class="empty-state-text">未找到相关文章</p></div>';
   if (!q) emptyHtml = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p class="empty-state-text">输入关键词搜索</p></div>';
 
+  // Highlight keywords in results
+  var highlightQ = esc(q);
+  if (q) {
+    items = items.replace(/(>)([^<]*?)(<)/g, function(match, pre, text, post) {
+      var highlighted = text.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>');
+      return pre + highlighted + post;
+    });
+  }
+
   var title = q ? '搜索: ' + esc(q) : '搜索';
+
+  // Recent searches
+  var recentHtml = '';
+  if (!q) {
+    recentHtml = `<div class="search-recent" id="search-recent" style="display:none">
+      <div class="search-recent-title">最近搜索</div>
+      <div class="search-recent-list" id="search-recent-list"></div>
+    </div>`;
+  }
 
   return new Response(`<!DOCTYPE html>
 <html lang="zh-CN">
@@ -57,6 +75,7 @@ ${searchNavbar()}
       <div class="search-results">
         ${items || emptyHtml}
       </div>
+      ${recentHtml}
     </div>
   </div>
   <footer class="page-footer">
@@ -81,7 +100,25 @@ ${searchNavbar()}
   var closeBtn=document.getElementById('mobile-menu-close');
   if(hamburger&&menu) hamburger.addEventListener('click',function(){menu.classList.add('active')});
   if(closeBtn&&menu) closeBtn.addEventListener('click',function(){menu.classList.remove('active')});
-})()
+
+  /* / shortcut to focus search */
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){
+      e.preventDefault();var si=document.querySelector('.search-input');if(si)si.focus();
+    }
+  });
+
+  /* Recent searches */
+  var q='${esc(q)}';
+  if(q){saveRecent(q)}
+  function saveRecent(t){
+    try{var r=JSON.parse(localStorage.getItem('recent_searches')||'[]');r=r.filter(function(x){return x!==t});r.unshift(t);if(r.length>8)r=r.slice(0,8);localStorage.setItem('recent_searches',JSON.stringify(r))}catch(e){}
+  }
+  var recentDiv=document.getElementById('search-recent');
+  var recentList=document.getElementById('search-recent-list');
+  if(recentDiv&&recentList){
+    try{var r=JSON.parse(localStorage.getItem('recent_searches')||'[]');if(r.length){recentDiv.style.display='block';var h='';for(var i=0;i<r.length;i++){h+='<a class="search-recent-item" href="/search?q='+encodeURIComponent(r[i])+'">'+esc(r[i])+'</a>'}recentList.innerHTML=h}catch(e){}
+  }
 /* Command Palette */
 (function(){
   var overlay=document.getElementById('cmd-overlay'),input=document.getElementById('cmd-input'),list=document.getElementById('cmd-list');
