@@ -1124,7 +1124,8 @@ body[style*="background-image"] .page-wrapper {
   border-radius: 0;
   padding: 1rem 1.2rem;
   background: transparent;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .line-numbers {
