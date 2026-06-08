@@ -997,7 +997,10 @@ body[style*="background-image"] .page-wrapper {
   overflow-y: hidden;
   background: var(--bg-secondary);
   transition: margin 0.35s var(--ease);
+  width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
+  display: block;
 }
 
 /* Custom scrollbar for code blocks */
