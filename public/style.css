@@ -993,7 +993,7 @@ body[style*="background-image"] .page-wrapper {
   margin: 1.2em 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  overflow: hidden;
+  overflow: visible;
   background: var(--bg-secondary);
   transition: margin 0.35s var(--ease);
   max-width: 100%;
@@ -1126,6 +1126,7 @@ body[style*="background-image"] .page-wrapper {
   background: transparent;
   overflow-x: auto;
   overflow-y: visible;
+  min-width: 0;
 }
 
 .line-numbers {
