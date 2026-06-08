@@ -52,6 +52,7 @@ function render(a, likes) {
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<div class="reading-progress" id="reading-progress"></div>
 ${articleNavbar()}
 <div class="page-wrapper">
   <div class="content">
@@ -327,6 +328,16 @@ function escR(s){var d=document.createElement("div");d.textContent=s||"";return 
 
 /* Clock */
 (function(){function u(){var n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0');var el=document.getElementById('clock');if(el) el.textContent=h+':'+m+':'+s}u();setInterval(u,1e3)})();
+
+/* Reading progress bar */
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  var ticking=false;
+  window.addEventListener('scroll',function(){
+    if(!ticking){requestAnimationFrame(function(){var h=document.documentElement.scrollHeight-window.innerHeight;if(h>0)bar.style.width=Math.min(100,Math.round(window.scrollY/h*100))+'%';ticking=false});ticking=true}
+  });
+})();
 
 /* Theme toggle */
 var b=document.getElementById("theme-toggle"),st=localStorage.getItem("theme")||"light";

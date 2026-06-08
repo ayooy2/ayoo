@@ -1494,6 +1494,19 @@ body[style*="background-image"] .page-wrapper {
   color: var(--text-tertiary);
 }
 
+/* ===== READING PROGRESS BAR ===== */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: var(--accent);
+  z-index: 9998;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+
 /* Search enhancements */
 .search-results mark {
   background: var(--accent-subtle);
