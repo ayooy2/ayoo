@@ -25,12 +25,13 @@ function render(s, sites, articles, stats) {
 
   var bgStyle = bg ? ' style="background-image:url(\'' + bg + '\');background-size:cover;background-position:center;background-attachment:fixed;"' : '';
 
-  // Navigation cards
+  // Navigation cards — static pages first, then dynamic sites
   var navCards = '';
+  navCards += `<div class="nav-card" data-url="/now" title="Now" style="animation-delay:0ms"><div class="nav-card-icon"><span class="nav-card-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div><div class="nav-card-text"><div class="nav-card-title">Now</div><div class="nav-card-desc">近况</div></div></div>`;
+  navCards += `<div class="nav-card" data-url="/guestbook" title="留言簿" style="animation-delay:60ms"><div class="nav-card-icon"><span class="nav-card-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span></div><div class="nav-card-text"><div class="nav-card-title">留言簿</div><div class="nav-card-desc">来留个言吧</div></div></div>`;
   for (var i = 0; i < sites.length; i++) {
-    navCards += navCard(sites[i], i);
+    navCards += navCard(sites[i], i + 2);
   }
-  if (!navCards) navCards = '<p class="empty-state"><span class="empty-state-text">暂无链接</span></p>';
 
   // Recent articles
   var articleCards = '';
@@ -181,6 +182,14 @@ ${mobileMenu()}
     img.src=iu;
   }
 
+  /* Scroll reveal animation */
+  if('IntersectionObserver' in window){
+    var observer=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})
+    },{threshold:0.1});
+    document.querySelectorAll('.scroll-reveal').forEach(function(el){observer.observe(el)});
+  }
+
   /* Mobile menu */
   var hamburger=document.getElementById('nav-hamburger');
   var menu=document.getElementById('mobile-menu');
@@ -221,11 +230,11 @@ ${mobileMenu()}
 }
 
 function navbar(title) {
-  return `<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">${esc(title)}</a><div class="nav-links"><a href="/blog" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>笔记</a><a href="/search" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>搜索</a><a href="/archive" class="nav-link"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>归档</a></div><div class="nav-spacer"></div><span class="nav-clock" id="clock">--:--:--</span><button class="theme-toggle" id="theme-toggle" aria-label="切换主题">☽</button><button class="nav-hamburger" id="nav-hamburger" aria-label="菜单"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg></button></div></nav>`;
+  return `<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">${esc(title)}</a><div class="nav-links"><a href="/blog" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>笔记</a><a href="/search" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>搜索</a><a href="/archive" class="nav-link"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>归档</a><a href="/now" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Now</a><a href="/guestbook" class="nav-link"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>留言簿</a></div><div class="nav-spacer"></div><span class="nav-clock" id="clock">--:--:--</span><button class="theme-toggle" id="theme-toggle" aria-label="切换主题">☽</button><button class="nav-hamburger" id="nav-hamburger" aria-label="菜单"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg></button></div></nav>`;
 }
 
 function mobileMenu() {
-  return `<div class="mobile-menu" id="mobile-menu"><button class="mobile-menu-close" id="mobile-menu-close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button><div class="mobile-menu-links"><a href="/" class="mobile-menu-link">首页</a><a href="/blog" class="mobile-menu-link">笔记</a><a href="/search" class="mobile-menu-link">搜索</a><a href="/archive" class="mobile-menu-link">归档</a></div></div>`;
+  return `<div class="mobile-menu" id="mobile-menu"><button class="mobile-menu-close" id="mobile-menu-close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button><div class="mobile-menu-links"><a href="/" class="mobile-menu-link">首页</a><a href="/blog" class="mobile-menu-link">笔记</a><a href="/search" class="mobile-menu-link">搜索</a><a href="/archive" class="mobile-menu-link">归档</a><a href="/now" class="mobile-menu-link">Now</a><a href="/guestbook" class="mobile-menu-link">留言簿</a></div></div>`;
 }
 
 function articleCard(article, index) {
