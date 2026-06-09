@@ -1184,13 +1184,17 @@ body[style*="background-image"] .page-wrapper {
 .code-block-wrapper.fullscreen .cb-body {
   flex: 1;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 .code-block-wrapper.fullscreen .cb-body.hidden { display: flex !important; }
 .code-block-wrapper.fullscreen pre {
   flex: 1;
+  min-height: 0;
   font-size: 0.9rem;
   margin: 0;
   border-radius: 0;
+  overflow: auto;
 }
 
 .code-block-wrapper code {
