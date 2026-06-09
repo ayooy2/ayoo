@@ -1006,14 +1006,10 @@ body[style*="background-image"] .page-wrapper {
   margin: 1.2em 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  overflow-x: auto;
-  overflow-y: hidden;
   background: var(--bg-secondary);
   transition: margin 0.35s var(--ease);
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  display: block;
+  max-width: 540px;
+  overflow: hidden;
 }
 
 /* Custom scrollbar for code blocks */
@@ -1126,7 +1122,8 @@ body[style*="background-image"] .page-wrapper {
   max-height: 600px;
   opacity: 1;
   transition: max-height 0.4s var(--ease), opacity 0.3s var(--ease), border-top-width 0.3s var(--ease);
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: auto;
 }
 .cb-body.hidden {
   max-height: 0;
@@ -1140,10 +1137,7 @@ body[style*="background-image"] .page-wrapper {
   border-radius: 0;
   padding: 1rem 1.2rem;
   background: transparent;
-  overflow: visible;
   min-width: 0;
-  max-width: none;
-  width: fit-content;
 }
 
 .line-numbers {
@@ -1181,6 +1175,8 @@ body[style*="background-image"] .page-wrapper {
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
+  max-width: none;
+  overflow: hidden;
 }
 .code-block-wrapper.fullscreen .code-block-bar {
   flex-shrink: 0;
