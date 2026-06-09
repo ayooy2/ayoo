@@ -232,14 +232,8 @@ function toggleCB(bar){
 
 setTimeout(function(){document.getElementById("content").style.opacity="1"},3000);
 init();
-// Remove animate-in after animation ends — transform creates a containing block
-// that breaks position:fixed on fullscreen code blocks
-var anims=document.querySelectorAll(".animate-in");
-for(var ai=0;ai<anims.length;ai++){
-  (function(el){
-    el.addEventListener("animationend",function(){el.classList.remove("animate-in");el.style.opacity="1";},{once:true});
-  })(anims[ai]);
-}
+/* Remove animate-in after animation to prevent transform from breaking fixed positioning */
+document.querySelectorAll('.animate-in').forEach(function(el){el.addEventListener('animationend',function(){el.classList.remove('animate-in');el.style.opacity='1'},{once:true})});
 loadComments();
 updateLikeState();
 
