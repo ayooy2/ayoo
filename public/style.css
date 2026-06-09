@@ -1008,8 +1008,7 @@ body[style*="background-image"] .page-wrapper {
   border-radius: var(--radius-sm);
   background: var(--bg-secondary);
   transition: margin 0.35s var(--ease);
-  max-width: 540px;
-  overflow: hidden;
+  max-width: 640px;
 }
 
 /* Custom scrollbar for code blocks */
@@ -1186,8 +1185,11 @@ body[style*="background-image"] .page-wrapper {
 .code-block-wrapper.fullscreen .cb-body {
   flex: 1;
   overflow: auto;
+  max-height: none;
+  display: flex !important;
+  opacity: 1;
+  border-top-width: 1px;
 }
-.code-block-wrapper.fullscreen .cb-body.hidden { display: flex; }
 .code-block-wrapper.fullscreen pre {
   flex: 1;
   font-size: 0.9rem;
