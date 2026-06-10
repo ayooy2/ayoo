@@ -269,9 +269,12 @@ function onCBBtn(e){
         var lines=pre.textContent.split("\\n"),nums="",lc=0;
         for(var li=0;li<lines.length;li++){if(lines[li].trim()||li<lines.length-1)nums+=(++lc)+"\\n"}
         var ln=document.createElement("div");ln.className="line-numbers";ln.textContent=nums;
-        pre.insertBefore(ln,pre.firstChild);pre.style.display="flex";
+        pre.insertBefore(ln,pre.firstChild);
       }
-    }else{document.body.style.overflow=""}
+    }else{
+      document.body.style.overflow="";
+      pre.style.display="";
+    }
   }
 }
 
