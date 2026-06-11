@@ -259,11 +259,18 @@ document.addEventListener("DOMContentLoaded",function(){document.getElementById(
 
 function onCBBtn(e){
   var btn=e.target.closest(".code-block-btn");if(!btn)return;
-  var a=btn.dataset.a,w=btn.closest(".code-block-wrapper"),pre=w.querySelector("pre");
+  var a=btn.dataset.a,w=btn.closest(".code-block-wrapper"),pre=w.querySelector("pre"),body=w.querySelector(".cb-body");
   if(a==="copy") navigator.clipboard.writeText(pre.textContent);
   if(a==="fullscreen"){
-    w.classList.toggle("fullscreen");
-    if(w.classList.contains("fullscreen")){
+    var bar=w.querySelector(".code-block-bar"),arrow=bar?bar.querySelector(".lang-arrow"):null;
+    if(!w.classList.contains("fullscreen")){
+      /* entering fullscreen */
+      w._wasFolded=w.classList.contains("folded");
+      w.classList.remove("folded");
+      body.classList.remove("hidden");
+      if(arrow) arrow.textContent="⌵";
+      if(bar) bar.title="收起";
+      w.classList.add("fullscreen");
       document.body.style.overflow="hidden";
       if(!pre.querySelector(".line-numbers")){
         var lines=pre.textContent.split("\\n"),nums="",lc=0;
@@ -272,8 +279,17 @@ function onCBBtn(e){
         pre.insertBefore(ln,pre.firstChild);
       }
     }else{
+      /* exiting fullscreen */
+      w.classList.remove("fullscreen");
       document.body.style.overflow="";
       pre.style.display="";
+      if(w._wasFolded){
+        w.classList.add("folded");
+        body.classList.add("hidden");
+        if(arrow) arrow.textContent="›";
+        if(bar) bar.title="展开";
+      }
+      delete w._wasFolded;
     }
   }
 }
