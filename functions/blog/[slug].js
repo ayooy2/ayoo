@@ -223,7 +223,8 @@ function closeMobileTOC(){
 }
 
 function toggleCB(bar){
-  var body=bar.nextElementSibling,wr=bar.parentElement,folded=wr.classList.toggle("folded");
+  var wr=bar.parentElement;if(wr.classList.contains("fullscreen"))return;
+  var body=bar.nextElementSibling,folded=wr.classList.toggle("folded");
   body.classList.toggle("hidden",folded);
   var arrow=bar.querySelector(".lang-arrow");
   if(arrow) arrow.textContent=folded?"\\u203A":"\\u2335";
