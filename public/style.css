@@ -1233,11 +1233,15 @@ body[style*="background-image"] .page-wrapper {
   margin-bottom: var(--space-md);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
 }
 .toc-title svg {
   stroke: var(--text-tertiary);
-  opacity: 0.6;
+  opacity: 0.5;
+  transition: opacity var(--duration-fast) var(--ease);
+}
+.article-toc:hover .toc-title svg {
+  opacity: 0.8;
 }
 
 .toc-list {
@@ -1329,7 +1333,7 @@ body[style*="background-image"] .page-wrapper {
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-sm);
-  padding: 6px 8px;
+  padding: 7px 10px;
   border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   text-decoration: none;
@@ -1338,28 +1342,53 @@ body[style*="background-image"] .page-wrapper {
   cursor: pointer;
   font-family: var(--font-sans);
   font-size: var(--text-xs);
-  transition: color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+  transition: all var(--duration-fast) var(--ease);
   position: relative;
+  overflow: hidden;
+}
+.toc-nav-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  opacity: 0;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--duration-fast) var(--ease);
 }
 .toc-nav-btn:hover {
   color: var(--accent-text);
-  background: var(--bg-hover);
 }
+.toc-nav-btn:hover::before {
+  opacity: 0.06;
+}
+.toc-nav-btn svg {
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease);
+}
+.toc-nav-btn:hover svg {
+  color: var(--accent-text);
+}
+.toc-nav-btn:first-child:hover svg { transform: translateX(-2px); }
+.toc-nav-btn:nth-child(2):hover svg { transform: translateX(2px); }
+.toc-nav-btn:last-child:hover svg { transform: translateY(-2px); }
 .toc-nav-label {
   opacity: 0;
   max-width: 0;
   overflow: hidden;
   white-space: nowrap;
-  transition: opacity 0.2s var(--ease), max-width 0.25s var(--ease);
-  font-size: var(--text-xs);
+  transition: opacity 0.25s var(--ease), max-width 0.3s var(--ease);
+  font-size: 0.7rem;
+  letter-spacing: 0.01em;
   color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
 }
 .toc-nav-btn:hover .toc-nav-label {
   opacity: 1;
   max-width: 120px;
 }
 .toc-nav-btn.disabled {
-  opacity: 0.3;
+  opacity: 0.25;
   pointer-events: none;
 }
 
