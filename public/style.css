@@ -1392,23 +1392,6 @@ body[style*="background-image"] .page-wrapper {
   pointer-events: none;
 }
 
-/* Mobile nav — horizontal row */
-.toc-nav-mobile {
-  flex-direction: row;
-  justify-content: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-lg) var(--space-md);
-  border-top: 1px solid var(--border-subtle);
-  margin-top: 0;
-  padding-top: var(--space-sm);
-}
-.toc-nav-mobile .toc-nav-label {
-  display: none;
-}
-.toc-nav-mobile .toc-nav-btn {
-  padding: 8px 12px;
-}
-
 @media (max-width: 1024px) {
   .article-toc { display: none; }
   .toc-mobile { display: block; }
