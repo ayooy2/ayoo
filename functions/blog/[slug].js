@@ -111,16 +111,16 @@ ${articleNavbar()}
 
       <!-- Sidebar TOC (desktop) -->
       <aside class="article-toc" id="article-toc">
-        <div class="toc-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg> 目录</div>
-        <ul class="toc-list" id="toc-list"></ul>
-        <div class="toc-nav">
-          ${prev ? '<a class="toc-nav-btn" href="/blog/' + esc(prev.slug) + '" title="' + esc(prev.title) + '"><span class="toc-nav-label">Previous post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></a>' : '<span class="toc-nav-btn disabled"><span class="toc-nav-label">Previous post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>'}
-          ${next ? '<a class="toc-nav-btn" href="/blog/' + esc(next.slug) + '" title="' + esc(next.title) + '"><span class="toc-nav-label">Next post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></a>' : '<span class="toc-nav-btn disabled"><span class="toc-nav-label">Next post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>'}
-          <button class="toc-nav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">
-            <span class="toc-nav-label">Back to top</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        <div class="toc-topbar">
+          <svg class="toc-topbar-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+          <span class="toc-topbar-info" id="toc-info"></span>
+          ${prev ? '<a class="toc-topbar-btn" href="/blog/' + esc(prev.slug) + '" title="' + esc(prev.title) + '" data-label="Previous post"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></a>' : '<span class="toc-topbar-btn disabled" data-label="Previous post"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>'}
+          ${next ? '<a class="toc-topbar-btn" href="/blog/' + esc(next.slug) + '" title="' + esc(next.title) + '" data-label="Next post"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></a>' : '<span class="toc-topbar-btn disabled" data-label="Next post"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>'}
+          <button class="toc-topbar-btn" data-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
           </button>
         </div>
+        <ul class="toc-list" id="toc-list"></ul>
       </aside>
 
     </div>
@@ -247,6 +247,16 @@ init();
 document.querySelectorAll('.animate-in').forEach(function(el){el.addEventListener('animationend',function(){el.classList.remove('animate-in');el.style.opacity='1'},{once:true})});
 loadComments();
 updateLikeState();
+
+/* TOC topbar hover info */
+var tocInfo=document.getElementById("toc-info");
+var tocBtns=document.querySelectorAll(".toc-topbar-btn");
+for(var bi=0;bi<tocBtns.length;bi++){
+  (function(btn){
+    btn.addEventListener("mouseenter",function(){if(tocInfo)tocInfo.textContent=btn.dataset.label||""});
+    btn.addEventListener("mouseleave",function(){if(tocInfo)tocInfo.textContent=""});
+  })(tocBtns[bi]);
+}
 
 function barHTML(l){
   return '<span class="code-block-lang">X <span class="lang-arrow">⌵</span></span><span style="flex:1"></span><button class="code-block-btn btn-copy" data-a="copy" title="复制" onclick="event.stopPropagation();onCBBtn(event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="code-block-btn btn-fs" data-a="fullscreen" title="全屏" onclick="event.stopPropagation();onCBBtn(event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>'.replace("X",l);
