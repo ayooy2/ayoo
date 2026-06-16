@@ -8,14 +8,16 @@ export async function onRequestGet(context) {
     await env.DB.prepare('UPDATE articles SET views = views + 1 WHERE id = ?').bind(a.id).run();
     a.views = (a.views || 0) + 1;
     const l = await env.DB.prepare('SELECT COUNT(*) as c FROM likes WHERE article_id=?').bind(a.id).first();
-    var h = render(a, l.c);
+    const prev = await env.DB.prepare("SELECT title, slug FROM articles WHERE is_published=1 AND id < ? AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY id DESC LIMIT 1").bind(a.id).first();
+    const next = await env.DB.prepare("SELECT title, slug FROM articles WHERE is_published=1 AND id > ? AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY id ASC LIMIT 1").bind(a.id).first();
+    var h = render(a, l.c, prev, next);
     return new Response(h, {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=3600' }
     });
   } catch (e) { return new Response('Error: ' + e.message, { status: 500 }); }
 }
 
-function render(a, likes) {
+function render(a, likes, prev, next) {
   var time = (a.created_at || '').replace('T', ' ').slice(0, 16);
   var tags = '', ts = (a.tags || '').split(',').filter(Boolean);
   for (var i = 0; i < ts.length; i++) tags += '<span class="tag">#' + esc(ts[i].trim()) + '</span>';
@@ -109,8 +111,16 @@ ${articleNavbar()}
 
       <!-- Sidebar TOC (desktop) -->
       <aside class="article-toc" id="article-toc">
-        <div class="toc-title">目录</div>
+        <div class="toc-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg> 目录</div>
         <ul class="toc-list" id="toc-list"></ul>
+        <div class="toc-nav">
+          ${prev ? '<a class="toc-nav-btn" href="/blog/' + esc(prev.slug) + '" title="' + esc(prev.title) + '"><span class="toc-nav-label">Previous post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></a>' : '<span class="toc-nav-btn disabled"><span class="toc-nav-label">Previous post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>'}
+          ${next ? '<a class="toc-nav-btn" href="/blog/' + esc(next.slug) + '" title="' + esc(next.title) + '"><span class="toc-nav-label">Next post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></a>' : '<span class="toc-nav-btn disabled"><span class="toc-nav-label">Next post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>'}
+          <button class="toc-nav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">
+            <span class="toc-nav-label">Back to top</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+        </div>
       </aside>
 
     </div>
