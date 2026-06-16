@@ -73,6 +73,14 @@ ${articleNavbar()}
         <svg id="toc-mobile-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="toc-mobile-content" id="toc-mobile-content"></div>
+      <div class="toc-nav toc-nav-mobile">
+        ${prev ? '<a class="toc-nav-btn" href="/blog/' + esc(prev.slug) + '" title="' + esc(prev.title) + '"><span class="toc-nav-label">Previous post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></a>' : '<span class="toc-nav-btn disabled"><span class="toc-nav-label">Previous post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>'}
+        ${next ? '<a class="toc-nav-btn" href="/blog/' + esc(next.slug) + '" title="' + esc(next.title) + '"><span class="toc-nav-label">Next post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></a>' : '<span class="toc-nav-btn disabled"><span class="toc-nav-label">Next post</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>'}
+        <button class="toc-nav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">
+          <span class="toc-nav-label">Back to top</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+      </div>
     </div>
 
     <!-- Article Layout: Content + Sidebar TOC -->
