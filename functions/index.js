@@ -115,6 +115,7 @@ ${navbar(t)}
 ${mobileMenu()}
 <script>
 (function(){
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
   /* Clock — hero (HH:MM) + navbar (HH:MM:SS) */
   function updateClock(){
     var n=new Date();

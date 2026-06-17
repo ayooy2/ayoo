@@ -84,6 +84,7 @@ ${searchNavbar()}
 </div>
 <script>
 (function(){
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
   /* Clock */
   function updateClock(){var n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0');var el=document.getElementById('clock');if(el) el.textContent=h+':'+m+':'+s}
   updateClock();setInterval(updateClock,1e3);
@@ -117,7 +118,7 @@ ${searchNavbar()}
   var recentDiv=document.getElementById('search-recent');
   var recentList=document.getElementById('search-recent-list');
   if(recentDiv&&recentList){
-    try{var r=JSON.parse(localStorage.getItem('recent_searches')||'[]');if(r.length){recentDiv.style.display='block';var h='';for(var i=0;i<r.length;i++){h+='<a class="search-recent-item" href="/search?q='+encodeURIComponent(r[i])+'">'+esc(r[i])+'</a>'}recentList.innerHTML=h}catch(e){}
+    try{var r=JSON.parse(localStorage.getItem('recent_searches')||'[]');if(r.length){recentDiv.style.display='block';var h='';for(var i=0;i<r.length;i++){h+='<a class="search-recent-item" href="/search?q='+encodeURIComponent(r[i])+'">'+esc(r[i])+'</a>'}recentList.innerHTML=h}}catch(e){}
   }
 /* Command Palette */
 (function(){

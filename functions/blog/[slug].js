@@ -370,6 +370,7 @@ function escR(s){var d=document.createElement("div");d.textContent=s||"";return 
 
 /* Clock */
 (function(){function u(){var n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0');var el=document.getElementById('clock');if(el) el.textContent=h+':'+m+':'+s}u();setInterval(u,1e3)})();
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 /* Reading progress bar */
 (function(){
