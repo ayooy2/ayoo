@@ -69,7 +69,7 @@ ${searchNavbar()}
   <div class="content">
     <div class="search-container">
       <form action="/search" method="get" class="search-form animate-in">
-        <input type="text" name="q" value="${esc(q)}" placeholder="搜索文章..." class="search-input" autofocus>
+        <div class="search-input-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" name="q" value="${esc(q)}" placeholder="搜索文章..." class="search-input" autofocus></div>
         <button type="submit" class="search-btn">搜索</button>
       </form>
       <div class="search-results">
