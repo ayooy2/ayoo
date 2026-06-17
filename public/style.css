@@ -1238,8 +1238,11 @@ body[style*="background-image"] .page-wrapper {
   stroke: var(--text-tertiary);
   opacity: 0.5;
   transition: opacity var(--duration-fast) var(--ease);
+  cursor: pointer;
 }
-.article-toc:hover .toc-topbar-icon { opacity: 0.8; }
+.toc-topbar-icon:hover { opacity: 0.9; }
+.toc-topbar-icon.collapsed { opacity: 0.3; }
+.toc-list.collapsed { display: none; }
 .toc-topbar-info {
   flex: 1;
   min-width: 0;
