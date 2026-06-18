@@ -51,7 +51,7 @@ function render(a, likes, prev, next) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${esc(a.title)}</title>${seo}
-<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/style.css?v=2">
 </head>
 <body>
 <div class="reading-progress" id="reading-progress"></div>
