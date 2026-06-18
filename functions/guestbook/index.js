@@ -24,7 +24,7 @@ export async function onRequestGet(context) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>留言簿</title>${seo}
-<link rel="stylesheet" href="/style.css?v=2">
+<link rel="stylesheet" href="/style.css?v=3">
 </head>
 <body>
 ${guestbookNavbar()}
