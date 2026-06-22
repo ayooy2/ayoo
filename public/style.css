@@ -1482,6 +1482,136 @@ body[style*="background-image"] .page-wrapper {
   padding-left: var(--space-md);
 }
 
+/* Comment form layout */
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.comment-form-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.comment-form-row .comment-input {
+  flex: 1;
+  min-width: 140px;
+}
+.comment-form-error {
+  font-size: var(--text-xs);
+  color: var(--danger);
+  padding: 0 0.2rem;
+}
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* Comment header with avatar */
+.comment-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+.comment-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+}
+.comment-header-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.comment-header-info .comment-author {
+  margin-bottom: 0;
+}
+.comment-header-info a.comment-author {
+  color: var(--accent);
+  text-decoration: none;
+}
+.comment-header-info a.comment-author:hover {
+  text-decoration: underline;
+}
+
+/* Delete button */
+.comment-delete-btn {
+  position: absolute;
+  top: var(--space-md);
+  right: 0;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  opacity: 0.5;
+  transition: opacity var(--duration-fast), color var(--duration-fast);
+}
+.comment-delete-btn:hover {
+  opacity: 1;
+  color: var(--danger);
+}
+.comment-box {
+  position: relative;
+}
+
+/* Reply hint */
+.comment-reply-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: 0.6rem;
+}
+.reply-cancel-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.6rem;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  margin-left: auto;
+}
+.reply-cancel-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Load more */
+.comment-load-more {
+  text-align: center;
+  padding: var(--space-lg) 0;
+}
+
+/* Empty state */
+.comment-empty {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  padding: var(--space-xl) 0;
+}
+
+/* Comment box relative for delete button */
+.comment-box .comment-delete-btn {
+  display: none;
+}
+
 /* ===== SEARCH PAGE ===== */
 .search-container {
   max-width: 640px;
