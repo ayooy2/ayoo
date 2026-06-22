@@ -52,6 +52,11 @@ npx wrangler d1 migrations apply a-site-db                       # 对本地 D1 
 
 6. **有 `transform`/`filter`/`perspective` 的祖先元素会破坏 `position: fixed` 定位。** CSS 规范中，这些属性会创建新的包含块，使 `position: fixed` 子元素相对于该祖先而非视口定位。`animate-in` 动画使用了 `transform`，必须在 `animationend` 后移除该类，否则全屏代码块等 `position: fixed` 功能会失效。
 
+## 开发规范
+
+1. **每次改动后必须 git commit** — 提交信息简要说明改动内容，确保每次变更可追溯、可回滚。
+2. **每次改动后必须写入 `项目日志.md`** — 格式：`时间：YYYY/MM/DD HH:MM --改动描述`，记录大方向和完成进度。
+
 ## D1 数据库表（共 6 张）
 
 `sites`（导航链接）、`settings`（页面配置键值对）、`articles`（博客文章，Markdown 格式）、`comments`（评论，通过 parent_id 实现树形回复）、`likes`（点赞，基于 fingerprint 切换）、`images`（图片，base64 存储在 D1 中）。

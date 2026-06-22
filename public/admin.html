@@ -251,6 +251,48 @@
             color: var(--color-primary);
             font-weight: 600;
         }
+        .comment-count-badge {
+            display: inline-block;
+            background: var(--color-primary);
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 0 5px;
+            border-radius: 8px;
+            margin-left: 2px;
+            line-height: 1.5;
+        }
+        .comment-expand-row td {
+            padding: 0.6rem 1rem;
+            background: var(--color-bg-secondary, #f9f9f9);
+        }
+        .comment-inner-table {
+            margin: 0;
+            background: transparent;
+        }
+        .comment-inner-table th {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            background: transparent;
+        }
+        .comment-inner-table td {
+            background: transparent;
+            font-size: 0.85rem;
+        }
+        .comment-expand-empty {
+            text-align: center;
+            padding: 1rem;
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+        }
+        .comment-reply-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            background: var(--color-primary-light, #eef2ff);
+            color: var(--color-primary);
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-right: 2px;
+        }
     </style>
 </head>
 <body>
@@ -277,7 +319,6 @@
             <button class="tab-btn active" data-tab="sites" onclick="switchTab('sites')">网站管理</button>
             <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">页面设置</button>
             <button class="tab-btn" data-tab="articles" onclick="switchTab('articles')">文章管理</button>
-            <button class="tab-btn" data-tab="comments" onclick="switchTab('comments')">评论管理</button>
         </nav>
 
         <!-- ========== 网站管理 ========== -->
@@ -386,14 +427,6 @@
             <button class="btn btn-primary" onclick="openArticleEditor()">+ 写文章</button>
         </div>
         <div id="article-list-area"></div>
-    </div>
-
-    <!-- ========== 评论管理 ========== -->
-    <div id="tab-comments" class="tab-content hidden">
-        <div class="toolbar">
-            <span style="color:var(--color-text-muted);font-size:0.9rem;">共 <span id="comment-total-count">0</span> 条评论</span>
-        </div>
-        <div id="comment-list-area"></div>
     </div>
 
     <!-- 文章编辑模态框 -->
@@ -589,7 +622,6 @@
             if (name === 'settings') loadSettings();
             if (name === 'sites') loadTable();
             if (name === 'articles') loadArticles();
-            if (name === 'comments') loadCommentsAdmin();
         }
 
         // ---- 网站管理 ----
@@ -806,11 +838,22 @@
         }
 
         // ---- 文章管理 ----
+        var _commentMap = {};
+
         async function loadArticles() {
             try {
-                var res = await fetch('/api/articles?all=1');
-                var data = await res.json();
-                renderArticleList(data.articles || []);
+                var [articlesRes, commentsRes] = await Promise.all([
+                    fetch('/api/articles?all=1'),
+                    fetch('/api/comments?all=1', { headers: { 'Authorization': 'Bearer ' + token } })
+                ]);
+                var articlesData = await articlesRes.json();
+                var commentsData = await commentsRes.json();
+                _commentMap = {};
+                (commentsData.comments || []).forEach(function(c) {
+                    if (!_commentMap[c.article_id]) _commentMap[c.article_id] = [];
+                    _commentMap[c.article_id].push(c);
+                });
+                renderArticleList(articlesData.articles || []);
             } catch(e) {
                 document.getElementById('article-list-area').innerHTML = '<p style="text-align:center;color:var(--color-danger);padding:2rem;">加载失败</p>';
             }
@@ -841,7 +884,9 @@
 
         function buildArticleRow(a) {
             var time = (a.created_at || '').slice(0, 10);
-            return '<tr><td><strong>' + escapeHtml(a.title) + '</strong></td><td>' + escapeHtml(a.author) + '</td><td>' + formatArticleStatus(a) + '</td><td>' + escapeHtml(a.tags||'') + '</td><td>' + time + '</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editArticle(' + a.id + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteArticle(' + a.id + ')">删除</button></td></tr>';
+            var cc = (_commentMap[a.id] || []).length;
+            var ccLabel = cc ? '<span class="comment-count-badge">' + cc + '</span>' : '';
+            return '<tr data-article-id="' + a.id + '"><td><strong>' + escapeHtml(a.title) + '</strong></td><td>' + escapeHtml(a.author) + '</td><td>' + formatArticleStatus(a) + '</td><td>' + escapeHtml(a.tags||'') + '</td><td>' + time + '</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editArticle(' + a.id + ')">编辑</button><button class="btn btn-secondary btn-sm" onclick="toggleArticleComments(' + a.id + ')">评论 ' + ccLabel + '</button><button class="btn btn-danger btn-sm" onclick="deleteArticle(' + a.id + ')">删除</button></td></tr>';
         }
 
         var _articleData = { published: [], drafts: [] };
@@ -1311,48 +1356,48 @@
             if (e.target.id === 'modal') closeModal();
         });
 
-        // ---- 评论管理 ----
-        async function loadCommentsAdmin() {
-            var area = document.getElementById('comment-list-area');
-            area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-text-muted);">加载中...</div>';
-            try {
-                var res = await fetch('/api/comments?all=1', { headers: { 'Authorization': 'Bearer ' + token } });
-                var data = await res.json();
-                var comments = data.comments || [];
-                document.getElementById('comment-total-count').textContent = comments.length;
-                renderCommentsAdmin(comments);
-            } catch (e) {
-                area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-danger);">加载失败</div>';
+        // ---- 文章级评论管理 ----
+        function toggleArticleComments(articleId) {
+            var rows = document.querySelectorAll('#article-tab-content tr[data-article-id="' + articleId + '"]');
+            var articleRow = null;
+            for (var i = 0; i < rows.length; i++) {
+                if (!rows[i].classList.contains('comment-expand-row')) { articleRow = rows[i]; break; }
+            }
+            if (!articleRow) return;
+            var next = articleRow.nextElementSibling;
+            if (next && next.classList.contains('comment-expand-row')) {
+                next.remove();
+            } else {
+                var div = document.createElement('tr');
+                div.className = 'comment-expand-row';
+                div.innerHTML = '<td colspan="6">' + renderArticleComments(articleId) + '</td>';
+                articleRow.after(div);
             }
         }
 
-        function renderCommentsAdmin(comments) {
-            var area = document.getElementById('comment-list-area');
-            if (!comments.length) {
-                area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-text-placeholder);">暂无评论</div>';
-                return;
-            }
-            var html = '<table class="data-table"><thead><tr>'
-                + '<th>文章</th><th>昵称</th><th>邮箱</th><th>内容</th><th>时间</th><th>操作</th>'
+        function renderArticleComments(articleId) {
+            var comments = _commentMap[articleId] || [];
+            if (!comments.length) return '<div class="comment-expand-empty">该文章暂无评论</div>';
+            var html = '<table class="data-table comment-inner-table"><thead><tr>'
+                + '<th>昵称</th><th>内容</th><th>时间</th><th>操作</th>'
                 + '</tr></thead><tbody>';
             for (var i = 0; i < comments.length; i++) {
                 var c = comments[i];
                 var time = (c.created_at || '').slice(0, 16).replace('T', ' ');
-                var content = (c.content || '').length > 60 ? c.content.slice(0, 60) + '...' : (c.content || '');
+                var content = (c.content || '').length > 80 ? c.content.slice(0, 80) + '...' : (c.content || '');
+                var prefix = c.parent_id ? '<span class="comment-reply-tag">回复</span> ' : '';
                 html += '<tr>'
-                    + '<td><a href="/blog/' + (c.article_slug || '') + '" target="_blank" style="color:var(--color-primary);text-decoration:none;">' + escapeHtml(c.article_title || '') + '</a></td>'
-                    + '<td>' + escapeHtml(c.author_name || '') + '</td>'
-                    + '<td style="font-size:0.8rem;color:var(--color-text-muted);">' + escapeHtml(c.email || '-') + '</td>'
+                    + '<td style="white-space:nowrap;">' + prefix + escapeHtml(c.author_name || '') + '</td>'
                     + '<td>' + escapeHtml(content) + '</td>'
                     + '<td style="white-space:nowrap;font-size:0.8rem;">' + time + '</td>'
-                    + '<td><button class="btn btn-sm btn-danger" onclick="deleteCommentAdmin(' + c.id + ')">删除</button></td>'
+                    + '<td><button class="btn btn-sm btn-danger" onclick="deleteArticleComment(' + c.id + ',' + articleId + ')">删除</button></td>'
                     + '</tr>';
             }
             html += '</tbody></table>';
-            area.innerHTML = html;
+            return html;
         }
 
-        function deleteCommentAdmin(id) {
+        function deleteArticleComment(id, articleId) {
             if (!confirm('确定删除这条评论及其所有回复？')) return;
             fetch('/api/comments/' + id, {
                 method: 'DELETE',
@@ -1361,7 +1406,7 @@
                 if (!r.ok) throw new Error('fail');
                 return r.json();
             }).then(function() {
-                loadCommentsAdmin();
+                loadArticles();
             }).catch(function() {
                 alert('删除失败');
             });
