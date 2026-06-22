@@ -277,6 +277,7 @@
             <button class="tab-btn active" data-tab="sites" onclick="switchTab('sites')">网站管理</button>
             <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">页面设置</button>
             <button class="tab-btn" data-tab="articles" onclick="switchTab('articles')">文章管理</button>
+            <button class="tab-btn" data-tab="comments" onclick="switchTab('comments')">评论管理</button>
         </nav>
 
         <!-- ========== 网站管理 ========== -->
@@ -385,6 +386,14 @@
             <button class="btn btn-primary" onclick="openArticleEditor()">+ 写文章</button>
         </div>
         <div id="article-list-area"></div>
+    </div>
+
+    <!-- ========== 评论管理 ========== -->
+    <div id="tab-comments" class="tab-content hidden">
+        <div class="toolbar">
+            <span style="color:var(--color-text-muted);font-size:0.9rem;">共 <span id="comment-total-count">0</span> 条评论</span>
+        </div>
+        <div id="comment-list-area"></div>
     </div>
 
     <!-- 文章编辑模态框 -->
@@ -580,6 +589,7 @@
             if (name === 'settings') loadSettings();
             if (name === 'sites') loadTable();
             if (name === 'articles') loadArticles();
+            if (name === 'comments') loadCommentsAdmin();
         }
 
         // ---- 网站管理 ----
@@ -1300,6 +1310,97 @@
         document.getElementById('modal').addEventListener('click', function(e) {
             if (e.target.id === 'modal') closeModal();
         });
+
+        // ---- 评论管理 ----
+        var _commentArticles = []; // 缓存文章列表用于显示标题
+
+        async function loadCommentsAdmin() {
+            var area = document.getElementById('comment-list-area');
+            area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-text-muted);">加载中...</div>';
+            try {
+                // 先加载文章列表以获取文章标题
+                if (!_commentArticles.length) {
+                    var aRes = await fetch('/api/articles?all=1');
+                    var aData = await aRes.json();
+                    _commentArticles = aData.articles || [];
+                }
+                // 加载所有文章的评论
+                var allComments = [];
+                for (var i = 0; i < _commentArticles.length; i++) {
+                    var art = _commentArticles[i];
+                    var cRes = await fetch('/api/comments?article_id=' + art.id + '&limit=100');
+                    var cData = await cRes.json();
+                    var cs = flattenComments(cData.comments || []);
+                    for (var j = 0; j < cs.length; j++) {
+                        cs[j]._articleTitle = art.title;
+                        cs[j]._articleSlug = art.slug;
+                    }
+                    allComments = allComments.concat(cs);
+                }
+                // 按时间倒序
+                allComments.sort(function(a, b) { return (b.created_at || '').localeCompare(a.created_at || ''); });
+                document.getElementById('comment-total-count').textContent = allComments.length;
+                renderCommentsAdmin(allComments);
+            } catch (e) {
+                area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-danger);">加载失败</div>';
+            }
+        }
+
+        function flattenComments(list) {
+            var result = [];
+            for (var i = 0; i < list.length; i++) {
+                result.push(list[i]);
+                if (list[i].replies && list[i].replies.length) {
+                    result = result.concat(flattenComments(list[i].replies));
+                }
+            }
+            return result;
+        }
+
+        function renderCommentsAdmin(comments) {
+            var area = document.getElementById('comment-list-area');
+            if (!comments.length) {
+                area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-text-placeholder);">暂无评论</div>';
+                return;
+            }
+            var html = '<table class="data-table"><thead><tr>'
+                + '<th>文章</th><th>昵称</th><th>邮箱</th><th>内容</th><th>时间</th><th>操作</th>'
+                + '</tr></thead><tbody>';
+            for (var i = 0; i < comments.length; i++) {
+                var c = comments[i];
+                var time = (c.created_at || '').slice(0, 16).replace('T', ' ');
+                var content = (c.content || '').length > 60 ? c.content.slice(0, 60) + '...' : (c.content || '');
+                html += '<tr>'
+                    + '<td><a href="/blog/' + (c._articleSlug || '') + '" target="_blank" style="color:var(--color-primary);text-decoration:none;">' + escHTML(c._articleTitle || '') + '</a></td>'
+                    + '<td>' + escHTML(c.author_name || '') + '</td>'
+                    + '<td style="font-size:0.8rem;color:var(--color-text-muted);">' + escHTML(c.email || '-') + '</td>'
+                    + '<td>' + escHTML(content) + '</td>'
+                    + '<td style="white-space:nowrap;font-size:0.8rem;">' + time + '</td>'
+                    + '<td><button class="btn btn-sm btn-danger" onclick="deleteCommentAdmin(' + c.id + ')">删除</button></td>'
+                    + '</tr>';
+            }
+            html += '</tbody></table>';
+            area.innerHTML = html;
+        }
+
+        function deleteCommentAdmin(id) {
+            if (!confirm('确定删除这条评论及其所有回复？')) return;
+            fetch('/api/comments/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).then(function(r) {
+                if (!r.ok) throw new Error('fail');
+                return r.json();
+            }).then(function() {
+                loadCommentsAdmin();
+            }).catch(function() {
+                alert('删除失败');
+            });
+        }
+
+        function escHTML(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
     </script>
 </body>
 </html>
