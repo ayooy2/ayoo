@@ -1312,49 +1312,18 @@
         });
 
         // ---- 评论管理 ----
-        var _commentArticles = []; // 缓存文章列表用于显示标题
-
         async function loadCommentsAdmin() {
             var area = document.getElementById('comment-list-area');
             area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-text-muted);">加载中...</div>';
             try {
-                // 先加载文章列表以获取文章标题
-                if (!_commentArticles.length) {
-                    var aRes = await fetch('/api/articles?all=1');
-                    var aData = await aRes.json();
-                    _commentArticles = aData.articles || [];
-                }
-                // 加载所有文章的评论
-                var allComments = [];
-                for (var i = 0; i < _commentArticles.length; i++) {
-                    var art = _commentArticles[i];
-                    var cRes = await fetch('/api/comments?article_id=' + art.id + '&limit=100');
-                    var cData = await cRes.json();
-                    var cs = flattenComments(cData.comments || []);
-                    for (var j = 0; j < cs.length; j++) {
-                        cs[j]._articleTitle = art.title;
-                        cs[j]._articleSlug = art.slug;
-                    }
-                    allComments = allComments.concat(cs);
-                }
-                // 按时间倒序
-                allComments.sort(function(a, b) { return (b.created_at || '').localeCompare(a.created_at || ''); });
-                document.getElementById('comment-total-count').textContent = allComments.length;
-                renderCommentsAdmin(allComments);
+                var res = await fetch('/api/comments?all=1', { headers: { 'Authorization': 'Bearer ' + token } });
+                var data = await res.json();
+                var comments = data.comments || [];
+                document.getElementById('comment-total-count').textContent = comments.length;
+                renderCommentsAdmin(comments);
             } catch (e) {
                 area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-danger);">加载失败</div>';
             }
-        }
-
-        function flattenComments(list) {
-            var result = [];
-            for (var i = 0; i < list.length; i++) {
-                result.push(list[i]);
-                if (list[i].replies && list[i].replies.length) {
-                    result = result.concat(flattenComments(list[i].replies));
-                }
-            }
-            return result;
         }
 
         function renderCommentsAdmin(comments) {
@@ -1371,10 +1340,10 @@
                 var time = (c.created_at || '').slice(0, 16).replace('T', ' ');
                 var content = (c.content || '').length > 60 ? c.content.slice(0, 60) + '...' : (c.content || '');
                 html += '<tr>'
-                    + '<td><a href="/blog/' + (c._articleSlug || '') + '" target="_blank" style="color:var(--color-primary);text-decoration:none;">' + escHTML(c._articleTitle || '') + '</a></td>'
-                    + '<td>' + escHTML(c.author_name || '') + '</td>'
-                    + '<td style="font-size:0.8rem;color:var(--color-text-muted);">' + escHTML(c.email || '-') + '</td>'
-                    + '<td>' + escHTML(content) + '</td>'
+                    + '<td><a href="/blog/' + (c.article_slug || '') + '" target="_blank" style="color:var(--color-primary);text-decoration:none;">' + escapeHtml(c.article_title || '') + '</a></td>'
+                    + '<td>' + escapeHtml(c.author_name || '') + '</td>'
+                    + '<td style="font-size:0.8rem;color:var(--color-text-muted);">' + escapeHtml(c.email || '-') + '</td>'
+                    + '<td>' + escapeHtml(content) + '</td>'
                     + '<td style="white-space:nowrap;font-size:0.8rem;">' + time + '</td>'
                     + '<td><button class="btn btn-sm btn-danger" onclick="deleteCommentAdmin(' + c.id + ')">删除</button></td>'
                     + '</tr>';
@@ -1396,10 +1365,6 @@
             }).catch(function() {
                 alert('删除失败');
             });
-        }
-
-        function escHTML(s) {
-            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
     </script>
 </body>
