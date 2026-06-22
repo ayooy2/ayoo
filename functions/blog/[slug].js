@@ -383,7 +383,7 @@ function loadComments(page){
     }
     if(!d.total) area.innerHTML='<div class="comment-empty">还没有评论，来抢沙发吧</div>';
     checkAdmin();
-  });
+  }).catch(function(){});
 }
 
 function countAll(list){var n=0;for(var i=0;i<list.length;i++){n++;if(list[i].replies)n+=countAll(list[i].replies)}return n}
