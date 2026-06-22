@@ -103,9 +103,21 @@ ${articleNavbar()}
         <section class="comment-section">
           <h3>评论 (<span id="cc">0</span>)</h3>
           <div id="comments-area"></div>
-          <textarea class="comment-input" id="comment-input" placeholder="写下想法..."></textarea>
-          <input class="comment-input" id="comment-name" placeholder="昵称" style="min-height:auto;height:auto;margin-top:0.4rem;width:auto;min-width:160px;">
-          <button class="btn-submit" onclick="this.disabled=true;postComment(this)">发表</button>
+          <div id="reply-hint" class="comment-reply-hint" style="display:none">
+            <span id="reply-hint-text"></span>
+            <button onclick="cancelReply()" class="reply-cancel-btn">取消回复</button>
+          </div>
+          <form id="comment-form" class="comment-form" onsubmit="return submitComment(event)">
+            <div class="comment-form-row">
+              <input type="text" id="comment-name" class="comment-input" placeholder="昵称 *" required maxlength="20" style="flex:1;min-height:auto;height:auto;">
+              <input type="email" id="comment-email" class="comment-input" placeholder="邮箱 *" required maxlength="100" style="flex:1;min-height:auto;height:auto;">
+            </div>
+            <input type="url" id="comment-url" class="comment-input" placeholder="个人网址 (选填)" maxlength="200" style="min-height:auto;height:auto;">
+            <textarea id="comment-input" class="comment-input" placeholder="写下想法... (5-500字)" required maxlength="500" rows="3"></textarea>
+            <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off">
+            <div id="comment-error" class="comment-form-error" style="display:none"></div>
+            <button type="submit" class="btn-submit" id="comment-submit-btn">发表评论</button>
+          </form>
         </section>
       </article>
 
@@ -315,20 +327,59 @@ function onCBBtn(e){
   }
 }
 
-function postComment(btn){
-  var c=document.getElementById("comment-input").value.trim(),
-      n=document.getElementById("comment-name").value.trim()||"匿名";
-  if(!c){if(btn)btn.disabled=false;return;}
-  fetch("/api/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,parent_id:replyTo,author_name:n,content:c})})
-  .then(function(r){return r.json()})
-  .then(function(){document.getElementById("comment-input").value="";replyTo=null;loadComments()})
-  .finally(function(){if(btn)btn.disabled=false});
+var commentPage=1,commentHasMore=false;
+
+function submitComment(e){
+  e.preventDefault();
+  var form=document.getElementById("comment-form");
+  var hp=form.elements['website'];
+  if(hp&&hp.value) return false;
+  var n=(document.getElementById("comment-name").value||"").trim();
+  var em=(document.getElementById("comment-email").value||"").trim().toLowerCase();
+  var u=(document.getElementById("comment-url").value||"").trim();
+  var c=(document.getElementById("comment-input").value||"").trim();
+  var errEl=document.getElementById("comment-error");
+  var btn=document.getElementById("comment-submit-btn");
+  errEl.style.display="none";
+  if(!n){showCommentError("请输入昵称");return false;}
+  if(n.length>20){showCommentError("昵称不能超过20个字符");return false;}
+  if(!em){showCommentError("请输入邮箱");return false;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){showCommentError("邮箱格式不正确");return false;}
+  if(c.length<5){showCommentError("评论内容至少5个字符");return false;}
+  if(c.length>500){showCommentError("评论内容不能超过500个字符");return false;}
+  if(u&&!/^https?:\/\/.+/i.test(u)){showCommentError("网址格式不正确");return false;}
+  btn.disabled=true;btn.textContent="发布中...";
+  fetch("/api/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,parent_id:replyTo,author_name:n,email:em,url:u,content:c})})
+  .then(function(r){if(!r.ok)return r.json().then(function(d){throw new Error(d.error||"提交失败")});return r.json()})
+  .then(function(){document.getElementById("comment-input").value="";cancelReply();commentPage=1;loadComments();showCommentSuccess()})
+  .catch(function(err){showCommentError(err.message||"提交失败，请稍后再试")})
+  .finally(function(){btn.disabled=false;btn.textContent="发表评论"});
+  return false;
 }
 
-function loadComments(){
-  fetch("/api/comments?article_id="+aid).then(function(r){return r.json()}).then(function(cs){
-    document.getElementById("cc").textContent=countAll(cs);
-    document.getElementById("comments-area").innerHTML=rc(cs);
+function showCommentError(msg){
+  var el=document.getElementById("comment-error");el.textContent=msg;el.style.display="block";el.style.color="var(--danger)";
+}
+function showCommentSuccess(){
+  var el=document.getElementById("comment-error");el.textContent="评论发布成功！";el.style.display="block";el.style.color="var(--success)";
+  setTimeout(function(){el.style.display="none"},3000);
+}
+function cancelReply(){replyTo=null;var h=document.getElementById("reply-hint");if(h)h.style.display="none";}
+function startReply(id,name){replyTo=id;var h=document.getElementById("reply-hint"),t=document.getElementById("reply-hint-text");if(h&&t){t.textContent="回复 "+name+":";h.style.display="flex";}document.getElementById("comment-input").focus();}
+
+function loadComments(page){
+  page=page||1;
+  fetch("/api/comments?article_id="+aid+"&page="+page+"&limit=20").then(function(r){return r.json()}).then(function(d){
+    document.getElementById("cc").textContent=d.total||0;
+    commentPage=d.page;commentHasMore=d.hasMore;
+    var area=document.getElementById("comments-area");
+    if(page===1) area.innerHTML="";
+    area.innerHTML+=rc(d.comments||[]);
+    if(d.hasMore){
+      area.innerHTML+='<div class="comment-load-more"><button class="btn-submit" onclick="loadComments('+(page+1)+')">加载更多评论</button></div>';
+    }
+    if(!d.total) area.innerHTML='<div class="comment-empty">还没有评论，来抢沙发吧</div>';
+    checkAdmin();
   });
 }
 
@@ -338,11 +389,22 @@ function rc(list,d){
   d=d||0;var h="";
   for(var i=0;i<list.length;i++){
     var c=list[i];
-    h+='<div class="comment-box" style="padding-left:'+(d*16)+'px">';
-    h+='<div class="comment-author">'+escR(c.author_name)+'</div>';
-    h+='<div class="comment-time">'+((c.created_at||"").slice(0,16).replace("T"," "))+'</div>';
-    h+='<div class="comment-text">'+escR(c.content)+'</div>';
-    h+='<a class="reply-link" onclick="replyTo='+c.id+';document.getElementById(\\'comment-input\\').focus()">回复</a>';
+    var avatar=gravatarUrl(c.email||"");
+    var nameHtml=c.url
+      ?'<a href="'+escR(c.url)+'" target="_blank" rel="noopener noreferrer" class="comment-author">'+escR(c.author_name)+'</a>'
+      :'<span class="comment-author">'+escR(c.author_name)+'</span>';
+    var time=((c.created_at||"").slice(0,16).replace("T"," "));
+    h+='<div class="comment-box'+(d?' comment-children':'')+'">';
+    h+='<div class="comment-header">';
+    h+='<img class="comment-avatar" src="'+avatar+'" alt="" loading="lazy" onerror="this.src=\'https://www.gravatar.com/avatar?d=mp&s=48\'">';
+    h+='<div class="comment-header-info">';
+    h+=nameHtml;
+    h+='<span class="comment-time">'+time+'</span>';
+    h+='</div>';
+    h+='<button class="comment-delete-btn" data-id="'+c.id+'" onclick="deleteComment('+c.id+')" title="删除" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>';
+    h+='</div>';
+    h+='<div class="comment-text">'+escR(c.content).replace(/\n/g,"<br>")+'</div>';
+    h+='<a class="reply-link" onclick="startReply('+c.id+',\''+escR(c.author_name).replace(/'/g,"\\'")+'\')">回复</a>';
     h+='</div>';
     if(c.replies&&c.replies.length) h+=rc(c.replies,d+1);
   }
@@ -367,6 +429,40 @@ function updateLikeState(){
 }
 
 function escR(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
+
+function gravatarUrl(email){
+  if(!email) return "https://www.gravatar.com/avatar?d=mp&s=48";
+  return "https://www.gravatar.com/avatar/"+md5(email.trim().toLowerCase())+"?d=mp&s=48";
+}
+
+function md5(s){
+  function L(k,d){return(k<<d)|(k>>>(32-d))}
+  function K(G,k){var I,d,F,H,x;F=(G&2147483648);H=(k&2147483648);I=(G&1073741824);d=(k&1073741824);x=(G&1073741823)+(k&1073741823);if(I&d)return(x^2147483648^F^H);if(I|d){if(x&1073741824)return(x^3221225472^F^H);else return(x^1073741824^F^H)}else return(x^F^H)}
+  function r(d,F,k){return(d&F)|((~d)&k)}function q(d,F,k){return(d&k)|(F&(~k))}function p(d,F,k){return(d^F^k)}function n(d,F,k){return(F^(d|(~k)))}
+  function u(G,F,aa,Z,k,H,I){G=K(G,K(K(r(F,aa,Z),k),I));return K(L(G,H),F)}
+  function f(G,F,aa,Z,k,H,I){G=K(G,K(K(q(F,aa,Z),k),I));return K(L(G,H),F)}
+  function D(G,F,aa,Z,k,H,I){G=K(G,K(K(p(F,aa,Z),k),I));return K(L(G,H),F)}
+  function t(G,F,aa,Z,k,H,I){G=K(G,K(K(n(F,aa,Z),k),I));return K(L(G,H),F)}
+  function e(G){var Z;var F=G.length;var x=F+8;var k=(x-(x%64))/64;var I=(k+1)*16;var aa=Array(I-1);var d=0;var H=0;while(H<F){Z=(H-(H%4))/4;d=(H%4)*8;aa[Z]=(aa[Z]|(G.charCodeAt(H)<<d));H++}Z=(H-(H%4))/4;d=(H%4)*8;aa[Z]=aa[Z]|(128<<d);aa[I-2]=F<<3;aa[I-1]=F>>>29;return aa}
+  function B(x){var k="",F="",G,d;for(d=0;d<=3;d++){G=(x>>>(d*8))&255;F="0"+G.toString(16);k=k+F.substr(F.length-2,2)}return k}
+  var C=[],P,h,E,v,g,Y,X,W,V,S=7,Q=12,N=17,M=22,A=5,z=9,y=14,w=20,i=4,o=11,m=16,j=23,U=6,T=10,R=15,O=21;var s=e(s);Y=1732584193;X=4023233417;W=2562383102;V=271733878;for(P=0;P<s.length;P+=16){h=Y;E=X;v=W;g=V;Y=u(Y,X,W,V,s[P],S,3614090360);V=u(V,Y,X,W,s[P+1],Q,3905402710);W=u(W,V,Y,X,s[P+2],N,606105819);X=u(X,W,V,Y,s[P+3],M,3250441966);Y=u(Y,X,W,V,s[P+4],S,4118548399);V=u(V,Y,X,W,s[P+5],Q,1200080426);W=u(W,V,Y,X,s[P+6],N,2821735955);X=u(X,W,V,Y,s[P+7],M,4249261313);Y=u(Y,X,W,V,s[P+8],S,1770035416);V=u(V,Y,X,W,s[P+9],Q,2336552879);W=u(W,V,Y,X,s[P+10],N,4294925233);X=u(X,W,V,Y,s[P+11],M,2304563134);Y=u(Y,X,W,V,s[P+12],S,1804603682);V=u(V,Y,X,W,s[P+13],Q,4254626195);W=u(W,V,Y,X,s[P+14],N,2792965006);X=u(X,W,V,Y,s[P+15],M,1236535329);Y=f(Y,X,W,V,s[P+1],A,4129170786);V=f(V,Y,X,W,s[P+6],z,3225465664);W=f(W,V,Y,X,s[P+11],y,643717713);X=f(X,W,V,Y,s[P],w,3921069994);Y=f(Y,X,W,V,s[P+5],A,3593408605);V=f(V,Y,X,W,s[P+10],z,38016083);W=f(W,V,Y,X,s[P+15],y,3634488961);X=f(X,W,V,Y,s[P+4],w,3889429448);Y=f(Y,X,W,V,s[P+9],A,568446438);V=f(V,Y,X,W,s[P+14],z,3275163606);W=f(W,V,Y,X,s[P+3],y,4107603335);X=f(X,W,V,Y,s[P+8],w,1163531501);Y=f(Y,X,W,V,s[P+13],A,2850285829);V=f(V,Y,X,W,s[P+2],z,4243563512);W=f(W,V,Y,X,s[P+7],y,1735328473);X=f(X,W,V,Y,s[P+12],w,2368359562);Y=D(Y,X,W,V,s[P+5],i,4294588738);V=D(V,Y,X,W,s[P+8],o,2272392833);W=D(W,V,Y,X,s[P+11],m,1839030562);X=D(X,W,V,Y,s[P+14],j,4259657740);Y=D(Y,X,W,V,s[P+1],i,2763975236);V=D(V,Y,X,W,s[P+4],o,1272893353);W=D(W,V,Y,X,s[P+7],m,4139469664);X=D(X,W,V,Y,s[P+10],j,3200236656);Y=D(Y,X,W,V,s[P+13],i,681279174);V=D(V,Y,X,W,s[P],o,3936430074);W=D(W,V,Y,X,s[P+3],m,3572445317);X=D(X,W,V,Y,s[P+6],j,76029189);Y=D(Y,X,W,V,s[P+9],i,3654602809);V=D(V,Y,X,W,s[P+12],o,3873151461);W=D(W,V,Y,X,s[P+15],m,530742520);X=D(X,W,V,Y,s[P+2],j,3299628645);Y=t(Y,X,W,V,s[P],U,4096336452);V=t(V,Y,X,W,s[P+7],T,1126891415);W=t(W,V,Y,X,s[P+14],R,2878612391);X=t(X,W,V,Y,s[P+5],O,4237533241);Y=t(Y,X,W,V,s[P+12],U,1700485571);V=t(V,Y,X,W,s[P+3],T,2399980690);W=t(W,V,Y,X,s[P+10],R,4293915773);X=t(X,W,V,Y,s[P+1],O,2240044497);Y=t(Y,X,W,V,s[P+8],U,1873313359);V=t(V,Y,X,W,s[P+15],T,4264355552);W=t(W,V,Y,X,s[P+6],R,2734768916);X=t(X,W,V,Y,s[P+13],O,1309151649);Y=t(Y,X,W,V,s[P+4],U,4149444226);V=t(V,Y,X,W,s[P+11],T,3174756917);W=t(W,V,Y,X,s[P+2],R,718787259);X=t(X,W,V,Y,s[P+9],O,3951481745);Y=K(Y,h);X=K(X,E);W=K(W,v);V=K(V,g)}return(B(Y)+B(X)+B(W)+B(V)).toLowerCase()}
+
+function checkAdmin(){
+  var token=localStorage.getItem("admin_token");
+  if(!token) return;
+  fetch("/api/auth",{headers:{"Authorization":"Bearer "+token}}).then(function(r){return r.json()}).then(function(d){
+    if(d.ok){document.querySelectorAll(".comment-delete-btn").forEach(function(b){b.style.display="inline-flex"})}
+  }).catch(function(){});
+}
+
+function deleteComment(id){
+  if(!confirm("确定删除这条评论及其所有回复？")) return;
+  var token=localStorage.getItem("admin_token");
+  fetch("/api/comments/"+id,{method:"DELETE",headers:{"Authorization":"Bearer "+token}})
+  .then(function(r){if(!r.ok)throw new Error("fail");return r.json()})
+  .then(function(){commentPage=1;loadComments(1)})
+  .catch(function(){alert("删除失败")});
+}
 
 /* Clock */
 (function(){function u(){var n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0');var el=document.getElementById('clock');if(el) el.textContent=h+':'+m+':'+s}u();setInterval(u,1e3)})();
