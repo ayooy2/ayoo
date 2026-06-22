@@ -347,10 +347,10 @@ function submitComment(){
   if(!n){showCommentError("请输入昵称");return false;}
   if(n.length>20){showCommentError("昵称不能超过20个字符");return false;}
   if(!em){showCommentError("请输入邮箱");return false;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){showCommentError("邮箱格式不正确");return false;}
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(em)){showCommentError("邮箱格式不正确");return false;}
   if(c.length<5){showCommentError("评论内容至少5个字符");return false;}
   if(c.length>500){showCommentError("评论内容不能超过500个字符");return false;}
-  if(u&&!/^https?:\/\/.+/i.test(u)){showCommentError("网址格式不正确");return false;}
+  if(u&&!/^https?:\\/\\/.+/i.test(u)){showCommentError("网址格式不正确");return false;}
   btn.disabled=true;btn.textContent="发布中...";
   fetch("/api/comments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,parent_id:replyTo,author_name:n,email:em,url:u,content:c})})
   .then(function(r){if(!r.ok)return r.json().then(function(d){throw new Error(d.error||"提交失败")});return r.json()})
@@ -399,15 +399,15 @@ function rc(list,d){
     var time=((c.created_at||"").slice(0,16).replace("T"," "));
     h+='<div class="comment-box'+(d?' comment-children':'')+'">';
     h+='<div class="comment-header">';
-    h+='<img class="comment-avatar" src="'+avatar+'" alt="" loading="lazy" onerror="this.src=\'https://www.gravatar.com/avatar?d=mp&s=48\'">';
+    h+='<img class="comment-avatar" src="'+avatar+'" alt="" loading="lazy" onerror="this.src=&quot;https://www.gravatar.com/avatar?d=mp&amp;s=48&quot;">';
     h+='<div class="comment-header-info">';
     h+=nameHtml;
     h+='<span class="comment-time">'+time+'</span>';
     h+='</div>';
     h+='<button class="comment-delete-btn" data-id="'+c.id+'" onclick="deleteComment('+c.id+')" title="删除" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>';
     h+='</div>';
-    h+='<div class="comment-text">'+escR(c.content).replace(/\n/g,"<br>")+'</div>';
-    h+='<a class="reply-link" onclick="startReply('+c.id+',\''+escR(c.author_name).replace(/'/g,"\\'")+'\')">回复</a>';
+    h+='<div class="comment-text">'+escR(c.content).replace(/\\n/g,"<br>")+'</div>';
+    h+='<a class="reply-link" onclick="startReply('+c.id+',&apos;'+escR(c.author_name).replace(/'/g,"&apos;")+'&apos;)">回复</a>';
     h+='</div>';
     if(c.replies&&c.replies.length) h+=rc(c.replies,d+1);
   }
