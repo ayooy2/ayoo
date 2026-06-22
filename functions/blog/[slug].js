@@ -107,7 +107,7 @@ ${articleNavbar()}
             <span id="reply-hint-text"></span>
             <button onclick="cancelReply()" class="reply-cancel-btn">取消回复</button>
           </div>
-          <form id="comment-form" class="comment-form" onsubmit="return submitComment(event)">
+          <form id="comment-form" class="comment-form">
             <div class="comment-form-row">
               <input type="text" id="comment-name" class="comment-input" placeholder="昵称 *" required maxlength="20" style="flex:1;min-height:auto;height:auto;">
               <input type="email" id="comment-email" class="comment-input" placeholder="邮箱 *" required maxlength="100" style="flex:1;min-height:auto;height:auto;">
@@ -260,6 +260,10 @@ document.querySelectorAll('.animate-in').forEach(function(el){el.addEventListene
 loadComments();
 updateLikeState();
 
+/* Comment form submission */
+var _cForm=document.getElementById("comment-form");
+if(_cForm) _cForm.addEventListener("submit",function(e){e.preventDefault();submitComment()});
+
 /* TOC topbar hover info */
 var tocInfo=document.getElementById("toc-info");
 var tocBtns=document.querySelectorAll(".toc-topbar-btn");
@@ -329,8 +333,7 @@ function onCBBtn(e){
 
 var commentPage=1,commentHasMore=false;
 
-function submitComment(e){
-  e.preventDefault();
+function submitComment(){
   var form=document.getElementById("comment-form");
   var hp=form.elements['website'];
   if(hp&&hp.value) return false;
