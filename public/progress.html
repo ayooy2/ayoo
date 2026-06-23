@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ayoo - 项目进度日志</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#faf9f7;--bg2:#fff;--text:#1a1a1a;--text2:#666;--text3:#999;--border:#e8e6e3;--accent:#2563eb;--accent2:#7c3aed;--green:#16a34a;--orange:#ea580c;--card:#fff;--shadow:0 1px 3px rgba(0,0,0,.06)}
+[data-theme="dark"]{--bg:#111;--bg2:#1a1a1a;--text:#e5e5e5;--text2:#a0a0a0;--text3:#666;--border:#2a2a2a;--card:#1e1e1e;--shadow:0 1px 3px rgba(0,0,0,.3)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2.5rem;flex-wrap:wrap;gap:1rem}
+header h1{font-size:1.6rem;font-weight:700;letter-spacing:-.02em}
+header h1 span{color:var(--accent)}
+.meta{display:flex;gap:.6rem;flex-wrap:wrap}
+.tag{display:inline-block;padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:500;background:var(--accent);color:#fff}
+.tag.green{background:var(--green)}
+.tag.orange{background:var(--orange)}
+.tag.purple{background:var(--accent2)}
+.theme-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;color:var(--text)}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:2.5rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;box-shadow:var(--shadow)}
+.stat-num{font-size:2rem;font-weight:700;color:var(--accent);line-height:1.2}
+.stat-label{font-size:.78rem;color:var(--text2);margin-top:.3rem}
+/* Architecture */
+.section-title{font-size:1.1rem;font-weight:600;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+.arch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2.5rem}
+.arch-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;box-shadow:var(--shadow);transition:transform .2s}
+.arch-card:hover{transform:translateY(-2px)}
+.arch-icon{font-size:1.6rem;margin-bottom:.5rem}
+.arch-name{font-weight:600;font-size:.9rem;margin-bottom:.3rem}
+.arch-desc{font-size:.75rem;color:var(--text2);line-height:1.5}
+/* Timeline */
+.timeline{position:relative;padding-left:2rem}
+.timeline::before{content:"";position:absolute;left:.5rem;top:0;bottom:0;width:2px;background:var(--border)}
+.day-group{margin-bottom:1.5rem}
+.day-label{position:relative;font-size:.85rem;font-weight:600;color:var(--accent);margin-bottom:.6rem;padding-left:1.2rem}
+.day-label::before{content:"";position:absolute;left:-1.65rem;top:.35rem;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+.entry{position:relative;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;margin-bottom:.5rem;font-size:.82rem;line-height:1.6;box-shadow:var(--shadow)}
+.entry::before{content:"";position:absolute;left:-1.55rem;top:.7rem;width:6px;height:6px;border-radius:50%;background:var(--border)}
+.entry .time{color:var(--text3);font-size:.72rem;margin-bottom:.2rem}
+.entry .desc{color:var(--text2)}
+.entry .desc strong{color:var(--text);font-weight:600}
+/* Filter */
+.filter-bar{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.filter-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.35rem .8rem;cursor:pointer;font-size:.78rem;color:var(--text2);transition:all .2s}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+footer{text-align:center;padding:2rem 0;font-size:.75rem;color:var(--text3)}
+footer a{color:var(--accent);text-decoration:none}
+@media(max-width:640px){.container{padding:1rem}.timeline{padding-left:1.5rem}.day-label{padding-left:.8rem}.day-label::before{left:-1.15rem}.entry::before{left:-1.05rem}}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1><span>Ayoo</span> 项目进度日志</h1>
+      <div style="font-size:.8rem;color:var(--text2);margin-top:.3rem">Cloudflare Pages + Workers + D1 | 纯原生 JS</div>
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <div class="meta">
+        <span class="tag">SSR</span>
+        <span class="tag green">D1</span>
+        <span class="tag purple">Workers</span>
+      </div>
+      <button class="theme-btn" onclick="toggleTheme()">☽</button>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="section-title">系统架构</div>
+  <div class="arch-grid" id="arch"></div>
+
+  <div class="section-title">变更时间线</div>
+  <div class="filter-bar" id="filters"></div>
+  <div class="timeline" id="timeline"></div>
+
+  <footer>
+    <a href="https://ayoow.pages.dev" target="_blank">ayoow.pages.dev</a> · 最后更新：<span id="last-update"></span>
+  </footer>
+</div>
+
+<script>
+var LOGS=[
+{date:"2026/05/10",time:"00:10",desc:"完成主页搭建，包含标题\"一切从这里开始！\"和网站卡片区域，支持双击跳转",cat:"首页"},
+{date:"2026/05/10",time:"00:20",desc:"完成后台管理页面，支持添加、编辑、删除网站，包含图标、标题、介绍字段",cat:"后台"},
+{date:"2026/05/10",time:"00:30",desc:"完成数据导入导出功能（JSON格式）",cat:"后台"},
+{date:"2026/05/10",time:"00:40",desc:"重构为 <strong>Cloudflare Pages + Workers + D1</strong> 架构，实现真正后端 API，前后端分离",cat:"架构"},
+{date:"2026/05/10",time:"00:50",desc:"管理员后台独立页面，带密码登录，普通访问者无法进入",cat:"后台"},
+{date:"2026/05/10",time:"01:00",desc:"创建 Cloudflare D1 数据库并应用 Schema 迁移，建立 sites 表并写入初始数据",cat:"数据"},
+{date:"2026/05/10",time:"01:10",desc:"创建 Cloudflare Pages 项目并部署上线，绑定 D1 数据库至 Pages Functions",cat:"架构"},
+{date:"2026/05/10",time:"01:20",desc:"修复 Functions 路由冲突（[[id]] → [id]），验证全链路 API CRUD 正常",cat:"API"},
+{date:"2026/05/10",time:"01:30",desc:"迁移管理员密码至 <strong>Cloudflare Secret</strong>（env.ADMIN_PASSWORD），去除硬编码",cat:"安全"},
+{date:"2026/05/10",time:"01:40",desc:"迁移项目至新域名 ayoo-31u.pages.dev",cat:"架构"},
+{date:"2026/05/10",time:"02:00",desc:"实现首页 <strong>Edge SSR + CDN 缓存</strong>架构，从 D1 读取设置和站点数据，服务端渲染完整 HTML",cat:"首页"},
+{date:"2026/05/10",time:"02:10",desc:"新增 settings 表与 /api/settings 端点，实现页面设置的可视化管理",cat:"API"},
+{date:"2026/05/10",time:"02:20",desc:"后台管理页新增\"页面设置\"面板，含实时预览，修改即时生效并自动清除 CDN 缓存",cat:"后台"},
+{date:"2026/05/10",time:"02:30",desc:"重构 CSS 为设计变量体系（:root 变量），便于后续全局调整主题",cat:"样式"},
+{date:"2026/05/10",time:"02:40",desc:"添加页面左上角实时时钟，精确到秒",cat:"首页"},
+{date:"2026/05/10",time:"02:50",desc:"修复图标加载：去除被屏蔽的 Google Favicon API，改为 emoji 兜底 + 客户端异步获取 favicon.ico",cat:"修复"},
+{date:"2026/05/10",time:"03:00",desc:"优化缓存策略：max-age 从 0 改为 600，减少浏览器无意义的重验证请求",cat:"性能"},
+{date:"2026/05/10",time:"03:10",desc:"清理废弃代码：删除根目录旧版文件，关闭 GitHub Pages，统一入口为 Cloudflare Pages",cat:"架构"},
+{date:"2026/05/10",time:"03:20",desc:"迁移至新域名 <strong>ayoow.pages.dev</strong>，旧 ayoo 项目和 GitHub Pages 已关闭",cat:"架构"},
+{date:"2026/05/10",time:"03:30",desc:"全架构安全加固：新增 /api/auth 端点修复登录验证绕过漏洞；API 输入验证；settings key 白名单；提取共享 lib/response.js",cat:"安全"},
+{date:"2026/05/10",time:"03:40",desc:"重新设计卡片为横向长圆角布局，暗色高级配色（毛玻璃材质 + 紫蓝渐变），hover 右移光效",cat:"样式"},
+{date:"2026/05/11",time:"00:10",desc:"重构页面为亚克力导航栏布局（backdrop-filter + sticky），新增日/夜间双主题切换",cat:"样式"},
+{date:"2026/05/11",time:"00:20",desc:"改造主题切换为胶囊形滑块开关，日间天蓝渐变轨道+飘动云朵+暖光太阳，夜间星空轨道+闪烁星星+冷光月牙",cat:"样式"},
+{date:"2026/05/11",time:"00:30",desc:"全面重构切换开关为超现实梦幻粒子风格：晨曦渐变轨道+斜射光柱+有机层叠半透明云+漂浮光粒子",cat:"样式"},
+{date:"2026/05/12",time:"00:10",desc:"清理站点内容仅保留音乐电台；后台图标改为本地上传（canvas 裁剪 64x64 + base64 存储）",cat:"后台"},
+{date:"2026/05/12",time:"00:20",desc:"强化亚克力材质：body SVG 噪点纹理 + 三光斑柔光背景 + 导航栏 blur(32px) saturate(200%)",cat:"样式"},
+{date:"2026/05/18",time:"00:10",desc:"新增<strong>博客系统</strong>：articles/comments/likes 三表；/api/articles CRUD + 分页排序 + /api/comments 树形回复 + /api/likes 切换点赞；/blog 列表页 + /blog/:slug 详情页",cat:"博客"},
+{date:"2026/05/18",time:"00:20",desc:"文章编辑器新增 Markdown 快捷工具栏（14 个格式化按钮）；新增图片上传功能（canvas 缩放 + JPEG 压缩 + base64）",cat:"博客"},
+{date:"2026/05/20",time:"00:10",desc:"新增图片独立存储 API（/api/images），文章图片改为 URL 引用而非 base64 内联",cat:"API"},
+{date:"2026/05/20",time:"00:20",desc:"全站视觉重设计为<strong>极简留白风</strong>个人博客：衬线字体、低饱和度暖色纸感配色、大量留白",cat:"样式"},
+{date:"2026/05/20",time:"00:30",desc:"文章代码块增强：语言标识标签、复制按钮、折叠按钮、全屏按钮（含行号）；SSR 服务端降级渲染",cat:"博客"},
+{date:"2026/05/24",time:"00:10",desc:"修复 D1 存储换行为字面量 \\n 导致 SSR 代码块不渲染的根因；部署流程去掉 --branch main",cat:"修复"},
+{date:"2026/05/28",time:"00:10",desc:"新增<strong>壁纸/背景图</strong>功能：5 张 SVG 预设壁纸；settings 表新增 bg_image 字段；后台壁纸选择器",cat:"首页"},
+{date:"2026/06/04",time:"00:10",desc:"编辑器全面改造：MD_CMDS 命令表重构；左右分栏布局（左编辑右预览）；自动保存（localStorage + 2s 防抖）；键盘快捷键",cat:"博客"},
+{date:"2026/06/18",time:"00:10",desc:"完成<strong>评论系统</strong>：D1 迁移(0009)新增 email/url 列；API 重构；前端评论表单+蜜罐反垃圾；Gravatar 头像；评论树形回复+分页加载",cat:"评论"},
+{date:"2026/06/18",time:"00:30",desc:"评论系统代码质量优化：API 返回 avatar_url 替代 email 保护隐私；D1 batch 原子删除；insertAdjacentHTML 替代 innerHTML+=",cat:"评论"},
+{date:"2026/06/18",time:"00:50",desc:"评论区布局优化：评论表单移至评论列表上方；客户端 MD5 兜底 Gravatar；localStorage 记忆昵称邮箱",cat:"评论"},
+{date:"2026/06/18",time:"01:00",desc:"CLAUDE.md 新增开发规范；评论管理重构为文章级关联",cat:"评论"},
+{date:"2026/06/18",time:"01:20",desc:"评论管理增强：全屏管理面板，支持<strong>筛选/排序/多选/批量删除</strong>",cat:"评论"},
+{date:"2026/06/18",time:"01:40",desc:"修复 Gravatar 头像不可用：gravatar.com 替换为 cravatar.cn（国内镜像）",cat:"修复"},
+{date:"2026/06/18",time:"02:00",desc:"头像系统升级为 <strong>Identicon</strong> 方案：客户端生成 SVG 几何图案，不依赖外部服务",cat:"评论"},
+{date:"2026/06/18",time:"03:00",desc:"Identicon 多风格升级：3 种形状 × 2 种密度 × 3 色配色，共 18 种组合",cat:"评论"}
+];
+
+var ARCH=[
+{icon:"🏠",name:"首页",desc:"极简留白风链接导航，双击跳转，实时时钟，日/夜间主题切换，壁纸系统"},
+{icon:"📝",name:"博客",desc:"Markdown 渲染，代码块折叠/复制/全屏，文章 CRUD，评论系统"},
+{icon:"⚙️",name:"后台",desc:"网站管理，页面设置（实时预览），文章编辑器（工具栏+分栏+自动保存）"},
+{icon:"🔌",name:"API",desc:"RESTful 认证，图片独立存储，评论树形回复，点赞切换，搜索"},
+{icon:"🗄️",name:"数据",desc:"D1 6 表：sites, settings, articles, comments, likes, images"},
+{icon:"🛡️",name:"安全",desc:"Secret 密码，API 验证，XSS 过滤，蜜罐反垃圾，输入校验"}
+];
+
+var CATS=["全部","架构","首页","博客","后台","API","数据","安全","样式","修复","评论","性能"];
+
+// Theme
+function toggleTheme(){
+  var d=document.documentElement;if(d.dataset.theme==="dark"){d.dataset.theme="";localStorage.setItem("t","")}else{d.dataset.theme="dark";localStorage.setItem("t","dark")}
+  document.querySelector(".theme-btn").textContent=d.dataset.theme==="dark"?"☀":"☽";
+}
+if(localStorage.getItem("t")==="dark"){document.documentElement.dataset.theme="dark";setTimeout(function(){document.querySelector(".theme-btn").textContent="☀"},0)}
+
+// Stats
+var days=[...new Set(LOGS.map(function(l){return l.date}))].length;
+var cats=[...new Set(LOGS.map(function(l){return l.cat}))].length;
+document.getElementById("stats").innerHTML=
+  '<div class="stat-card"><div class="stat-num">'+LOGS.length+'</div><div class="stat-label">变更记录</div></div>'
+ +'<div class="stat-card"><div class="stat-num">'+days+'</div><div class="stat-label">开发天数</div></div>'
+ +'<div class="stat-card"><div class="stat-num">'+cats+'</div><div class="stat-label">涉及模块</div></div>'
+ +'<div class="stat-card"><div class="stat-num">9</div><div class="stat-label">D1 迁移</div></div>';
+
+// Architecture
+document.getElementById("arch").innerHTML=ARCH.map(function(a){
+  return '<div class="arch-card"><div class="arch-icon">'+a.icon+'</div><div class="arch-name">'+a.name+'</div><div class="arch-desc">'+a.desc+'</div></div>';
+}).join("");
+
+// Filters
+var activeFilter="全部";
+function renderFilters(){
+  document.getElementById("filters").innerHTML=CATS.map(function(c){
+    return '<button class="filter-btn'+(c===activeFilter?" active":"")+'" onclick="setFilter(\''+c+'\')">'+c+'</button>';
+  }).join("");
+}
+function setFilter(f){activeFilter=f;renderFilters();renderTimeline();}
+
+// Timeline
+function renderTimeline(){
+  var filtered=activeFilter==="全部"?LOGS:LOGS.filter(function(l){return l.cat===activeFilter});
+  var groups={};
+  filtered.forEach(function(l){
+    if(!groups[l.date])groups[l.date]=[];
+    groups[l.date].push(l);
+  });
+  var html="";
+  Object.keys(groups).sort().reverse().forEach(function(date){
+    var entries=groups[date];
+    html+='<div class="day-group"><div class="day-label">'+date+' ('+entries.length+' 项)</div>';
+    entries.forEach(function(e){
+      html+='<div class="entry"><div class="time">'+e.time+'</div><div class="desc"><span class="tag" style="font-size:.65rem;padding:.1rem .4rem;margin-right:.3rem">'+e.cat+'</span>'+e.desc+'</div></div>';
+    });
+    html+='</div>';
+  });
+  document.getElementById("timeline").innerHTML=html;
+}
+
+renderFilters();
+renderTimeline();
+
+// Last update
+var last=LOGS[LOGS.length-1];
+document.getElementById("last-update").textContent=last.date+" "+last.time;
+</script>
+</body>
+</html>
