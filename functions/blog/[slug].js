@@ -380,7 +380,7 @@ function loadComments(page){
   }).catch(function(){});
 }
 
-function retroAv(seed){var h=0,s=String(seed);for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return"https://q1.qlogo.cn/g?b=qq&nk=0&s=100&fid="+(Math.abs(h)%14+1);}
+function retroAv(seed){var h=0,s=String(seed);for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return"https://q1.qlogo.cn/g?b=qq&nk="+(Math.abs(h)%90000+10000)+"&s=100";}
 
 function rc(list,d){
   d=d||0;var h="";
