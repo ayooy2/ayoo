@@ -531,6 +531,29 @@
                     <div class="save-hint" id="save-hint">已保存</div>
                 </div>
 
+                <div class="settings-form" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;">
+                    <h3>修改密码</h3>
+                    <form id="password-form" onsubmit="changePassword(event)">
+                        <div class="form-group">
+                            <label>当前密码</label>
+                            <input type="password" id="pw-current" required placeholder="输入当前密码">
+                        </div>
+                        <div class="form-group">
+                            <label>新密码</label>
+                            <input type="password" id="pw-new" required placeholder="输入新密码" minlength="1" maxlength="100">
+                        </div>
+                        <div class="form-group">
+                            <label>确认新密码</label>
+                            <input type="password" id="pw-confirm" required placeholder="再次输入新密码" minlength="1" maxlength="100">
+                        </div>
+                        <p class="error-msg" id="pw-error" style="display:none"></p>
+                        <p class="save-hint" id="pw-success" style="display:none">密码修改成功</p>
+                        <div class="modal-actions">
+                            <button type="submit" class="btn btn-primary">修改密码</button>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="preview-box">
                     <h3>实时预览</h3>
                     <div class="preview-area">
@@ -804,6 +827,49 @@
             localStorage.removeItem('admin_token');
             token = '';
             location.reload();
+        }
+
+        async function changePassword(e) {
+            e.preventDefault();
+            var errEl = document.getElementById('pw-error');
+            var okEl = document.getElementById('pw-success');
+            errEl.style.display = 'none';
+            okEl.style.display = 'none';
+
+            var cur = document.getElementById('pw-current').value;
+            var nw = document.getElementById('pw-new').value;
+            var cf = document.getElementById('pw-confirm').value;
+
+            if (nw !== cf) {
+                errEl.textContent = '两次输入的新密码不一致';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                var res = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ current_password: cur, new_password: nw })
+                });
+                var data = await res.json();
+                if (!res.ok) {
+                    errEl.textContent = data.error || '修改失败';
+                    errEl.style.display = 'block';
+                    return;
+                }
+                // Update stored token to new password
+                token = nw;
+                localStorage.setItem('admin_token', nw);
+                okEl.style.display = 'block';
+                document.getElementById('pw-current').value = '';
+                document.getElementById('pw-new').value = '';
+                document.getElementById('pw-confirm').value = '';
+                setTimeout(function() { okEl.style.display = 'none'; }, 3000);
+            } catch (err) {
+                errEl.textContent = '网络错误，请重试';
+                errEl.style.display = 'block';
+            }
         }
 
         function showAdmin() {

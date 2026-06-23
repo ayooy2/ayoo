@@ -1,6 +1,6 @@
 import { json, error } from '../../lib/response.js';
+import { requireAuth } from '../../lib/auth.js';
 
-// Simple hash for password storage (SHA-256 via Web Crypto)
 async function hashPassword(password) {
   const data = new TextEncoder().encode(password);
   const hash = await crypto.subtle.digest('SHA-256', data);
@@ -12,33 +12,31 @@ export async function onRequest(context) {
   const { request, env } = context;
   if (request.method !== 'POST') return error('Method not allowed', 405);
 
-  // Require authentication
-  const auth = request.headers.get('Authorization');
-  if (!auth) return error('Unauthorized', 401);
+  // Authenticate via Authorization header (doesn't read body)
+  const authErr = await requireAuth(request, env);
+  if (authErr) return authErr;
 
-  // Verify current auth (check env secret or stored hash)
+  // Parse body once
+  const body = await request.json();
+  const currentPassword = (body.current_password || '').trim();
+  const newPassword = (body.new_password || '').trim();
+
+  // Verify current password matches what's stored (defense in depth)
   const storedHash = await env.DB.prepare("SELECT value FROM settings WHERE key='admin_password_hash'").first();
-  let authenticated = false;
-
   if (storedHash && storedHash.value) {
-    // Verify against stored hash
-    const data = await request.json();
-    const currentHash = await hashPassword(data.current_password || '');
-    if (currentHash === storedHash.value) authenticated = true;
+    // Has stored hash — verify current password against it
+    const currentHash = await hashPassword(currentPassword);
+    if (currentHash !== storedHash.value) {
+      return error('当前密码错误', 403);
+    }
+  } else {
+    // No stored hash yet — verify against env secret
+    if (env.ADMIN_PASSWORD && currentPassword !== env.ADMIN_PASSWORD) {
+      return error('当前密码错误', 403);
+    }
   }
-
-  // Fallback: verify against Cloudflare secret
-  if (!authenticated && auth === 'Bearer ' + env.ADMIN_PASSWORD) {
-    authenticated = true;
-  }
-
-  if (!authenticated) return error('当前密码错误', 403);
-
-  const data = await request.json();
-  const newPassword = (data.new_password || '').trim();
 
   if (!newPassword) return error('新密码不能为空', 400);
-  if (newPassword.length < 1) return error('新密码至少1个字符', 400);
   if (newPassword.length > 100) return error('新密码不能超过100个字符', 400);
 
   // Hash and store new password

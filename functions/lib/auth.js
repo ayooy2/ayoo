@@ -6,7 +6,7 @@ async function hashPassword(password) {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Verify admin authentication (checks env secret + stored hash)
+// Verify admin authentication (stored hash takes priority over env secret)
 // Returns null if authenticated, or error Response if not
 export async function requireAuth(request, env) {
   const auth = request.headers.get('Authorization');
@@ -14,12 +14,7 @@ export async function requireAuth(request, env) {
 
   const token = auth.replace('Bearer ', '');
 
-  // Check env secret first (backward compatibility)
-  if (env.ADMIN_PASSWORD && token === env.ADMIN_PASSWORD) {
-    return null; // authenticated
-  }
-
-  // Check stored hash in database
+  // Check stored hash first (user changed password via UI)
   try {
     const storedHash = await env.DB.prepare(
       "SELECT value FROM settings WHERE key='admin_password_hash'"
@@ -29,9 +24,16 @@ export async function requireAuth(request, env) {
       if (inputHash === storedHash.value) {
         return null; // authenticated
       }
+      // Hash exists but doesn't match — reject, ignore env secret
+      return error('Unauthorized', 401);
     }
   } catch (e) {
-    // DB error, fall through
+    // DB error, fall through to env secret
+  }
+
+  // No stored hash — fall back to env secret (first-time setup)
+  if (env.ADMIN_PASSWORD && token === env.ADMIN_PASSWORD) {
+    return null; // authenticated
   }
 
   return error('Unauthorized', 401);
