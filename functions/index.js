@@ -2,17 +2,20 @@
 export async function onRequestGet(context) {
   const { env } = context;
   try {
-    const [sRes, siteRes, articleRes, statsRes] = await Promise.all([
+    const [sRes, siteRes, articleRes, statsRes, tagsRes] = await Promise.all([
       env.DB.prepare('SELECT key, value FROM settings').all(),
       env.DB.prepare('SELECT id, title, url, icon, description FROM sites ORDER BY sort_order ASC, id ASC LIMIT 200').all(),
       env.DB.prepare("SELECT id, title, slug, summary, created_at, views FROM articles WHERE is_published = 1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY created_at DESC LIMIT 4").all(),
-      env.DB.prepare('SELECT COUNT(*) as count, COALESCE(SUM(views), 0) as total_views FROM articles WHERE is_published = 1').first()
+      env.DB.prepare('SELECT COUNT(*) as count, COALESCE(SUM(views), 0) as total_views FROM articles WHERE is_published = 1').first(),
+      env.DB.prepare('SELECT COUNT(*) as count FROM tags').first()
     ]);
     var settings = {};
     for (var i = 0; i < (sRes.results || []).length; i++) {
       settings[sRes.results[i].key] = sRes.results[i].value;
     }
-    var html = render(settings, siteRes.results || [], articleRes.results || [], statsRes || { count: 0, total_views: 0 });
+    var stats = statsRes || { count: 0, total_views: 0 };
+    stats.tag_count = (tagsRes && tagsRes.count) || 0;
+    var html = render(settings, siteRes.results || [], articleRes.results || [], stats);
     return new Response(html, {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=86400' }
     });
@@ -71,6 +74,20 @@ ${navbar(t)}
       <div class="home-date" id="date">----年--月--日</div>
       <div class="home-greeting" id="greeting"></div>
     </section>
+
+    <!-- Personal Card -->
+    <div class="home-profile animate-in" style="animation-delay:100ms">
+      <div class="home-profile-info">
+        <div class="home-profile-name">${t}</div>
+        <div class="home-profile-bio">${sub || 'Personal Operating System'}</div>
+        <div class="home-profile-stats">
+          <span class="home-profile-stat"><strong>${stats.count}</strong> 文章</span>
+          <span class="home-profile-stat"><strong>${stats.tag_count}</strong> 标签</span>
+          <span class="home-profile-stat"><strong>${stats.total_views}</strong> 阅读</span>
+          <span class="home-profile-stat"><strong>${sites.length}</strong> 导航</span>
+        </div>
+      </div>
+    </div>
 
     <!-- Main Grid: Articles + Nav Cards -->
     <div class="home-grid">
@@ -181,11 +198,11 @@ ${mobileMenu()}
 }
 
 function navbar(title) {
-  return `<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">${esc(title)}</a><div class="nav-links"><a href="/blog" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>笔记</a><a href="/search" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>搜索</a><a href="/archive" class="nav-link"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>归档</a><a href="/now" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Now</a><a href="/guestbook" class="nav-link"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>留言簿</a></div><div class="nav-spacer"></div><span class="nav-clock" id="clock">--:--:--</span><button class="theme-toggle" id="theme-toggle" aria-label="切换主题">☽</button><button class="nav-hamburger" id="nav-hamburger" aria-label="菜单"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg></button></div></nav>`;
+  return `<nav class="navbar"><div class="nav-inner"><a href="/" class="nav-brand">${esc(title)}</a><div class="nav-links"><a href="/blog" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>笔记</a><a href="/search" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>搜索</a><a href="/archive" class="nav-link"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>归档</a><a href="/features" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>功能</a></div><div class="nav-spacer"></div><span class="nav-clock" id="clock">--:--:--</span><button class="theme-toggle" id="theme-toggle" aria-label="切换主题">☽</button><button class="nav-hamburger" id="nav-hamburger" aria-label="菜单"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg></button></div></nav>`;
 }
 
 function mobileMenu() {
-  return `<div class="mobile-menu" id="mobile-menu"><button class="mobile-menu-close" id="mobile-menu-close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button><div class="mobile-menu-links"><a href="/" class="mobile-menu-link">首页</a><a href="/blog" class="mobile-menu-link">笔记</a><a href="/search" class="mobile-menu-link">搜索</a><a href="/archive" class="mobile-menu-link">归档</a><a href="/now" class="mobile-menu-link">Now</a><a href="/guestbook" class="mobile-menu-link">留言簿</a></div></div>`;
+  return `<div class="mobile-menu" id="mobile-menu"><button class="mobile-menu-close" id="mobile-menu-close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button><div class="mobile-menu-links"><a href="/" class="mobile-menu-link">首页</a><a href="/blog" class="mobile-menu-link">笔记</a><a href="/search" class="mobile-menu-link">搜索</a><a href="/archive" class="mobile-menu-link">归档</a><a href="/features" class="mobile-menu-link">功能</a><a href="/about" class="mobile-menu-link">关于</a></div></div>`;
 }
 
 function articleCard(article, index) {

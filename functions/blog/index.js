@@ -1,15 +1,30 @@
-// 博客列表 Edge SSR — Card Grid Layout
+// 博客列表 Edge SSR — Card Grid Layout with Tag Filtering
 export async function onRequestGet(context) {
   const { env } = context;
   try {
-  const { results } = await env.DB.prepare(
-    `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.author, a.tags, a.created_at, a.views,
+  const url = new URL(context.request.url);
+  const tagFilter = (url.searchParams.get('tag') || '').trim();
+
+  // Build query with optional tag filter
+  var sql = `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.author, a.tags, a.created_at, a.views,
       (SELECT COUNT(*) FROM likes WHERE article_id=a.id) as likes,
       (SELECT COUNT(*) FROM comments WHERE article_id=a.id) as comments
-    FROM articles a WHERE a.is_published=1 AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))
-    ORDER BY a.created_at DESC LIMIT 50`
-  ).all();
+    FROM articles a WHERE a.is_published=1 AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))`;
+  var params = [];
+  if (tagFilter) {
+    sql += " AND (',' || a.tags || ',') LIKE ?";
+    params.push('%,' + tagFilter + ',%');
+  }
+  sql += ' ORDER BY a.created_at DESC LIMIT 50';
+
+  var stmt = env.DB.prepare(sql);
+  if (params.length) stmt = stmt.bind(...params);
+  const { results } = await stmt.all();
   const articles = results || [];
+
+  // Fetch all tags for filter bar
+  const { results: allTags } = await env.DB.prepare('SELECT * FROM tags ORDER BY name ASC').all();
+  const tags = allTags || [];
 
   // Blog cards
   var cards = '';
@@ -38,9 +53,10 @@ ${blogNavbar()}
 <div class="page-wrapper">
   <div class="page-header animate-in">
     <h1 class="page-title">Blog</h1>
-    <p class="page-subtitle">${articles.length} 篇文章</p>
+    <p class="page-subtitle">${tagFilter ? '标签: ' + esc(tagFilter) + ' · ' : ''}${articles.length} 篇文章</p>
   </div>
   <div class="content">
+    ${tagFilterBar(tags, tagFilter)}
     <div class="blog-grid stagger">
       ${cards}
     </div>
@@ -90,6 +106,19 @@ function blogCard(a, index) {
     </div>
     ${tags ? '<div class="blog-card-tags">' + tags + '</div>' : ''}
   </a>`;
+}
+
+function tagFilterBar(allTags, active) {
+  if (!allTags.length) return '';
+  var html = '<div class="tag-filter-bar">';
+  html += '<a class="tag-filter-item' + (!active ? ' active' : '') + '" href="/blog">全部</a>';
+  for (var i = 0; i < allTags.length; i++) {
+    var t = allTags[i];
+    var isActive = active === t.name;
+    html += '<a class="tag-filter-item' + (isActive ? ' active' : '') + '" href="/blog?tag=' + encodeURIComponent(t.name) + '">' + esc(t.name) + '</a>';
+  }
+  html += '</div>';
+  return html;
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

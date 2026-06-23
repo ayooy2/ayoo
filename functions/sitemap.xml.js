@@ -26,6 +26,12 @@ export async function onRequestGet(context) {
   // Now
   urls += '<url><loc>' + base + '/now</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>';
 
+  // 关于
+  urls += '<url><loc>' + base + '/about</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>';
+
+  // 功能
+  urls += '<url><loc>' + base + '/features</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>';
+
   // 文章详情
   for (var i = 0; i < (results || []).length; i++) {
     var a = results[i];

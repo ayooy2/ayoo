@@ -17,6 +17,10 @@ export async function onRequestGet(context) {
     items.push({ type: 'page', title: '笔记', url: '/blog', icon: '📝' });
     items.push({ type: 'page', title: '搜索', url: '/search', icon: '🔍' });
     items.push({ type: 'page', title: '归档', url: '/archive', icon: '📦' });
+    items.push({ type: 'page', title: 'Now', url: '/now', icon: '⏱️' });
+    items.push({ type: 'page', title: '留言簿', url: '/guestbook', icon: '💬' });
+    items.push({ type: 'page', title: '关于我', url: '/about', icon: '👤' });
+    items.push({ type: 'page', title: '功能', url: '/features', icon: '⚡' });
 
     // Sites
     for (var i = 0; i < (sites.results || []).length; i++) {
