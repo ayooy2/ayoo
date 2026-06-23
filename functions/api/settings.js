@@ -1,4 +1,5 @@
 import { json, error } from '../lib/response.js';
+import { requireAuth } from '../lib/auth.js';
 
 const ALLOWED_KEYS = ['title', 'subtitle', 'footer', 'bg_image'];
 
@@ -6,10 +7,8 @@ export async function onRequest(context) {
   const { request, env } = context;
 
   if (request.method !== 'GET') {
-    const auth = request.headers.get('Authorization');
-    if (!auth || auth !== `Bearer ${env.ADMIN_PASSWORD}`) {
-      return error('Unauthorized', 401);
-    }
+    const authErr = await requireAuth(request, env);
+    if (authErr) return authErr;
   }
 
   try {

@@ -1,4 +1,5 @@
 import { json, error } from '../lib/response.js';
+import { requireAuth } from '../lib/auth.js';
 
 // GET: 文章列表（公开，支持分页和排序）
 // POST: 创建文章（需认证）
@@ -11,10 +12,8 @@ export async function onRequest(context) {
   }
 
   if (method === 'POST') {
-    const auth = request.headers.get('Authorization');
-    if (!auth || auth !== `Bearer ${env.ADMIN_PASSWORD}`) {
-      return error('Unauthorized', 401);
-    }
+    const authErr = await requireAuth(request, env);
+    if (authErr) return authErr;
     return createArticle(env, await request.json());
   }
 

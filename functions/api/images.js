@@ -1,4 +1,5 @@
 import { json, error } from '../lib/response.js';
+import { requireAuth } from '../lib/auth.js';
 
 // GET ?id=:id 读取单张图片 / POST 上传（需认证）
 export async function onRequest(context) {
@@ -24,8 +25,8 @@ export async function onRequest(context) {
 
   // 上传（需认证）
   if (request.method === 'POST') {
-    const auth = request.headers.get('Authorization');
-    if (!auth || auth !== `Bearer ${env.ADMIN_PASSWORD}`) return error('Unauthorized', 401);
+    const authErr = await requireAuth(request, env);
+    if (authErr) return authErr;
     return uploadImage(env, await request.json());
   }
 

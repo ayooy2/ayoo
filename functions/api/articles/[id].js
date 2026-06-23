@@ -1,4 +1,5 @@
 import { json, error } from '../../lib/response.js';
+import { requireAuth } from '../../lib/auth.js';
 
 // GET/PUT/DELETE 单篇文章（GET 公开，PUT/DELETE 需认证）
 // GET 支持 id 或 ?slug=xxx
@@ -13,10 +14,8 @@ export async function onRequest(context) {
     return getArticle(env, id, slug);
   }
 
-  const auth = request.headers.get('Authorization');
-  if (!auth || auth !== `Bearer ${env.ADMIN_PASSWORD}`) {
-    return error('Unauthorized', 401);
-  }
+  const authErr = await requireAuth(request, env);
+  if (authErr) return authErr;
 
   try {
     if (method === 'PUT') return updateArticle(env, id, await request.json());

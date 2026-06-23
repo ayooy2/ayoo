@@ -1,4 +1,5 @@
 import { json, error } from '../lib/response.js';
+import { requireAuth } from '../lib/auth.js';
 
 // GET ?article_id=:id&page=1&limit=20 获取评论列表（分页，最新置顶）
 // GET ?all=1 管理员获取所有评论（需认证）
@@ -10,8 +11,8 @@ export async function onRequest(context) {
   if (request.method === 'GET') {
     // 管理员批量查询：返回所有评论 + 文章信息
     if (url.searchParams.get('all') === '1') {
-      const auth = request.headers.get('Authorization');
-      if (!auth || auth !== `Bearer ${env.ADMIN_PASSWORD}`) return error('Unauthorized', 401);
+      const authErr = await requireAuth(request, env);
+      if (authErr) return authErr;
       const { results } = await env.DB.prepare(
         'SELECT c.id, c.article_id, c.parent_id, c.author_name, c.content, c.created_at, a.title as article_title, a.slug as article_slug FROM comments c LEFT JOIN articles a ON c.article_id = a.id ORDER BY c.created_at DESC'
       ).all();

@@ -1,4 +1,5 @@
 import { json, error } from '../../lib/response.js';
+import { requireAuth } from '../../lib/auth.js';
 
 // GET: get single tag
 // PUT: update tag (auth required)
@@ -14,8 +15,8 @@ export async function onRequest(context) {
     return json(tag);
   }
 
-  const auth = request.headers.get('Authorization');
-  if (!auth || auth !== 'Bearer ' + env.ADMIN_PASSWORD) return error('Unauthorized', 401);
+  const authErr = await requireAuth(request, env);
+  if (authErr) return authErr;
 
   if (request.method === 'PUT') {
     const data = await request.json();

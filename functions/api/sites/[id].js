@@ -1,4 +1,5 @@
 import { json, error } from '../../lib/response.js';
+import { requireAuth } from '../../lib/auth.js';
 
 const TITLE_MAX = 200;
 const URL_MAX = 2000;
@@ -9,10 +10,8 @@ export async function onRequest(context) {
   const id = params.id;
 
   if (request.method !== 'GET') {
-    const auth = request.headers.get('Authorization');
-    if (!auth || auth !== `Bearer ${env.ADMIN_PASSWORD}`) {
-      return error('Unauthorized', 401);
-    }
+    const authErr = await requireAuth(request, env);
+    if (authErr) return authErr;
   }
 
   try {
