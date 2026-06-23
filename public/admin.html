@@ -343,6 +343,87 @@
         .comment-table th.sort-desc::after { content: '↓'; opacity: 0.8; }
         .cb-cell { width: 36px; text-align: center; }
         .cb-cell input { cursor: pointer; }
+        /* 标签颜色点 */
+        .tag-color-dot {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.15s, transform 0.15s;
+            vertical-align: middle;
+        }
+        .tag-color-dot:hover { transform: scale(1.15); }
+        .tag-color-dot.active { border-color: var(--color-text); }
+        .tag-color-presets { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+        .tag-color-badge {
+            display: inline-block;
+            padding: 0.15rem 0.6rem;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        /* 文章标签选择器 */
+        .tag-selector { margin-top: 0.5rem; }
+        .tag-selector-btn {
+            padding: 0.35rem 0.7rem;
+            border: 1px dashed var(--color-border);
+            background: var(--color-bg);
+            color: var(--color-text-muted);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: all 0.15s;
+        }
+        .tag-selector-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+        .tag-selector-dropdown {
+            display: none;
+            position: relative;
+            margin-top: 0.3rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            background: var(--color-surface);
+            padding: 0.5rem;
+            max-height: 160px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-sm);
+        }
+        .tag-selector-dropdown.open { display: block; }
+        .tag-selector-item {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            margin: 0.2rem;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+        .tag-selector-item:hover { opacity: 0.85; transform: scale(1.05); }
+        .tag-selector-item.selected { opacity: 0.4; cursor: default; transform: none; }
+        .tag-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
+        .tag-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        .tag-chip-remove {
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+            margin-left: 0.1rem;
+        }
+        .tag-chip-remove:hover { opacity: 1; }
     </style>
 </head>
 <body>
@@ -369,6 +450,7 @@
             <button class="tab-btn active" data-tab="sites" onclick="switchTab('sites')">网站管理</button>
             <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">页面设置</button>
             <button class="tab-btn" data-tab="articles" onclick="switchTab('articles')">文章管理</button>
+            <button class="tab-btn" data-tab="tags" onclick="switchTab('tags')">标签管理</button>
         </nav>
 
         <!-- ========== 网站管理 ========== -->
@@ -480,6 +562,24 @@
         <div id="article-list-area"></div>
     </div>
 
+    <!-- ========== 标签管理 ========== -->
+    <div id="tab-tags" class="tab-content hidden">
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="openTagEditor()">+ 新建标签</button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>标签名</th>
+                    <th>标识(slug)</th>
+                    <th>颜色</th>
+                    <th style="width:140px;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="tags-table-body"></tbody>
+        </table>
+    </div>
+
     <!-- 文章编辑模态框 -->
     <div class="modal-overlay" id="article-modal">
         <div class="modal" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto;">
@@ -533,7 +633,13 @@
                     </div>
                 </div>
                 <div class="form-group"><label>作者</label><input type="text" id="article-author" value="Admin"></div>
-                <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="article-tags"></div>
+                <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="article-tags">
+                    <div class="tag-selector">
+                        <button type="button" class="tag-selector-btn" onclick="toggleTagSelector()">选择已有标签</button>
+                        <div class="tag-selector-dropdown" id="tag-selector-dropdown"></div>
+                    </div>
+                    <div class="tag-chips" id="article-tag-chips"></div>
+                </div>
                 <div class="form-group"><label>发布方式</label>
                     <div class="publish-actions">
                         <button type="button" class="pub-btn pub-btn-publish" onclick="doPublish('publish')">立即发布</button>
@@ -583,6 +689,45 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 标签编辑模态框 -->
+    <div class="modal-overlay" id="tag-modal">
+        <div class="modal">
+            <h2 id="tag-modal-title">新建标签</h2>
+            <form id="tag-form" onsubmit="saveTag(event)">
+                <input type="hidden" id="tag-edit-id">
+                <div class="form-group">
+                    <label>标签名 *</label>
+                    <input type="text" id="tag-name" required placeholder="例如：前端开发">
+                </div>
+                <div class="form-group">
+                    <label>标识（slug，留空自动生成）</label>
+                    <input type="text" id="tag-slug" placeholder="例如：frontend">
+                </div>
+                <div class="form-group">
+                    <label>颜色</label>
+                    <div class="tag-color-presets" id="tag-color-presets">
+                        <span class="tag-color-dot active" data-color="#6366f1" style="background:#6366f1" onclick="selectTagColor(this)"></span>
+                        <span class="tag-color-dot" data-color="#8b5cf6" style="background:#8b5cf6" onclick="selectTagColor(this)"></span>
+                        <span class="tag-color-dot" data-color="#ec4899" style="background:#ec4899" onclick="selectTagColor(this)"></span>
+                        <span class="tag-color-dot" data-color="#ef4444" style="background:#ef4444" onclick="selectTagColor(this)"></span>
+                        <span class="tag-color-dot" data-color="#f97316" style="background:#f97316" onclick="selectTagColor(this)"></span>
+                        <span class="tag-color-dot" data-color="#eab308" style="background:#eab308" onclick="selectTagColor(this)"></span>
+                        <span class="tag-color-dot" data-color="#22c55e" style="background:#22c55e" onclick="selectTagColor(this)"></span>
+                        <span class="tag-color-dot" data-color="#14b8a6" style="background:#14b8a6" onclick="selectTagColor(this)"></span>
+                        <span class="tag-color-dot" data-color="#3b82f6" style="background:#3b82f6" onclick="selectTagColor(this)"></span>
+                        <span class="tag-color-dot" data-color="#6b7280" style="background:#6b7280" onclick="selectTagColor(this)"></span>
+                    </div>
+                    <input type="color" id="tag-color-picker" style="margin-top:0.4rem;width:40px;height:32px;border:none;cursor:pointer;background:none;" onchange="document.getElementById('tag-color').value=this.value">
+                    <input type="hidden" id="tag-color" value="#6366f1">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTagEditor()">取消</button>
                     <button type="submit" class="btn btn-primary">保存</button>
                 </div>
             </form>
@@ -673,6 +818,7 @@
             if (name === 'settings') loadSettings();
             if (name === 'sites') loadTable();
             if (name === 'articles') loadArticles();
+            if (name === 'tags') loadTags();
         }
 
         // ---- 网站管理 ----
@@ -1009,6 +1155,7 @@
                     document.getElementById('article-content-md').value = a.content_md || '';
                     document.getElementById('article-author').value = a.author || 'Admin';
                     document.getElementById('article-tags').value = a.tags || '';
+                    updateArticleTagChips();
                     if (a.scheduled_at) {
                         var d = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
                         var pad = function(n) { return n < 10 ? '0' + n : n; };
@@ -1021,6 +1168,8 @@
                 var draft = loadDraft();
                 if (draft && draft.content) {
                     restoreDraft(draft);
+                } else {
+                    updateArticleTagChips();
                 }
             }
         }
@@ -1326,6 +1475,7 @@
             document.getElementById('article-content-md').value = draft.content || '';
             document.getElementById('article-author').value = draft.author || 'Admin';
             document.getElementById('article-tags').value = draft.tags || '';
+            updateArticleTagChips();
             if (draft.scheduled) {
                 document.getElementById('article-scheduled').value = draft.scheduled;
             }
@@ -1341,6 +1491,8 @@
                 if (id === 'article-content-md') {
                     // textarea 同时触发预览更新 + 自动保存
                     el.addEventListener('input', function() { updateArticlePreview(); scheduleAutoSave(); });
+                } else if (id === 'article-tags') {
+                    el.addEventListener('input', function() { updateArticleTagChips(); scheduleAutoSave(); });
                 } else {
                     el.addEventListener('input', scheduleAutoSave);
                 }
@@ -1405,6 +1557,10 @@
 
         document.getElementById('modal').addEventListener('click', function(e) {
             if (e.target.id === 'modal') closeModal();
+        });
+
+        document.getElementById('tag-modal').addEventListener('click', function(e) {
+            if (e.target.id === 'tag-modal') closeTagEditor();
         });
 
         // ---- 评论管理面板 ----
@@ -1584,6 +1740,198 @@
                 alert('部分删除失败');
                 showCommentPanel();
             });
+        }
+
+        // ---- 标签管理 ----
+        var _allTags = [];
+
+        async function loadTags() {
+            try {
+                var res = await fetch('/api/tags');
+                var data = await res.json();
+                _allTags = data.tags || [];
+                renderTagsTable(_allTags);
+            } catch (e) {
+                document.getElementById('tags-table-body').innerHTML =
+                    '<tr><td colspan="4" style="text-align:center;color:var(--color-danger);padding:2rem;">加载失败</td></tr>';
+            }
+        }
+
+        function renderTagsTable(tags) {
+            var tbody = document.getElementById('tags-table-body');
+            if (!tags.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-text-placeholder);padding:2rem;">暂无标签</td></tr>';
+                return;
+            }
+            tbody.innerHTML = tags.map(function(t) {
+                var color = t.color || '#6366f1';
+                return '<tr>'
+                    + '<td><span class="tag-color-badge" style="background:' + escapeHtml(color) + '">' + escapeHtml(t.name) + '</span></td>'
+                    + '<td><code style="font-size:0.82rem;color:var(--color-text-secondary);">' + escapeHtml(t.slug || '') + '</code></td>'
+                    + '<td><span class="tag-color-dot" style="background:' + escapeHtml(color) + ';cursor:default;"></span> <span style="font-size:0.8rem;color:var(--color-text-muted);">' + escapeHtml(color) + '</span></td>'
+                    + '<td class="actions">'
+                    + '<button class="btn btn-secondary btn-sm" onclick="openTagEditor(' + t.id + ')">编辑</button>'
+                    + '<button class="btn btn-danger btn-sm" onclick="deleteTag(' + t.id + ')">删除</button>'
+                    + '</td></tr>';
+            }).join('');
+        }
+
+        function openTagEditor(id) {
+            document.getElementById('tag-modal').classList.add('active');
+            document.getElementById('tag-form').reset();
+            document.getElementById('tag-edit-id').value = '';
+            document.getElementById('tag-color').value = '#6366f1';
+            document.getElementById('tag-modal-title').textContent = id ? '编辑标签' : '新建标签';
+            // 重置颜色选择
+            document.querySelectorAll('#tag-color-presets .tag-color-dot').forEach(function(d) {
+                d.classList.toggle('active', d.dataset.color === '#6366f1');
+            });
+            document.getElementById('tag-color-picker').value = '#6366f1';
+
+            if (id) {
+                var tag = _allTags.find(function(t) { return t.id === id; });
+                if (tag) {
+                    document.getElementById('tag-edit-id').value = tag.id;
+                    document.getElementById('tag-name').value = tag.name || '';
+                    document.getElementById('tag-slug').value = tag.slug || '';
+                    document.getElementById('tag-color').value = tag.color || '#6366f1';
+                    document.getElementById('tag-color-picker').value = tag.color || '#6366f1';
+                    document.querySelectorAll('#tag-color-presets .tag-color-dot').forEach(function(d) {
+                        d.classList.toggle('active', d.dataset.color === (tag.color || '#6366f1'));
+                    });
+                }
+            }
+        }
+
+        function closeTagEditor() {
+            document.getElementById('tag-modal').classList.remove('active');
+        }
+
+        function selectTagColor(el) {
+            var color = el.dataset.color;
+            document.getElementById('tag-color').value = color;
+            document.getElementById('tag-color-picker').value = color;
+            document.querySelectorAll('#tag-color-presets .tag-color-dot').forEach(function(d) {
+                d.classList.remove('active');
+            });
+            el.classList.add('active');
+        }
+
+        async function saveTag(e) {
+            e.preventDefault();
+            var id = document.getElementById('tag-edit-id').value;
+            var body = {
+                name: document.getElementById('tag-name').value.trim(),
+                slug: document.getElementById('tag-slug').value.trim(),
+                color: document.getElementById('tag-color').value
+            };
+            if (!body.name) { alert('请输入标签名'); return; }
+
+            var url = id ? '/api/tags/' + id : '/api/tags';
+            var res = await fetch(url, {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) { closeTagEditor(); loadTags(); }
+            else if (res.status === 401) { alert('登录已过期'); logout(); }
+            else {
+                var errData = await res.json().catch(function() { return {}; });
+                alert('保存失败: ' + (errData.error || res.status));
+            }
+        }
+
+        async function deleteTag(id) {
+            var tag = _allTags.find(function(t) { return t.id === id; });
+            var name = tag ? tag.name : '';
+            if (!confirm('确定删除标签"' + name + '"？')) return;
+            var res = await fetch('/api/tags/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) loadTags();
+            else if (res.status === 401) { alert('登录已过期'); logout(); }
+            else { alert('删除失败'); }
+        }
+
+        // ---- 文章编辑器中的标签选择器 ----
+        var _tagSelectorOpen = false;
+
+        function toggleTagSelector() {
+            _tagSelectorOpen = !_tagSelectorOpen;
+            var dropdown = document.getElementById('tag-selector-dropdown');
+            if (_tagSelectorOpen) {
+                loadTagSelector();
+                dropdown.classList.add('open');
+            } else {
+                dropdown.classList.remove('open');
+            }
+        }
+
+        function getSelectedArticleTags() {
+            var val = document.getElementById('article-tags').value.trim();
+            if (!val) return [];
+            return val.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        }
+
+        async function loadTagSelector() {
+            var dropdown = document.getElementById('tag-selector-dropdown');
+            if (!_allTags.length) {
+                try {
+                    var res = await fetch('/api/tags');
+                    var data = await res.json();
+                    _allTags = data.tags || [];
+                } catch (e) {
+                    dropdown.innerHTML = '<span style="color:var(--color-text-muted);font-size:0.82rem;">加载失败</span>';
+                    return;
+                }
+            }
+            if (!_allTags.length) {
+                dropdown.innerHTML = '<span style="color:var(--color-text-muted);font-size:0.82rem;">暂无标签，请先到标签管理中创建</span>';
+                return;
+            }
+            var selected = getSelectedArticleTags();
+            dropdown.innerHTML = _allTags.map(function(t) {
+                var isSelected = selected.indexOf(t.name) >= 0;
+                var cls = 'tag-selector-item' + (isSelected ? ' selected' : '');
+                return '<span class="' + cls + '" style="background:' + escapeHtml(t.color || '#6366f1') + '" onclick="addTagToSelector(\'' + escapeHtml(t.name).replace(/'/g, "\\'") + '\')">' + escapeHtml(t.name) + '</span>';
+            }).join('');
+            updateArticleTagChips();
+        }
+
+        function addTagToSelector(name) {
+            var input = document.getElementById('article-tags');
+            var current = getSelectedArticleTags();
+            if (current.indexOf(name) >= 0) return; // already added
+            current.push(name);
+            input.value = current.join(', ');
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            loadTagSelector(); // refresh dropdown to show selected state
+        }
+
+        function removeTagChip(name) {
+            var input = document.getElementById('article-tags');
+            var current = getSelectedArticleTags();
+            current = current.filter(function(t) { return t !== name; });
+            input.value = current.join(', ');
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            updateArticleTagChips();
+            if (_tagSelectorOpen) loadTagSelector();
+        }
+
+        function updateArticleTagChips() {
+            var container = document.getElementById('article-tag-chips');
+            var selected = getSelectedArticleTags();
+            if (!selected.length) { container.innerHTML = ''; return; }
+            var colorMap = {};
+            _allTags.forEach(function(t) { colorMap[t.name] = t.color || '#6366f1'; });
+            container.innerHTML = selected.map(function(name) {
+                var color = colorMap[name] || '#6b7280';
+                return '<span class="tag-chip" style="background:' + escapeHtml(color) + '">'
+                    + escapeHtml(name)
+                    + '<span class="tag-chip-remove" onclick="removeTagChip(\'' + escapeHtml(name).replace(/'/g, "\\'") + '\')">&times;</span>'
+                    + '</span>';
+            }).join('');
         }
     </script>
 </body>
