@@ -89,16 +89,21 @@ function guestbookNavbar() {
 <div class="mobile-menu" id="mobile-menu"><button class="mobile-menu-close" id="mobile-menu-close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button><div class="mobile-menu-links"><a href="/" class="mobile-menu-link">首页</a><a href="/blog" class="mobile-menu-link">笔记</a><a href="/search" class="mobile-menu-link">搜索</a><a href="/archive" class="mobile-menu-link">归档</a><a href="/guestbook" class="mobile-menu-link">留言簿</a></div></div>`;
 }
 
+function retroAv(seed){var h=0,s=String(seed);for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return'https://q1.qlogo.cn/g?b=qq&nk=0&s=100&fid='+(Math.abs(h)%14+1);}
+
 function guestbookCard(entry, index) {
   var date = (entry.created_at || '').slice(0, 16).replace('T', ' ');
+  var avatar = retroAv(entry.name || 'default');
   var nameHtml = entry.url
     ? '<a href="' + esc(entry.url) + '" target="_blank" rel="noopener" class="comment-author">' + esc(entry.name) + '</a>'
     : '<span class="comment-author">' + esc(entry.name) + '</span>';
   return '<div class="comment-box" style="animation-delay:' + (index * 60) + 'ms">'
-    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">'
+    + '<div class="comment-header">'
+    + '<img class="comment-avatar" src="' + avatar + '" alt="" loading="lazy">'
+    + '<div class="comment-header-info">'
     + nameHtml
     + '<span class="comment-time">' + esc(date) + '</span>'
-    + '</div>'
+    + '</div></div>'
     + '<div class="comment-text">' + esc(entry.message).replace(/\n/g, '<br>') + '</div>'
     + '</div>';
 }
