@@ -1,6 +1,7 @@
 // GET /feed.xml — RSS 2.0 订阅源
 export async function onRequestGet(context) {
   const { env } = context;
+  try {
   const base = 'https://ayoow.pages.dev';
 
   // 获取站点标题
@@ -46,6 +47,9 @@ export async function onRequestGet(context) {
       'Cache-Control': 'public, max-age=3600, s-maxage=86400'
     }
   });
+  } catch (e) {
+    return new Response('服务器错误', { status: 500 });
+  }
 }
 
 function escXml(s) {

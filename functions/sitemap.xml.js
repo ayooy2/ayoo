@@ -1,6 +1,7 @@
 // GET /sitemap.xml — 动态生成站点地图
 export async function onRequestGet(context) {
   const { env } = context;
+  try {
   const base = 'https://ayoow.pages.dev';
 
   // 获取所有已发布的文章
@@ -15,6 +16,15 @@ export async function onRequestGet(context) {
 
   // 博客列表
   urls += '<url><loc>' + base + '/blog</loc><changefreq>daily</changefreq><priority>0.8</priority></url>';
+
+  // 归档
+  urls += '<url><loc>' + base + '/archive</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>';
+
+  // 留言簿
+  urls += '<url><loc>' + base + '/guestbook</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>';
+
+  // Now
+  urls += '<url><loc>' + base + '/now</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>';
 
   // 文章详情
   for (var i = 0; i < (results || []).length; i++) {
@@ -34,4 +44,7 @@ export async function onRequestGet(context) {
       'Cache-Control': 'public, max-age=3600, s-maxage=86400'
     }
   });
+  } catch (e) {
+    return new Response('服务器错误', { status: 500 });
+  }
 }

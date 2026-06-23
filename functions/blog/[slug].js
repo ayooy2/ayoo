@@ -417,7 +417,7 @@ function toggleLike(){
 
 function updateLikeState(){
   var b=document.getElementById("like-btn");
-  fetch("/api/likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,fingerprint:fp})})
+  fetch("/api/likes?article_id="+encodeURIComponent(aid)+"&fingerprint="+encodeURIComponent(fp))
   .then(function(r){return r.json()})
   .then(function(d){
     b.innerHTML=d.liked

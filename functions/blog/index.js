@@ -1,6 +1,7 @@
 // 博客列表 Edge SSR — Card Grid Layout
 export async function onRequestGet(context) {
   const { env } = context;
+  try {
   const { results } = await env.DB.prepare(
     "SELECT id, title, slug, summary, cover_image, author, tags, created_at, views FROM articles WHERE is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY created_at DESC LIMIT 50"
   ).all();
@@ -97,6 +98,9 @@ document.querySelectorAll('.animate-in').forEach(function(el){el.addEventListene
 <div class="cmd-overlay" id="cmd-overlay"><div class="cmd-box"><div class="cmd-input-wrap"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="cmd-input" id="cmd-input" placeholder="搜索页面、笔记、链接..." autocomplete="off"></div><div class="cmd-list" id="cmd-list"></div><div class="cmd-hint"><span><kbd>↑↓</kbd> 导航</span><span><kbd>Enter</kbd> 打开</span><span><kbd>Esc</kbd> 关闭</span></div></div></div>
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' } });
+  } catch (e) {
+    return new Response('服务器错误，请稍后再试', { status: 500 });
+  }
 }
 
 function blogNavbar() {
@@ -127,6 +131,7 @@ function blogCard(a, index) {
       <span>${esc(date)}</span>
       <span>${a.views || 0} 阅读</span>
       <span>${a.likes} 喜欢</span>
+      <span>${a.comments} 评论</span>
     </div>
     ${tags ? '<div class="blog-card-tags">' + tags + '</div>' : ''}
   </a>`;

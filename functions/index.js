@@ -1,20 +1,24 @@
 // 首页 Edge SSR — Personal Operating System
 export async function onRequestGet(context) {
   const { env } = context;
-  const [sRes, siteRes, articleRes, statsRes] = await Promise.all([
-    env.DB.prepare('SELECT key, value FROM settings').all(),
-    env.DB.prepare('SELECT id, title, url, icon, description FROM sites ORDER BY sort_order ASC, id ASC LIMIT 200').all(),
-    env.DB.prepare("SELECT id, title, slug, summary, created_at, views FROM articles WHERE is_published = 1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY created_at DESC LIMIT 4").all(),
-    env.DB.prepare('SELECT COUNT(*) as count, COALESCE(SUM(views), 0) as total_views FROM articles WHERE is_published = 1').first()
-  ]);
-  var settings = {};
-  for (var i = 0; i < (sRes.results || []).length; i++) {
-    settings[sRes.results[i].key] = sRes.results[i].value;
+  try {
+    const [sRes, siteRes, articleRes, statsRes] = await Promise.all([
+      env.DB.prepare('SELECT key, value FROM settings').all(),
+      env.DB.prepare('SELECT id, title, url, icon, description FROM sites ORDER BY sort_order ASC, id ASC LIMIT 200').all(),
+      env.DB.prepare("SELECT id, title, slug, summary, created_at, views FROM articles WHERE is_published = 1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY created_at DESC LIMIT 4").all(),
+      env.DB.prepare('SELECT COUNT(*) as count, COALESCE(SUM(views), 0) as total_views FROM articles WHERE is_published = 1').first()
+    ]);
+    var settings = {};
+    for (var i = 0; i < (sRes.results || []).length; i++) {
+      settings[sRes.results[i].key] = sRes.results[i].value;
+    }
+    var html = render(settings, siteRes.results || [], articleRes.results || [], statsRes || { count: 0, total_views: 0 });
+    return new Response(html, {
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=86400' }
+    });
+  } catch (e) {
+    return new Response('服务器错误，请稍后再试', { status: 500 });
   }
-  var html = render(settings, siteRes.results || [], articleRes.results || [], statsRes || { count: 0, total_views: 0 });
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=86400' }
-  });
 }
 
 function render(s, sites, articles, stats) {
