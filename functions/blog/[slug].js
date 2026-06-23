@@ -380,41 +380,7 @@ function loadComments(page){
   }).catch(function(){});
 }
 
-function identiconSvg(hash){
-  var h=parseInt(hash.slice(0,8),16);
-  var hue=h%360;var sat=45+h%30;var lig=38+h%20;
-  function hsl(a,b,c){return"hsl("+a+","+b+"%,"+c+"%)"}
-  var bg="#f5f5f5";var fg=hsl(hue,sat,lig);var fg2=hsl((hue+40)%360,sat-8,lig+12);var fg3=hsl((hue+180)%360,sat-15,lig+5);
-  var style=h%3;var n=3+((h>>4)&1);var sz=n*2-1;
-  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 '+sz+' '+sz+'">';
-  svg+='<rect width="'+sz+'" height="'+sz+'" fill="'+bg+'"/>';
-  for(var y=0;y<n;y++)for(var x=0;x<n;x++){
-    var idx=(y*n+x)%hash.length;var v=hash.charCodeAt(idx)%3;if(v===0)continue;
-    var c=[fg,fg2,fg3][v-1];var px=x;var py=y;var s=0.42;
-    if(style===0){
-      svg+='<circle cx="'+(px+0.5)+'" cy="'+(py+0.5)+'" r="'+s+'" fill="'+c+'"/>';
-    }else if(style===1){
-      svg+='<rect x="'+(px+0.08)+'" y="'+(py+0.08)+'" width="0.84" height="0.84" rx="0.18" fill="'+c+'"/>';
-    }else{
-      var cx=px+0.5,cy=py+0.5;
-      svg+='<polygon points="'+cx+','+(cy-s)+' '+(cx+s)+','+cy+' '+cx+','+(cy+s)+' '+(cx-s)+','+cy+'" fill="'+c+'"/>';
-    }
-    var mx=sz-1-x,my=sz-1-y;
-    if(mx!==x||my!==y){
-      if(style===0)svg+='<circle cx="'+(mx+0.5)+'" cy="'+(my+0.5)+'" r="'+s+'" fill="'+c+'"/>';
-      else if(style===1)svg+='<rect x="'+(mx+0.08)+'" y="'+(my+0.08)+'" width="0.84" height="0.84" rx="0.18" fill="'+c+'"/>';
-      else{var cx2=mx+0.5,cy2=my+0.5;svg+='<polygon points="'+cx2+','+(cy2-s)+' '+(cx2+s)+','+cy2+' '+cx2+','+(cy2+s)+' '+(cx2-s)+','+cy2+'" fill="'+c+'"/>';}
-    }
-    if(x!==mx){if(style===0)svg+='<circle cx="'+(mx+0.5)+'" cy="'+(py+0.5)+'" r="'+s+'" fill="'+c+'"/>';
-      else if(style===1)svg+='<rect x="'+(mx+0.08)+'" y="'+(py+0.08)+'" width="0.84" height="0.84" rx="0.18" fill="'+c+'"/>';
-      else{var cx3=mx+0.5,cy3=py+0.5;svg+='<polygon points="'+cx3+','+(cy3-s)+' '+(cx3+s)+','+cy3+' '+cx3+','+(cy3+s)+' '+(cx3-s)+','+cy3+'" fill="'+c+'"/>';}}
-    if(y!==my){if(style===0)svg+='<circle cx="'+(px+0.5)+'" cy="'+(my+0.5)+'" r="'+s+'" fill="'+c+'"/>';
-      else if(style===1)svg+='<rect x="'+(px+0.08)+'" y="'+(my+0.08)+'" width="0.84" height="0.84" rx="0.18" fill="'+c+'"/>';
-      else{var cx4=px+0.5,cy4=my+0.5;svg+='<polygon points="'+cx4+','+(cy4-s)+' '+(cx4+s)+','+cy4+' '+cx4+','+(cy4+s)+' '+(cx4-s)+','+cy4+'" fill="'+c+'"/>';}}
-  }
-  svg+='</svg>';
-  return "data:image/svg+xml,"+encodeURIComponent(svg);
-}
+function retroAv(seed){return"https://api.dicebear.com/7.x/pixel-art-neutral/svg?seed="+encodeURIComponent(seed)+"&size=48";}
 
 function rc(list,d){
   d=d||0;var h="";
@@ -422,7 +388,7 @@ function rc(list,d){
     var c=list[i];
     var avatarHash=c.avatar_hash||"";
     if(!avatarHash&&_cEmail&&c.author_name===_cName){avatarHash=md5c(_cEmail.trim().toLowerCase());}
-    var avatar=avatarHash?identiconSvg(avatarHash):"https://cravatar.cn/avatar?d=mp&s=48";
+    var avatar=retroAv(avatarHash||c.author_name||"default");
     var nameHtml=c.url
       ?'<a href="'+escR(c.url)+'" target="_blank" rel="noopener noreferrer" class="comment-author">'+escR(c.author_name)+'</a>'
       :'<span class="comment-author">'+escR(c.author_name)+'</span>';
