@@ -3,9 +3,6 @@ compatibility_date = "2026-05-10"
 
 pages_build_output_dir = "public"
 
-[vars]
-ADMIN_PASSWORD = "1"
-
 [[d1_databases]]
 binding = "DB"
 database_name = "a-site-db"
