@@ -381,16 +381,19 @@ function loadComments(page){
 }
 
 function identiconSvg(hash){
-  var bg=[240,240,240];var h=parseInt(hash.slice(0,8),16);
-  var r=((h>>16)&255),g=((h>>8)&255),b=(h&255);
-  r=Math.round((r+bg[0]*2)/3);g=Math.round((g+bg[1]*2)/3);b=Math.round((b+bg[2]*2)/3);
-  var fg="rgb("+r+","+g+","+b+")";
-  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 5 5">';
-  svg+='<rect width="5" height="5" fill="rgb('+bg[0]+','+bg[1]+','+bg[2]+')"/>';
-  for(var y=0;y<5;y++)for(var x=0;x<3;x++){
-    var idx=y*3+x;if(hash.charCodeAt(idx%hash.length)%2===0)continue;
-    svg+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+fg+'"/>';
-    svg+='<rect x="'+(4-x)+'" y="'+y+'" width="1" height="1" fill="'+fg+'"/>';
+  var h=parseInt(hash.slice(0,8),16);
+  var hue=h%360;var sat=50+h%30;var lig=40+h%20;
+  function hsl(h,s,l){return"hsl("+h+","+s+"%,"+l+"%)"}
+  var bg="#f5f5f5";var fg=hsl(hue,sat,lig);var fg2=hsl((hue+30)%360,sat-10,lig+10);
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 7 7">';
+  svg+='<rect width="7" height="7" fill="'+bg+'"/>';
+  for(var y=0;y<4;y++)for(var x=0;x<4;x++){
+    var idx=(y*4+x)%hash.length;var v=hash.charCodeAt(idx)%3;if(v===0)continue;
+    var c=v===1?fg:fg2;
+    svg+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>';
+    svg+='<rect x="'+(6-x)+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>';
+    svg+='<rect x="'+x+'" y="'+(6-y)+'" width="1" height="1" fill="'+c+'"/>';
+    svg+='<rect x="'+(6-x)+'" y="'+(6-y)+'" width="1" height="1" fill="'+c+'"/>';
   }
   svg+='</svg>';
   return "data:image/svg+xml,"+encodeURIComponent(svg);
