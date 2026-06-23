@@ -839,10 +839,10 @@
             document.getElementById('pw-current').value = '';
             document.getElementById('pw-new').value = '';
             document.getElementById('pw-confirm').value = '';
-            document.getElementById('pw-modal').classList.add('open');
+            document.getElementById('pw-modal').classList.add('active');
         }
         function closePwModal() {
-            document.getElementById('pw-modal').classList.remove('open');
+            document.getElementById('pw-modal').classList.remove('active');
         }
 
         async function changePassword(e) {
