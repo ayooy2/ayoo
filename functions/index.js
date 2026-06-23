@@ -117,22 +117,12 @@ ${navbar(t)}
 </div>
 
 ${mobileMenu()}
+<script src="/app.js"></script>
 <script>
 (function(){
-  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-  /* Clock — hero (HH:MM) + navbar (HH:MM:SS) */
-  function updateClock(){
-    var n=new Date();
-    var h=String(n.getHours()).padStart(2,'0');
-    var m=String(n.getMinutes()).padStart(2,'0');
-    var s=String(n.getSeconds()).padStart(2,'0');
-    var hero=document.getElementById('time');
-    if(hero) hero.textContent=h+':'+m;
-    var nav=document.getElementById('clock');
-    if(nav) nav.textContent=h+':'+m+':'+s;
-  }
-  updateClock();
-  setInterval(updateClock,1e3);
+  /* Clock — hero (HH:MM) */
+  function updateHeroClock(){var n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0');var el=document.getElementById('time');if(el) el.textContent=h+':'+m}
+  updateHeroClock();setInterval(updateHeroClock,1e3);
 
   /* Date */
   var n=new Date();
@@ -151,17 +141,6 @@ ${mobileMenu()}
   else g='夜深了，注意休息';
   var gEl=document.getElementById('greeting');
   if(gEl) gEl.textContent=g;
-
-  /* Theme toggle */
-  var b=document.getElementById('theme-toggle'),
-      st=localStorage.getItem('theme')||'light';
-  if(st==='dark') document.documentElement.setAttribute('data-theme','dark');
-  b.textContent=st==='dark'?'☀':'☽';
-  b.addEventListener('click',function(){
-    var d=document.documentElement.getAttribute('data-theme')==='dark';
-    if(d){document.documentElement.removeAttribute('data-theme');localStorage.setItem('theme','light');b.textContent='☽'}
-    else{document.documentElement.setAttribute('data-theme','dark');localStorage.setItem('theme','dark');b.textContent='☀'}
-  });
 
   /* Double-click nav cards */
   document.querySelectorAll('.nav-card').forEach(function(x){
@@ -194,42 +173,7 @@ ${mobileMenu()}
     },{threshold:0.1});
     document.querySelectorAll('.scroll-reveal').forEach(function(el){observer.observe(el)});
   }
-
-  /* Mobile menu */
-  var hamburger=document.getElementById('nav-hamburger');
-  var menu=document.getElementById('mobile-menu');
-  var closeBtn=document.getElementById('mobile-menu-close');
-  if(hamburger&&menu){
-    hamburger.addEventListener('click',function(){menu.classList.add('active')});
-  }
-  if(closeBtn&&menu){
-    closeBtn.addEventListener('click',function(){menu.classList.remove('active')});
-  }
 })()
-/* Command Palette */
-(function(){
-  var overlay=document.getElementById('cmd-overlay'),input=document.getElementById('cmd-input'),list=document.getElementById('cmd-list');
-  var items=[],activeIdx=0,loaded=false;
-  function load(){if(loaded)return;loaded=true;fetch('/api/command-index').then(function(r){return r.json()}).then(function(d){items=d.items||[];render('')})}
-  function render(q){
-    var q2=q.toLowerCase(),filtered=q2?items.filter(function(x){return(x.title+' '+(x.desc||'')+' '+(x.tags||'')).toLowerCase().indexOf(q2)>=0}):items;
-    activeIdx=0;
-    if(!filtered.length){list.innerHTML='<div class="cmd-empty">没有结果</div>';return}
-    var h='';for(var i=0;i<filtered.length;i++){var x=filtered[i];h+='<div class="cmd-item'+(i===0?' active':'')+'" data-idx="'+i+'"><span class="cmd-item-icon">'+(x.icon||'📄')+'</span><div class="cmd-item-text"><div class="cmd-item-title">'+esc(x.title)+'</div>'+(x.desc?'<div class="cmd-item-desc">'+esc(x.desc)+'</div>':'')+'</div><span class="cmd-item-type">'+x.type+'</span></div>'}
-    list.innerHTML=h;
-    list.querySelectorAll('.cmd-item').forEach(function(el){el.addEventListener('click',function(){go(parseInt(el.dataset.idx))})})
-  }
-  function go(idx){var q2=input.value.toLowerCase();var filtered=q2?items.filter(function(x){return(x.title+' '+(x.desc||'')+' '+(x.tags||'')).toLowerCase().indexOf(q2)>=0}):items;if(filtered[idx]){close();window.location.href=filtered[idx].url}}
-  function open(){load();overlay.classList.add('active');input.value='';input.focus();render('')}
-  function close(){overlay.classList.remove('active')}
-  function move(d){var els=list.querySelectorAll('.cmd-item');if(!els.length)return;els[activeIdx].classList.remove('active');activeIdx=(activeIdx+d+els.length)%els.length;els[activeIdx].classList.add('active');els[activeIdx].scrollIntoView({block:'nearest'})}
-  document.addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();overlay.classList.contains('active')?close():open()}if(e.key==='Escape'&&overlay.classList.contains('active'))close()});
-  overlay.addEventListener('click',function(e){if(e.target===overlay)close()});
-  input.addEventListener('input',function(){render(input.value)});
-  input.addEventListener('keydown',function(e){if(e.key==='ArrowDown'){e.preventDefault();move(1)}if(e.key==='ArrowUp'){e.preventDefault();move(-1)}if(e.key==='Enter'){e.preventDefault();go(activeIdx)}});
-})();
-/* Remove animate-in after animation to prevent transform from breaking fixed positioning */
-document.querySelectorAll('.animate-in').forEach(function(el){el.addEventListener('animationend',function(){el.classList.remove('animate-in');el.style.opacity='1'},{once:true})});
 </script>
 <div class="cmd-overlay" id="cmd-overlay"><div class="cmd-box"><div class="cmd-input-wrap"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input class="cmd-input" id="cmd-input" placeholder="搜索页面、笔记、链接..." autocomplete="off"></div><div class="cmd-list" id="cmd-list"></div><div class="cmd-hint"><span><kbd>↑↓</kbd> 导航</span><span><kbd>Enter</kbd> 打开</span><span><kbd>Esc</kbd> 关闭</span></div></div></div>
 </body>
