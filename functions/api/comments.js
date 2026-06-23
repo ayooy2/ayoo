@@ -46,7 +46,9 @@ export async function onRequest(context) {
       // 为每条评论添加 avatar_url（服务端计算 MD5）
       const emailMap = await getEmailMap(env.DB, articleId, all);
       for (const c of all) {
-        c.avatar_url = gravatarUrl(emailMap[c.id] || '');
+        const av = gravatarUrl(emailMap[c.id] || '');
+        c.avatar_url = av.url;
+        c.avatar_hash = av.hash;
       }
       const tree = buildTree(all);
       return json({ comments: tree, total, page, limit, hasMore: offset + limit < total });
@@ -99,8 +101,10 @@ export async function onRequest(context) {
       'INSERT INTO comments (article_id, parent_id, author_name, email, url, content) VALUES (?, ?, ?, ?, ?, ?) RETURNING id, article_id, parent_id, author_name, url, content, created_at'
     ).bind(articleId, parentId, authorName, email, finalUrl, content).first();
 
-    // 返回时附带 avatar_url
-    result.avatar_url = gravatarUrl(email);
+    // 返回时附带 avatar_url 和 avatar_hash
+    const av = gravatarUrl(email);
+    result.avatar_url = av.url;
+    result.avatar_hash = av.hash;
     return json(result, 201);
   }
 
@@ -121,8 +125,9 @@ async function getEmailMap(db, articleId, comments) {
 }
 
 function gravatarUrl(email) {
-  if (!email) return '';
-  return 'https://cravatar.cn/avatar/' + md5(email.trim().toLowerCase()) + '?d=404&s=48';
+  if (!email) return { url: '', hash: '' };
+  const hash = md5(email.trim().toLowerCase());
+  return { url: 'https://cravatar.cn/avatar/' + hash + '?d=mp&s=48', hash: hash };
 }
 
 // Minimal MD5 for Gravatar (works in Cloudflare Workers without node:crypto)
