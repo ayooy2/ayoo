@@ -438,7 +438,7 @@
     <!-- 管理界面 -->
     <div id="admin-section" class="admin-wrapper hidden">
         <header class="admin-header">
-            <h1>后台管理</h1>
+            <h1>后台管理 <span onclick="openPwModal()" style="font-size:0.55em;font-weight:400;color:var(--color-text-muted);cursor:pointer;vertical-align:middle;">修改密码</span></h1>
             <div style="display:flex;align-items:center;gap:0.8rem;">
                 <button class="theme-toggle" id="theme-toggle" aria-label="切换主题" title="切换日间/夜间模式" style="width:40px;height:40px;font-size:1.1rem;">☽</button>
                 <button class="btn btn-secondary" onclick="logout()">退出登录</button>
@@ -529,31 +529,6 @@
                         </div>
                     </form>
                     <div class="save-hint" id="save-hint">已保存</div>
-                </div>
-
-                <div class="settings-form" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;">
-                    <h3 onclick="var f=document.getElementById('pw-form-wrap');f.style.display=f.style.display==='none'?'block':'none';this.querySelector('.pw-arrow').textContent=f.style.display==='none'?'▸':'▾'" style="cursor:pointer;user-select:none;">修改密码 <span class="pw-arrow" style="font-size:0.8em;color:var(--color-text-muted)">▸</span></h3>
-                    <div id="pw-form-wrap" style="display:none;">
-                    <form id="password-form" onsubmit="changePassword(event)">
-                        <div class="form-group">
-                            <label>当前密码</label>
-                            <input type="password" id="pw-current" required placeholder="输入当前密码">
-                        </div>
-                        <div class="form-group">
-                            <label>新密码</label>
-                            <input type="password" id="pw-new" required placeholder="输入新密码" minlength="1" maxlength="100">
-                        </div>
-                        <div class="form-group">
-                            <label>确认新密码</label>
-                            <input type="password" id="pw-confirm" required placeholder="再次输入新密码" minlength="1" maxlength="100">
-                        </div>
-                        <p class="error-msg" id="pw-error" style="display:none"></p>
-                        <p class="save-hint" id="pw-success" style="display:none">密码修改成功，即将重新登录…</p>
-                        <div class="modal-actions">
-                            <button type="submit" class="btn btn-primary">修改密码</button>
-                        </div>
-                    </form>
-                    </div>
                 </div>
 
                 <div class="preview-box">
@@ -759,6 +734,33 @@
         </div>
     </div>
 
+    <!-- 修改密码弹窗 -->
+    <div class="modal-overlay" id="pw-modal">
+        <div class="modal-content" style="max-width:400px;">
+            <h3>修改密码</h3>
+            <form id="password-form" onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label>当前密码</label>
+                    <input type="password" id="pw-current" required placeholder="输入当前密码">
+                </div>
+                <div class="form-group">
+                    <label>新密码</label>
+                    <input type="password" id="pw-new" required placeholder="输入新密码" minlength="1" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label>确认新密码</label>
+                    <input type="password" id="pw-confirm" required placeholder="再次输入新密码" minlength="1" maxlength="100">
+                </div>
+                <p class="error-msg" id="pw-error" style="display:none"></p>
+                <p class="save-hint" id="pw-success" style="display:none">密码修改成功，即将重新登录…</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePwModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">确认修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const API_BASE = '/api/sites';
         const API_SETTINGS = '/api/settings';
@@ -829,6 +831,18 @@
             localStorage.removeItem('admin_token');
             token = '';
             location.reload();
+        }
+
+        function openPwModal() {
+            document.getElementById('pw-error').style.display = 'none';
+            document.getElementById('pw-success').style.display = 'none';
+            document.getElementById('pw-current').value = '';
+            document.getElementById('pw-new').value = '';
+            document.getElementById('pw-confirm').value = '';
+            document.getElementById('pw-modal').classList.add('open');
+        }
+        function closePwModal() {
+            document.getElementById('pw-modal').classList.remove('open');
         }
 
         async function changePassword(e) {
@@ -1626,6 +1640,10 @@
 
         document.getElementById('tag-modal').addEventListener('click', function(e) {
             if (e.target.id === 'tag-modal') closeTagEditor();
+        });
+
+        document.getElementById('pw-modal').addEventListener('click', function(e) {
+            if (e.target.id === 'pw-modal') closePwModal();
         });
 
         // ---- 评论管理面板 ----
