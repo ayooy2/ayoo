@@ -532,7 +532,8 @@
                 </div>
 
                 <div class="settings-form" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;">
-                    <h3>修改密码</h3>
+                    <h3 onclick="var f=document.getElementById('pw-form-wrap');f.style.display=f.style.display==='none'?'block':'none';this.querySelector('.pw-arrow').textContent=f.style.display==='none'?'▸':'▾'" style="cursor:pointer;user-select:none;">修改密码 <span class="pw-arrow" style="font-size:0.8em;color:var(--color-text-muted)">▸</span></h3>
+                    <div id="pw-form-wrap" style="display:none;">
                     <form id="password-form" onsubmit="changePassword(event)">
                         <div class="form-group">
                             <label>当前密码</label>
@@ -547,11 +548,12 @@
                             <input type="password" id="pw-confirm" required placeholder="再次输入新密码" minlength="1" maxlength="100">
                         </div>
                         <p class="error-msg" id="pw-error" style="display:none"></p>
-                        <p class="save-hint" id="pw-success" style="display:none">密码修改成功</p>
+                        <p class="save-hint" id="pw-success" style="display:none">密码修改成功，即将重新登录…</p>
                         <div class="modal-actions">
                             <button type="submit" class="btn btn-primary">修改密码</button>
                         </div>
                     </form>
+                    </div>
                 </div>
 
                 <div class="preview-box">
@@ -858,14 +860,11 @@
                     errEl.style.display = 'block';
                     return;
                 }
-                // Update stored token to new password
+                // Update stored token to new password, then refresh to re-login
                 token = nw;
                 localStorage.setItem('admin_token', nw);
                 okEl.style.display = 'block';
-                document.getElementById('pw-current').value = '';
-                document.getElementById('pw-new').value = '';
-                document.getElementById('pw-confirm').value = '';
-                setTimeout(function() { okEl.style.display = 'none'; }, 3000);
+                setTimeout(function() { location.reload(); }, 1500);
             } catch (err) {
                 errEl.textContent = '网络错误，请重试';
                 errEl.style.display = 'block';
