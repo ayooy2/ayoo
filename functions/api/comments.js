@@ -121,8 +121,8 @@ async function getEmailMap(db, articleId, comments) {
 }
 
 function gravatarUrl(email) {
-  if (!email) return 'https://cravatar.cn/avatar?d=mp&s=48';
-  return 'https://cravatar.cn/avatar/' + md5(email.trim().toLowerCase()) + '?d=mp&s=48';
+  if (!email) return '';
+  return 'https://cravatar.cn/avatar/' + md5(email.trim().toLowerCase()) + '?d=404&s=48';
 }
 
 // Minimal MD5 for Gravatar (works in Cloudflare Workers without node:crypto)
