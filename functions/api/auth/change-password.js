@@ -1,5 +1,5 @@
 import { json, error } from '../../lib/response.js';
-import { requireAuth } from '../../lib/auth.js';
+import { requireAuth, clearSession } from '../../lib/auth.js';
 
 async function hashPassword(password) {
   const data = new TextEncoder().encode(password);
@@ -45,5 +45,10 @@ export async function onRequest(context) {
     "INSERT INTO settings (key, value) VALUES ('admin_password_hash', ?) ON CONFLICT(key) DO UPDATE SET value=?, updated_at=CURRENT_TIMESTAMP"
   ).bind(newHash, newHash).run();
 
-  return json({ ok: true, message: '密码修改成功' });
+  // 清除当前会话，强制重新登录
+  await clearSession(request, env);
+
+  return json({ ok: true, message: '密码修改成功' }, {
+    'Set-Cookie': 'admin_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0'
+  });
 }

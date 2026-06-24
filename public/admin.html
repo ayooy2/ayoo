@@ -427,16 +427,8 @@
     </style>
 </head>
 <body>
-    <!-- 登录界面 -->
-    <div id="login-section" class="login-box">
-        <h2>管理员登录</h2>
-        <p class="error-msg" id="login-error"></p>
-        <input type="password" id="password" placeholder="请输入管理密码" onkeydown="if(event.key==='Enter')doLogin()">
-        <button onclick="doLogin()">登录</button>
-    </div>
-
     <!-- 管理界面 -->
-    <div id="admin-section" class="admin-wrapper hidden">
+    <div id="admin-section" class="admin-wrapper">
         <header class="admin-header">
             <h1>后台管理 <span onclick="openPwModal()" style="font-size:0.55em;font-weight:400;color:var(--color-text-muted);cursor:pointer;vertical-align:middle;">修改密码</span></h1>
             <div style="display:flex;align-items:center;gap:0.8rem;">
@@ -765,7 +757,7 @@
         const API_BASE = '/api/sites';
         const API_SETTINGS = '/api/settings';
         const API_AUTH = '/api/auth';
-        let token = localStorage.getItem('admin_token') || '';
+        function apiFetch(url, opts) { opts = opts || {}; opts.credentials = 'same-origin'; return fetch(url, opts); }
 
         // 主题初始化
         (function() {
@@ -789,48 +781,20 @@
             }
         })();
 
-        if (token) {
-            verifyAndEnter();
-        }
-
-        function verifyAndEnter() {
-            fetch(API_AUTH, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            }).then(function(r) {
-                if (r.ok) {
-                    showAdmin();
-                    loadTable();
-                } else {
-                    localStorage.removeItem('admin_token');
-                    token = '';
-                }
-            });
-        }
-
-        function doLogin() {
-            const pwd = document.getElementById('password').value.trim();
-            if (!pwd) return;
-            token = pwd;
-            fetch(API_AUTH, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            }).then(function(r) {
-                if (!r.ok) {
-                    document.getElementById('login-error').textContent = '密码错误';
-                    token = '';
-                } else {
-                    localStorage.setItem('admin_token', token);
-                    showAdmin();
-                    loadTable();
-                }
+        // 会话检查（Cookie 方式）
+        (function() {
+            apiFetch(API_AUTH, { credentials: 'same-origin' }).then(function(r) {
+                if (!r.ok) window.location.href = '/login.html';
+                else loadTable();
             }).catch(function() {
-                document.getElementById('login-error').textContent = '网络错误';
+                window.location.href = '/login.html';
             });
-        }
+        })();
 
         function logout() {
-            localStorage.removeItem('admin_token');
-            token = '';
-            location.reload();
+            apiFetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).finally(function() {
+                window.location.href = '/login.html';
+            });
         }
 
         function openPwModal() {
@@ -863,9 +827,9 @@
             }
 
             try {
-                var res = await fetch('/api/auth/change-password', {
+                var res = await apiFetch('/api/auth/change-password', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ current_password: cur, new_password: nw })
                 });
                 var data = await res.json();
@@ -874,20 +838,13 @@
                     errEl.style.display = 'block';
                     return;
                 }
-                // Update stored token to new password, then refresh to re-login
-                token = nw;
-                localStorage.setItem('admin_token', nw);
+                // 密码修改成功，清除会话跳转登录页
                 okEl.style.display = 'block';
-                setTimeout(function() { location.reload(); }, 1500);
+                setTimeout(function() { window.location.href = '/login.html'; }, 1500);
             } catch (err) {
                 errEl.textContent = '网络错误，请重试';
                 errEl.style.display = 'block';
             }
-        }
-
-        function showAdmin() {
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('admin-section').classList.remove('hidden');
         }
 
         // ---- Tab 切换 ----
@@ -903,7 +860,7 @@
         // ---- 网站管理 ----
         async function loadTable() {
             try {
-                const res = await fetch(API_BASE);
+                const res = await apiFetch(API_BASE);
                 const data = await res.json();
                 renderTable(data.sites || []);
             } catch (e) {
@@ -950,7 +907,7 @@
             document.getElementById('icon-preview').innerHTML = '🌐';
             document.getElementById('modal-title').textContent = id ? '编辑网站' : '添加网站';
             if (id) {
-                fetch(API_BASE + '/' + id).then(r => r.json()).then(site => {
+                apiFetch(API_BASE + '/' + id).then(r => r.json()).then(site => {
                     document.getElementById('edit-id').value = site.id;
                     document.getElementById('edit-title').value = site.title;
                     document.getElementById('edit-url').value = site.url;
@@ -1009,9 +966,9 @@
                 description: document.getElementById('edit-desc').value.trim()
             };
             const url = id ? API_BASE + '/' + id : API_BASE + '/new';
-            const res = await fetch(url, {
+            const res = await apiFetch(url, {
                 method: id ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
             if (res.ok) { closeModal(); loadTable(); }
@@ -1023,9 +980,9 @@
 
         async function deleteSite(id) {
             if (!confirm('确定删除？')) return;
-            const res = await fetch(API_BASE + '/' + id, {
+            const res = await apiFetch(API_BASE + '/' + id, {
                 method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: {  }
             });
             if (res.ok) loadTable();
             else if (res.status === 401) { alert('登录已过期'); logout(); }
@@ -1034,7 +991,7 @@
         // ---- 页面设置 ----
         async function loadSettings() {
             try {
-                const res = await fetch(API_SETTINGS);
+                const res = await apiFetch(API_SETTINGS);
                 const data = await res.json();
                 document.getElementById('set-title').value = data.title || '';
                 document.getElementById('set-subtitle').value = data.subtitle || '';
@@ -1091,9 +1048,9 @@
                 footer: document.getElementById('set-footer').value.trim(),
                 bg_image: bgVal
             };
-            const res = await fetch(API_SETTINGS, {
+            const res = await apiFetch(API_SETTINGS, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
             if (res.ok) {
@@ -1119,8 +1076,8 @@
         async function loadArticles() {
             try {
                 var [articlesRes, commentsRes] = await Promise.all([
-                    fetch('/api/articles?all=1'),
-                    fetch('/api/comments?all=1', { headers: { 'Authorization': 'Bearer ' + token } })
+                    apiFetch('/api/articles?all=1'),
+                    apiFetch('/api/comments?all=1', { headers: {  } })
                 ]);
                 var articlesData = await articlesRes.json();
                 var commentsData = await commentsRes.json();
@@ -1225,7 +1182,7 @@
 
             if (id) {
                 document.getElementById('article-modal-title').textContent = '编辑文章';
-                fetch('/api/articles/' + id).then(function(r){return r.json();}).then(function(a){
+                apiFetch('/api/articles/' + id).then(function(r){return r.json();}).then(function(a){
                     document.getElementById('article-edit-id').value = a.id;
                     document.getElementById('article-title').value = a.title || '';
                     document.getElementById('article-slug').value = a.slug || '';
@@ -1285,9 +1242,9 @@
             };
 
             var url = id ? '/api/articles/' + id : '/api/articles';
-            var res = await fetch(url, {
+            var res = await apiFetch(url, {
                 method: id ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
             if (res.ok) { clearDraft(); closeArticleEditor(); loadArticles(); }
@@ -1297,9 +1254,9 @@
 
         async function deleteArticle(id) {
             if (!confirm('确定删除这篇文章？相关评论和点赞也会被删除。')) return;
-            var res = await fetch('/api/articles/' + id, {
+            var res = await apiFetch('/api/articles/' + id, {
                 method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: {  }
             });
             if (res.ok) loadArticles();
             else if (res.status === 401) { alert('登录已过期'); logout(); }
@@ -1460,9 +1417,9 @@
 
         async function uploadToServer(filename, mime, data) {
             try {
-                var res = await fetch('/api/images', {
+                var res = await apiFetch('/api/images', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ filename: filename, mime_type: mime, data: data })
                 });
                 if (res.ok) {
@@ -1654,7 +1611,7 @@
         function showCommentPanel() {
             var area = document.getElementById('article-list-area');
             area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-text-muted);">加载评论...</div>';
-            fetch('/api/comments?all=1', { headers: { 'Authorization': 'Bearer ' + token } })
+            apiFetch('/api/comments?all=1', { headers: {  } })
                 .then(function(r) { return r.json(); })
                 .then(function(d) {
                     _allComments = d.comments || [];
@@ -1794,9 +1751,9 @@
 
         function deleteSingleComment(id) {
             if (!confirm('确定删除这条评论及其所有回复？')) return;
-            fetch('/api/comments/' + id, {
+            apiFetch('/api/comments/' + id, {
                 method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: {  }
             }).then(function(r) { if (!r.ok) throw new Error(); })
             .then(function() { _allComments = _allComments.filter(function(c) { return c.id !== id; }); renderCommentPanel(); })
             .catch(function() { alert('删除失败'); });
@@ -1811,9 +1768,9 @@
             var btn = document.querySelector('#cp-batch-bar .btn-danger');
             if (btn) { btn.disabled = true; btn.textContent = '删除中...'; }
             Promise.all(ids.map(function(id) {
-                return fetch('/api/comments/' + id, {
+                return apiFetch('/api/comments/' + id, {
                     method: 'DELETE',
-                    headers: { 'Authorization': 'Bearer ' + token }
+                    headers: {  }
                 }).then(function(r) { return r.ok ? id : null; });
             })).then(function(results) {
                 var deleted = results.filter(Boolean);
@@ -1830,7 +1787,7 @@
 
         async function loadTags() {
             try {
-                var res = await fetch('/api/tags');
+                var res = await apiFetch('/api/tags');
                 var data = await res.json();
                 _allTags = data.tags || [];
                 renderTagsTable(_allTags);
@@ -1911,9 +1868,9 @@
             if (!body.name) { alert('请输入标签名'); return; }
 
             var url = id ? '/api/tags/' + id : '/api/tags';
-            var res = await fetch(url, {
+            var res = await apiFetch(url, {
                 method: id ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
             if (res.ok) { closeTagEditor(); loadTags(); }
@@ -1928,9 +1885,9 @@
             var tag = _allTags.find(function(t) { return t.id === id; });
             var name = tag ? tag.name : '';
             if (!confirm('确定删除标签"' + name + '"？')) return;
-            var res = await fetch('/api/tags/' + id, {
+            var res = await apiFetch('/api/tags/' + id, {
                 method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: {  }
             });
             if (res.ok) loadTags();
             else if (res.status === 401) { alert('登录已过期'); logout(); }
@@ -1961,7 +1918,7 @@
             var dropdown = document.getElementById('tag-selector-dropdown');
             if (!_allTags.length) {
                 try {
-                    var res = await fetch('/api/tags');
+                    var res = await apiFetch('/api/tags');
                     var data = await res.json();
                     _allTags = data.tags || [];
                 } catch (e) {

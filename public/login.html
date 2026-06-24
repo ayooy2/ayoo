@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>管理员登录</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
+    .login-box {
+        background: var(--color-surface);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 380px;
+        text-align: center;
+    }
+    .login-box h2 { margin:0 0 1.5rem; font-size:1.4rem; }
+    .login-box input {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        box-sizing: border-box;
+    }
+    .login-box input:focus { outline:none; border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
+    .login-box button {
+        width: 100%;
+        padding: 0.7rem;
+        background: var(--color-primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .login-box button:hover { background: var(--color-primary-hover); }
+    .error-msg { color:#ef4444; font-size:0.85rem; margin-bottom:0.8rem; display:none; }
+    .error-msg.show { display:block; }
+</style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>管理员登录</h2>
+        <p class="error-msg" id="login-error"></p>
+        <input type="password" id="password" placeholder="请输入管理密码" autofocus onkeydown="if(event.key==='Enter')doLogin()">
+        <button onclick="doLogin()">登录</button>
+    </div>
+    <script>
+        (function() {
+            var saved = localStorage.getItem('theme') || 'light';
+            if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+
+        function doLogin() {
+            var pwd = document.getElementById('password').value.trim();
+            if (!pwd) return;
+            var errEl = document.getElementById('login-error');
+            errEl.classList.remove('show');
+            fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pwd })
+            }).then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+            .then(function(result) {
+                if (!result.ok) {
+                    errEl.textContent = result.data.error || '密码错误';
+                    errEl.classList.add('show');
+                } else {
+                    window.location.href = '/admin.html';
+                }
+            }).catch(function() {
+                errEl.textContent = '网络错误，请重试';
+                errEl.classList.add('show');
+            });
+        }
+    </script>
+</body>
+</html>
