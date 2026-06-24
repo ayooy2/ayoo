@@ -2777,4 +2777,17 @@ body[style*="background-image"] .page-wrapper {
   .home-profile { flex-direction: column; text-align: center; }
   .home-profile-stats { justify-content: center; }
 }
+
+/* 密码输入框 + 显示/隐藏按钮 */
+.pw-input-wrap { position: relative; display: flex; align-items: center; }
+.pw-input-wrap input { padding-right: 3.2rem; }
+.pw-toggle {
+  position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  font-size: 0.78rem; color: var(--text-muted);
+  padding: 0.2rem 0.4rem; border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
 }
+.pw-toggle:hover { color: var(--accent); background: var(--accent-subtle); }
+[data-theme="dark"] .pw-modal-box { background: var(--bg-secondary); border-color: var(--border); }
+.pw-modal-box { background: #fff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); }
