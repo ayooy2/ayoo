@@ -1,3 +1,4 @@
+import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 // 文章详情 Edge SSR — Breadcrumb + Sidebar TOC + Modern Layout
 export async function onRequestGet(context) {
   try {

@@ -523,6 +523,29 @@
                     <div class="save-hint" id="save-hint">已保存</div>
                 </div>
 
+                <div class="settings-form" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;">
+                    <h3>关于我页面</h3>
+                    <form id="about-form" onsubmit="saveAbout(event)">
+                        <div class="form-group">
+                            <label>页面标题</label>
+                            <input type="text" id="about-title" placeholder="例如：关于我">
+                        </div>
+                        <div class="form-group">
+                            <label>头像 URL</label>
+                            <input type="text" id="about-avatar" placeholder="https://example.com/avatar.jpg">
+                            <p class="form-hint">输入头像图片链接</p>
+                        </div>
+                        <div class="form-group">
+                            <label>页面内容（Markdown）</label>
+                            <textarea id="about-content" rows="12" placeholder="支持 Markdown 格式，例如：&#10;&#10;## 你好 👋&#10;&#10;这里是个人介绍..."></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="submit" class="btn btn-primary">保存关于页面</button>
+                        </div>
+                    </form>
+                    <div class="save-hint" id="about-save-hint">已保存</div>
+                </div>
+
                 <div class="preview-box">
                     <h3>实时预览</h3>
                     <div class="preview-area">
@@ -1011,6 +1034,10 @@
                     el.classList.toggle('active', el.dataset.bg === bg);
                 });
                 updatePreview();
+                // 加载关于我页面设置
+                document.getElementById('about-title').value = data.about_title || '';
+                document.getElementById('about-avatar').value = data.about_avatar || '';
+                document.getElementById('about-content').value = (data.about_content || '').replace(/\\n/g, '\n');
             } catch (e) { /* ignore */ }
         }
 
@@ -1063,6 +1090,29 @@
             });
             if (res.ok) {
                 const hint = document.getElementById('save-hint');
+                hint.classList.add('show');
+                setTimeout(function() { hint.classList.remove('show'); }, 2000);
+            } else if (res.status === 401) {
+                alert('登录已过期'); logout();
+            } else {
+                alert('保存失败');
+            }
+        }
+
+        async function saveAbout(e) {
+            e.preventDefault();
+            const body = {
+                about_title: document.getElementById('about-title').value.trim(),
+                about_avatar: document.getElementById('about-avatar').value.trim(),
+                about_content: document.getElementById('about-content').value
+            };
+            const res = await apiFetch(API_SETTINGS, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) {
+                const hint = document.getElementById('about-save-hint');
                 hint.classList.add('show');
                 setTimeout(function() { hint.classList.remove('show'); }, 2000);
             } else if (res.status === 401) {

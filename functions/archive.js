@@ -1,3 +1,4 @@
+import { navbar, mobileMenu, cmdOverlay } from './lib/navbar.js';
 // GET /archive — 归档页，时间线布局
 export async function onRequestGet(context) {
   const { env } = context;

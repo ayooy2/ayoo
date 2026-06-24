@@ -1,3 +1,4 @@
+import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 // 博客列表 Edge SSR — Card Grid Layout with Tag Filtering
 export async function onRequestGet(context) {
   const { env } = context;

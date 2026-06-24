@@ -1,7 +1,7 @@
 import { json, error } from '../lib/response.js';
 import { requireAuth } from '../lib/auth.js';
 
-const ALLOWED_KEYS = ['title', 'subtitle', 'footer', 'bg_image'];
+const ALLOWED_KEYS = ['title', 'subtitle', 'footer', 'bg_image', 'about_title', 'about_content', 'about_avatar'];
 
 export async function onRequest(context) {
   const { request, env } = context;

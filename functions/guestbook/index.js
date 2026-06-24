@@ -1,3 +1,4 @@
+import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 // 留言簿 Edge SSR
 export async function onRequestGet(context) {
   const { env } = context;
