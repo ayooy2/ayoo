@@ -37,7 +37,7 @@ export async function onRequestPost(context) {
   clearRateLimit(ip);
   const sessionToken = await createSession(env);
   return json({ ok: true }, {
-    'Set-Cookie': `admin_session=${sessionToken}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`
+    'Set-Cookie': `admin_session=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`
   });
 }
 
