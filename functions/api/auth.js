@@ -16,9 +16,9 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  // 频率限制
+  // 频率限制（D1 存储，跨 Worker 实例共享）
   const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
-  const rateErr = checkRateLimit(ip);
+  const rateErr = await checkRateLimit(ip, env.DB);
   if (rateErr) return rateErr;
 
   let body;
@@ -29,41 +29,38 @@ export async function onRequestPost(context) {
   // 验证密码
   const authErr = await requireAuth(request, env, password);
   if (authErr) {
-    recordFailure(ip);
+    await recordFailure(ip, env.DB);
     return error('密码错误', 401);
   }
 
   // 创建会话并返回 Set-Cookie
-  clearRateLimit(ip);
+  await clearRateLimit(ip, env.DB);
   const sessionToken = await createSession(env);
   return json({ ok: true }, {
     'Set-Cookie': `admin_session=${sessionToken}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`
   });
 }
 
-// --- 频率限制（内存级，Worker 重启后重置） ---
-const rateMap = new Map();
-
-function checkRateLimit(ip) {
-  const now = Date.now();
-  const rec = rateMap.get(ip);
-  if (!rec) return null;
-  // 5 分钟窗口过期则清除
-  if (now - rec.windowStart > 5 * 60 * 1000) { rateMap.delete(ip); return null; }
-  if (rec.count >= 5) return error('登录尝试过多，请 5 分钟后再试', 429);
+// --- 频率限制（D1 存储，跨 Worker 实例共享） ---
+async function checkRateLimit(ip, db) {
+  // 清理超过 1 小时的旧记录
+  await db.prepare('DELETE FROM rate_limits WHERE attempted_at < datetime(\'now\', \'-1 hour\')').run();
+  // 检查最近 5 分钟内的尝试次数
+  const row = await db.prepare(
+    'SELECT COUNT(*) as cnt FROM rate_limits WHERE ip = ? AND action = \'login\' AND attempted_at > datetime(\'now\', \'-5 minutes\')'
+  ).bind(ip).first();
+  if (row && row.cnt >= 5) return error('登录尝试过多，请 5 分钟后再试', 429);
   return null;
 }
 
-function recordFailure(ip) {
-  const now = Date.now();
-  const rec = rateMap.get(ip);
-  if (!rec || now - rec.windowStart > 5 * 60 * 1000) {
-    rateMap.set(ip, { count: 1, windowStart: now });
-  } else {
-    rec.count++;
-  }
+async function recordFailure(ip, db) {
+  await db.prepare(
+    'INSERT INTO rate_limits (ip, action) VALUES (?, \'login\')'
+  ).bind(ip).run();
 }
 
-function clearRateLimit(ip) {
-  rateMap.delete(ip);
+async function clearRateLimit(ip, db) {
+  await db.prepare(
+    'DELETE FROM rate_limits WHERE ip = ? AND action = \'login\''
+  ).bind(ip).run();
 }
