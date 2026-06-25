@@ -441,6 +441,7 @@
         <nav class="tab-nav">
             <button class="tab-btn active" data-tab="sites" onclick="switchTab('sites')">网站管理</button>
             <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">页面设置</button>
+            <button class="tab-btn" data-tab="about" onclick="switchTab('about')">关于我</button>
             <button class="tab-btn" data-tab="articles" onclick="switchTab('articles')">文章管理</button>
             <button class="tab-btn" data-tab="tags" onclick="switchTab('tags')">标签管理</button>
         </nav>
@@ -523,29 +524,6 @@
                     <div class="save-hint" id="save-hint">已保存</div>
                 </div>
 
-                <div class="settings-form" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1.5rem;">
-                    <h3>关于我页面</h3>
-                    <form id="about-form" onsubmit="saveAbout(event)">
-                        <div class="form-group">
-                            <label>页面标题</label>
-                            <input type="text" id="about-title" placeholder="例如：关于我">
-                        </div>
-                        <div class="form-group">
-                            <label>头像 URL</label>
-                            <input type="text" id="about-avatar" placeholder="https://example.com/avatar.jpg">
-                            <p class="form-hint">输入头像图片链接</p>
-                        </div>
-                        <div class="form-group">
-                            <label>页面内容（Markdown）</label>
-                            <textarea id="about-content" rows="12" placeholder="支持 Markdown 格式，例如：&#10;&#10;## 你好 👋&#10;&#10;这里是个人介绍..."></textarea>
-                        </div>
-                        <div class="modal-actions">
-                            <button type="submit" class="btn btn-primary">保存关于页面</button>
-                        </div>
-                    </form>
-                    <div class="save-hint" id="about-save-hint">已保存</div>
-                </div>
-
                 <div class="preview-box">
                     <h3>实时预览</h3>
                     <div class="preview-area">
@@ -564,6 +542,38 @@
                         <div class="preview-footer" id="preview-footer">© 2026</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 关于我 ========== -->
+    <div id="tab-about" class="tab-content hidden">
+        <div class="settings-panel">
+            <div class="settings-form">
+                <h3>关于我页面</h3>
+                <form id="about-form" onsubmit="saveAbout(event)">
+                    <div class="form-group">
+                        <label>页面标题</label>
+                        <input type="text" id="about-title" placeholder="例如：关于我">
+                    </div>
+                    <div class="form-group">
+                        <label>头像 URL</label>
+                        <input type="text" id="about-avatar" placeholder="https://example.com/avatar.jpg">
+                        <p class="form-hint">输入头像图片链接</p>
+                    </div>
+                    <div class="form-group">
+                        <label>页面内容（Markdown）</label>
+                        <textarea id="about-content" rows="16" placeholder="支持 Markdown 格式，例如：&#10;&#10;## 你好 👋&#10;&#10;这里是个人介绍..."></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+                <div class="save-hint" id="about-save-hint">已保存</div>
+            </div>
+            <div class="preview-box">
+                <h3>预览</h3>
+                <div class="preview-area" id="about-preview" style="text-align:left;max-height:400px;overflow-y:auto;font-size:0.9rem;line-height:1.7;"></div>
             </div>
         </div>
     </div>
@@ -883,6 +893,7 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('hidden', c.id !== 'tab-' + name));
             if (name === 'settings') loadSettings();
+            if (name === 'about') loadAbout();
             if (name === 'sites') loadTable();
             if (name === 'articles') loadArticles();
             if (name === 'tags') loadTags();
@@ -1034,10 +1045,6 @@
                     el.classList.toggle('active', el.dataset.bg === bg);
                 });
                 updatePreview();
-                // 加载关于我页面设置
-                document.getElementById('about-title').value = data.about_title || '';
-                document.getElementById('about-avatar').value = data.about_avatar || '';
-                document.getElementById('about-content').value = (data.about_content || '').replace(/\\n/g, '\n');
             } catch (e) { /* ignore */ }
         }
 
@@ -1099,6 +1106,25 @@
             }
         }
 
+        async function loadAbout() {
+            try {
+                const res = await apiFetch(API_SETTINGS);
+                const data = await res.json();
+                document.getElementById('about-title').value = data.about_title || '';
+                document.getElementById('about-avatar').value = data.about_avatar || '';
+                document.getElementById('about-content').value = (data.about_content || '').replace(/\\n/g, '\n');
+                updateAboutPreview();
+            } catch (e) { /* ignore */ }
+        }
+
+        function updateAboutPreview() {
+            var content = document.getElementById('about-content').value;
+            var preview = document.getElementById('about-preview');
+            if (preview) {
+                preview.innerHTML = content ? '<p style="color:var(--text-muted);white-space:pre-wrap;">' + content.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>' : '<p style="color:var(--text-muted);">暂无内容</p>';
+            }
+        }
+
         async function saveAbout(e) {
             e.preventDefault();
             const body = {
@@ -1121,6 +1147,14 @@
                 alert('保存失败');
             }
         }
+
+        // 关于页面内容实时预览
+        (function() {
+            var aboutEl = document.getElementById('about-content');
+            if (aboutEl) {
+                aboutEl.addEventListener('input', updateAboutPreview);
+            }
+        })();
 
         function escapeHtml(text) {
             const div = document.createElement('div');
