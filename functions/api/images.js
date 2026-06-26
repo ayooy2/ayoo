@@ -12,6 +12,8 @@ export async function onRequest(context) {
     if (!id) return error('id required', 400);
     const img = await env.DB.prepare('SELECT * FROM images WHERE id = ?').bind(id).first();
     if (!img) return error('Not found', 404);
+    // 检查图片数据是否有效
+    if (!img.data) return error('Image data missing', 410);
     // 从 base64 解码
     const binary = Uint8Array.from(atob(img.data), c => c.charCodeAt(0));
     return new Response(binary, {

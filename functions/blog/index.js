@@ -103,7 +103,7 @@ function blogCard(a, index) {
 
   var cover = '';
   if (hasImage) {
-    cover = '<img class="blog-card-cover" src="' + esc(imgSrc) + '" alt="" loading="lazy">';
+    cover = '<img class="blog-card-cover" src="' + esc(imgSrc) + '" alt="" loading="lazy" onerror="this.parentElement.classList.remove(\'blog-card-has-image\');this.parentElement.classList.add(\'blog-card-no-image\');this.remove()">';
   }
 
   return `<a href="/blog/${esc(a.slug)}" class="${cardClass}" style="animation-delay:${index * 60}ms">

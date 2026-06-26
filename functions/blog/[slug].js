@@ -83,7 +83,7 @@ ${mobileMenu()}
       <!-- Main Content -->
       <article class="article-wrapper animate-in" style="animation-delay:100ms">
         <header class="article-header">
-          ${a.cover_image ? '<img src="' + esc(a.cover_image) + '" class="article-cover" alt="">' : ''}
+          ${a.cover_image ? '<img src="' + esc(a.cover_image) + '" class="article-cover" alt="" onerror="this.remove()">' : ''}
           <h1 class="article-title">${esc(a.title)}</h1>
           <div class="article-meta">
             <span class="article-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${esc(a.author)}</span>
@@ -154,6 +154,10 @@ function init(){
   try{
     var raw=${md}.replace(/\\\\n/g,"\\n");
     document.getElementById("content").innerHTML=marked.parse(raw);
+    // 为所有内容图片添加加载失败处理
+    document.querySelectorAll("#content img").forEach(function(img){
+      img.addEventListener("error",function(){this.alt="图片加载失败";this.style.opacity="0.5";this.style.maxWidth="200px";this.onerror=null;},{once:true});
+    });
     wrapCB();
     buildTOC();
   }catch(e){console.error("marked.parse failed:",e);}
