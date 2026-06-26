@@ -162,7 +162,10 @@ var LOGS=[
 {date:"2026/06/25",time:"01:00",desc:"<strong>后台重构</strong>：admin.html 从 2000+ 行拆分为 10 个模块文件（core/sites/settings/about/tags/articles/comments/images/app）",cat:"后台"},
 {date:"2026/06/25",time:"02:00",desc:"Rate Limiting 改用 D1 存储（跨 Worker 实例共享）；新增数据导出 API（/api/export）+ 后台导出按钮",cat:"API"},
 {date:"2026/06/25",time:"03:00",desc:"修复 16 个高优先级 bug：XSS 注入、认证降级后门、草稿泄露、换行符、时区错误、MIME 验证、javascript: 协议过滤、数据库索引等",cat:"安全"},
-{date:"2026/06/25",time:"04:00",desc:"修复前端模块 7 个 bug：innerHTML XSS 转义、Markdown 预览消毒、async try-catch 错误处理、标签选择器事件委托",cat:"修复"}
+{date:"2026/06/25",time:"04:00",desc:"修复前端模块 7 个 bug：innerHTML XSS 转义、Markdown 预览消毒、async try-catch 错误处理、标签选择器事件委托",cat:"修复"},
+{date:"2026/06/26",time:"15:00",desc:"<strong>全面 Bug 排查</strong>：4 个并行 agent 检查前端/后端/SSR/功能，发现 40+ 问题；修复 20 个文件 83 处改动",cat:"修复"},
+{date:"2026/06/26",time:"15:10",desc:"安全修复：about 页面 script 逃逸 XSS、导出泄露密码哈希、SVG 上传 XSS、LIKE 注入、Bearer token 严格校验",cat:"安全"},
+{date:"2026/06/26",time:"15:20",desc:"功能修复：admin DOM 结构、Ctrl+S 快捷键、发布后草稿残留、N+1 查询优化、主题键名统一、评论级联删除、D1 换行处理",cat:"修复"}
 ];
 
 var ARCH=[
