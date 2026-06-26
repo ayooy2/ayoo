@@ -103,6 +103,29 @@
         }
     }
 
+    // ---- 导出数据 ----
+    async function exportData() {
+        try {
+            var res = await apiFetch('/api/export');
+            if (!res.ok) {
+                if (res.status === 401) { alert('登录已过期'); logout(); return; }
+                alert('导出失败');
+                return;
+            }
+            var blob = await res.blob();
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'ayoo-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            alert('导出失败: ' + e.message);
+        }
+    }
+
     // ---- 暴露到全局 ----
     window.API_BASE = API_BASE;
     window.API_SETTINGS = API_SETTINGS;
@@ -114,4 +137,5 @@
     window.openPwModal = openPwModal;
     window.closePwModal = closePwModal;
     window.changePassword = changePassword;
+    window.exportData = exportData;
 })();
