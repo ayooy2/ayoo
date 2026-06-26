@@ -7,7 +7,7 @@ export async function onRequestGet(context) {
   const tagFilter = (url.searchParams.get('tag') || '').trim();
 
   // Build query with optional tag filter
-  var sql = `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.author, a.tags, a.created_at, a.views,
+  var sql = `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.content_md, a.author, a.tags, a.created_at, a.views,
       (SELECT COUNT(*) FROM likes WHERE article_id=a.id) as likes,
       (SELECT COUNT(*) FROM comments WHERE article_id=a.id) as comments
     FROM articles a WHERE a.is_published=1 AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))`;
@@ -47,7 +47,7 @@ export async function onRequestGet(context) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Blog</title>${seo}
-<link rel="stylesheet" href="/style.css?v=3">
+<link rel="stylesheet" href="/style.css?v=4">
 </head>
 <body>
 ${navbar('Blog', '/blog', '/blog')}
@@ -77,6 +77,14 @@ ${cmdOverlay()}
 }
 
 
+// 从 Markdown 内容中提取第一张图片 URL
+function extractFirstImage(content_md) {
+  if (!content_md) return '';
+  var md = content_md.replace(/\\n/g, '\n');
+  var m = md.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/);
+  return m ? m[1] : '';
+}
+
 function blogCard(a, index) {
   var date = (a.created_at || '').slice(0, 10);
   var tags = '';
@@ -85,24 +93,29 @@ function blogCard(a, index) {
     tags += '<span class="tag">#' + esc(tagArr[t].trim()) + '</span>';
   }
 
+  // 封面优先级：自定义 cover_image → 文章内第一张图 → 无图
+  var imgSrc = a.cover_image || extractFirstImage(a.content_md);
+  var hasImage = !!imgSrc;
+  var cardClass = hasImage ? 'blog-card blog-card-has-image' : 'blog-card blog-card-no-image';
+
   var cover = '';
-  if (a.cover_image) {
-    cover = '<img class="blog-card-cover" src="' + esc(a.cover_image) + '" alt="" loading="lazy">';
-  } else {
-    cover = '<div class="blog-card-cover-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
+  if (hasImage) {
+    cover = '<img class="blog-card-cover" src="' + esc(imgSrc) + '" alt="" loading="lazy">';
   }
 
-  return `<a href="/blog/${esc(a.slug)}" class="blog-card" style="animation-delay:${index * 60}ms">
+  return `<a href="/blog/${esc(a.slug)}" class="${cardClass}" style="animation-delay:${index * 60}ms">
     ${cover}
-    <h3 class="blog-card-title">${esc(a.title)}</h3>
-    ${a.summary ? '<p class="blog-card-summary">' + esc(a.summary) + '</p>' : ''}
-    <div class="blog-card-meta">
-      <span>${esc(date)}</span>
-      <span>${a.views || 0} 阅读</span>
-      <span>${a.likes} 喜欢</span>
-      <span>${a.comments} 评论</span>
+    <div class="blog-card-body">
+      <h3 class="blog-card-title">${esc(a.title)}</h3>
+      ${a.summary ? '<p class="blog-card-summary">' + esc(a.summary) + '</p>' : ''}
+      <div class="blog-card-meta">
+        <span>${esc(date)}</span>
+        <span>${a.views || 0} 阅读</span>
+        <span>${a.likes} 喜欢</span>
+        <span>${a.comments} 评论</span>
+      </div>
+      ${tags ? '<div class="blog-card-tags">' + tags + '</div>' : ''}
     </div>
-    ${tags ? '<div class="blog-card-tags">' + tags + '</div>' : ''}
   </a>`;
 }
 

@@ -176,3 +176,10 @@ export async function clearSession(request, env) {
     await env.DB.prepare("DELETE FROM settings WHERE key=?").bind('session_' + hash).run();
   } catch (e) {}
 }
+
+// 清除所有会话（密码修改时调用，确保所有设备需重新登录）
+export async function clearAllSessions(env) {
+  try {
+    await env.DB.prepare("DELETE FROM settings WHERE key LIKE 'session_%'").run();
+  } catch (e) {}
+}

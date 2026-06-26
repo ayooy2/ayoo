@@ -60,7 +60,7 @@ export async function onRequestGet(context) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${title}</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="/style.css?v=3">
+<link rel="stylesheet" href="/style.css?v=4">
 </head>
 <body>
 ${navbar('搜索', '/', '/search')}

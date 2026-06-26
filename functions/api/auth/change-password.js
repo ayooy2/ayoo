@@ -1,5 +1,5 @@
 import { json, error } from '../../lib/response.js';
-import { requireAuth, clearSession, validatePasswordComplexity } from '../../lib/auth.js';
+import { requireAuth, clearAllSessions, validatePasswordComplexity } from '../../lib/auth.js';
 
 // 旧 SHA-256 哈希（用于验证旧密码格式）
 async function hashSHA256(password) {
@@ -86,8 +86,8 @@ export async function onRequest(context) {
     "INSERT INTO settings (key, value) VALUES ('admin_password_hash', ?) ON CONFLICT(key) DO UPDATE SET value=?, updated_at=CURRENT_TIMESTAMP"
   ).bind(newHash, newHash).run();
 
-  // 清除当前会话，强制重新登录
-  await clearSession(request, env);
+  // 清除所有会话，强制所有设备重新登录
+  await clearAllSessions(env);
 
   return json({ ok: true, message: '密码修改成功' }, {
     'Set-Cookie': 'admin_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0'

@@ -50,7 +50,7 @@ export async function onRequestGet(context) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>归档</title>
 <meta name="description" content="所有文章归档">
-<link rel="stylesheet" href="/style.css?v=3">
+<link rel="stylesheet" href="/style.css?v=4">
 </head>
 <body>
 ${navbar('归档', '/', '/archive')}

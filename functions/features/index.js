@@ -64,7 +64,7 @@ function render(stats, tags) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>功能</title>${seo}
-<link rel="stylesheet" href="/style.css?v=3">
+<link rel="stylesheet" href="/style.css?v=4">
 </head>
 <body>
 ${navbar('功能', '/', '/features')}

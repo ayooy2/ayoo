@@ -692,13 +692,9 @@ body[style*="background-image"] .page-wrapper {
 }
 
 .blog-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-md);
-}
-
-@media (max-width: 768px) {
-  .blog-grid { grid-template-columns: 1fr; }
 }
 
 .blog-card {
@@ -713,7 +709,6 @@ body[style*="background-image"] .page-wrapper {
   text-decoration: none;
   color: inherit;
   display: flex;
-  flex-direction: column;
   animation: fade-in-up var(--duration-slow) var(--ease) both;
 }
 
@@ -723,32 +718,32 @@ body[style*="background-image"] .page-wrapper {
   border-color: var(--accent);
 }
 
-.blog-card-cover {
-  width: 100%;
-  height: 140px;
+/* 有封面图：横向长条布局 */
+.blog-card-has-image {
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--space-lg);
+}
+
+.blog-card-has-image .blog-card-cover {
+  width: 220px;
+  min-height: 130px;
+  max-height: 160px;
   object-fit: cover;
   border-radius: var(--radius-sm);
-  margin-bottom: var(--space-md);
+  flex-shrink: 0;
 }
 
-.blog-card-cover-placeholder {
-  width: 100%;
-  height: 140px;
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-md);
-  background: var(--bg-secondary);
+/* 无封面图：纯文字卡片 */
+.blog-card-no-image {
+  flex-direction: column;
+}
+
+.blog-card-body {
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.blog-card-cover-placeholder svg {
-  width: 32px;
-  height: 32px;
-  color: var(--text-placeholder);
-  stroke: currentColor;
-  stroke-width: 1.2;
-  fill: none;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .blog-card-title {
@@ -789,6 +784,18 @@ body[style*="background-image"] .page-wrapper {
   gap: var(--space-xs);
   margin-top: var(--space-sm);
   flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .blog-card-has-image {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  .blog-card-has-image .blog-card-cover {
+    width: 100%;
+    min-height: 160px;
+    max-height: 200px;
+  }
 }
 
 /* ===== ARTICLE DETAIL ===== */
@@ -2438,8 +2445,6 @@ body[style*="background-image"] .page-wrapper {
 
   .article-title { font-size: 1.5rem; }
   .article-layout { grid-template-columns: 1fr; }
-
-  .blog-grid { grid-template-columns: 1fr; }
 
   .settings-panel { grid-template-columns: 1fr; }
   .admin-header {

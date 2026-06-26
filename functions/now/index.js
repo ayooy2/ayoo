@@ -70,7 +70,7 @@ function render(groups, categoryOrder, lastUpdated) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Now</title>${seo}
-<link rel="stylesheet" href="/style.css?v=3">
+<link rel="stylesheet" href="/style.css?v=4">
 </head>
 <body>
 ${navbar('Now', '/', '/now')}
