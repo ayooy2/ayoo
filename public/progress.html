@@ -74,6 +74,31 @@ footer a{color:var(--accent);text-decoration:none}
   <div class="section-title">系统架构</div>
   <div class="arch-grid" id="arch"></div>
 
+  <div class="section-title">🔧 待办：图片存储迁移到 R2</div>
+  <div class="entry" style="margin-bottom:2rem;border-left:3px solid var(--orange);padding-left:1rem;">
+    <div class="desc" style="font-size:.85rem;line-height:1.8;">
+      <p><strong>当前状态：</strong>图片以 base64 存储在 D1 中，单列上限 256KB（约 180KB 原图），免费计划 5GB 总容量。</p>
+      <p style="margin-top:.6rem"><strong>迁移步骤：</strong></p>
+      <ol style="padding-left:1.2rem;margin-top:.3rem">
+        <li>登录 <a href="https://dash.cloudflare.com" target="_blank" style="color:var(--accent)">Cloudflare Dashboard</a></li>
+        <li>左侧菜单点击 <strong>R2 Object Storage</strong>（需要绑定支付方式，免费额度 10GB）</li>
+        <li>点击 <strong>Create bucket</strong>，名称输入 <code style="background:var(--bg);padding:.1rem .3rem;border-radius:4px">ayoo-images</code>，位置选 Automatic</li>
+        <li>进入 bucket → Settings → Public Access → 启用 <strong>R2.dev subdomain</strong></li>
+        <li>编辑 <code style="background:var(--bg);padding:.1rem .3rem;border-radius:4px">wrangler.toml</code> 添加：</li>
+      </ol>
+      <pre style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.8rem;margin:.5rem 0;font-size:.78rem;overflow-x:auto">[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "ayoo-images"</pre>
+      <ol start="6" style="padding-left:1.2rem;margin-top:.3rem">
+        <li>修改 <code style="background:var(--bg);padding:.1rem .3rem;border-radius:4px">functions/api/images.js</code>：POST 写入 R2（<code>env.IMAGES.put()</code>），GET 从 R2 读取（<code>env.IMAGES.get()</code>），D1 只存元数据</li>
+        <li>创建迁移文件：将 images 表的 <code>data TEXT</code> 改为 <code>r2_key TEXT</code></li>
+        <li>运行迁移：<code style="background:var(--bg);padding:.1rem .3rem;border-radius:4px">npx wrangler d1 migrations apply a-site-db --remote</code></li>
+        <li>部署：<code style="background:var(--bg);padding:.1rem .3rem;border-radius:4px">npx wrangler pages deploy public</code></li>
+      </ol>
+      <p style="margin-top:.6rem;color:var(--text2)"><strong>迁移后：</strong>图片大小限制放开到 5MB，免费 10GB 存储，无出口费用。现有 D1 中的图片需要写脚本迁移到 R2。</p>
+    </div>
+  </div>
+
   <div class="section-title">变更时间线</div>
   <div class="filter-bar" id="filters"></div>
   <div class="timeline" id="timeline"></div>
@@ -126,16 +151,27 @@ var LOGS=[
 {date:"2026/06/18",time:"01:20",desc:"评论管理增强：全屏管理面板，支持<strong>筛选/排序/多选/批量删除</strong>",cat:"评论"},
 {date:"2026/06/18",time:"01:40",desc:"修复 Gravatar 头像不可用：gravatar.com 替换为 cravatar.cn（国内镜像）",cat:"修复"},
 {date:"2026/06/18",time:"02:00",desc:"头像系统升级为 <strong>Identicon</strong> 方案：客户端生成 SVG 几何图案，不依赖外部服务",cat:"评论"},
-{date:"2026/06/18",time:"03:00",desc:"Identicon 多风格升级：3 种形状 × 2 种密度 × 3 色配色，共 18 种组合",cat:"评论"}
+{date:"2026/06/18",time:"03:00",desc:"Identicon 多风格升级：3 种形状 × 2 种密度 × 3 色配色，共 18 种组合",cat:"评论"},
+{date:"2026/06/23",time:"00:10",desc:"代码质量审计：修复点赞状态检查 Bug、博客卡片显示评论数、7个 SSR 页面 try/catch、sitemap 补全",cat:"修复"},
+{date:"2026/06/23",time:"00:20",desc:"性能优化：消除 blog/index.js N+1 查询（101次→1次），SQL 子查询一次获取 likes/comments 计数",cat:"性能"},
+{date:"2026/06/23",time:"00:30",desc:"代码重构：抽取公共 JS 到 public/app.js，消除 7 个页面重复代码（减少 ~320 行）",cat:"架构"},
+{date:"2026/06/23",time:"01:00",desc:"新增<strong>标签系统</strong>：0010_tags 迁移 + /api/tags CRUD + 后台标签管理 + 文章标签选择器 + 博客标签筛选",cat:"博客"},
+{date:"2026/06/23",time:"02:00",desc:"新增<strong>关于我</strong>页面(/about) + <strong>功能</strong>页面(/features) + 全局导航栏统一 8 个页面链接",cat:"首页"},
+{date:"2026/06/23",time:"03:00",desc:"密码管理系统：SHA-256 哈希存储，后台修改密码，统一认证函数(requireAuth)",cat:"安全"},
+{date:"2026/06/25",time:"00:10",desc:"<strong>安全加固</strong>：密码哈希升级为 PBKDF2（100k 迭代+随机 salt）；Settings API 过滤敏感字段；Cookie Secure 标志",cat:"安全"},
+{date:"2026/06/25",time:"01:00",desc:"<strong>后台重构</strong>：admin.html 从 2000+ 行拆分为 10 个模块文件（core/sites/settings/about/tags/articles/comments/images/app）",cat:"后台"},
+{date:"2026/06/25",time:"02:00",desc:"Rate Limiting 改用 D1 存储（跨 Worker 实例共享）；新增数据导出 API（/api/export）+ 后台导出按钮",cat:"API"},
+{date:"2026/06/25",time:"03:00",desc:"修复 16 个高优先级 bug：XSS 注入、认证降级后门、草稿泄露、换行符、时区错误、MIME 验证、javascript: 协议过滤、数据库索引等",cat:"安全"},
+{date:"2026/06/25",time:"04:00",desc:"修复前端模块 7 个 bug：innerHTML XSS 转义、Markdown 预览消毒、async try-catch 错误处理、标签选择器事件委托",cat:"修复"}
 ];
 
 var ARCH=[
 {icon:"🏠",name:"首页",desc:"极简留白风链接导航，双击跳转，实时时钟，日/夜间主题切换，壁纸系统"},
-{icon:"📝",name:"博客",desc:"Markdown 渲染，代码块折叠/复制/全屏，文章 CRUD，评论系统"},
-{icon:"⚙️",name:"后台",desc:"网站管理，页面设置（实时预览），文章编辑器（工具栏+分栏+自动保存）"},
-{icon:"🔌",name:"API",desc:"RESTful 认证，图片独立存储，评论树形回复，点赞切换，搜索"},
-{icon:"🗄️",name:"数据",desc:"D1 6 表：sites, settings, articles, comments, likes, images"},
-{icon:"🛡️",name:"安全",desc:"Secret 密码，API 验证，XSS 过滤，蜜罐反垃圾，输入校验"}
+{icon:"📝",name:"博客",desc:"Markdown 渲染，代码块折叠/复制/全屏，文章 CRUD，评论系统，标签筛选"},
+{icon:"⚙️",name:"后台",desc:"模块化架构（10个JS文件），网站/设置/关于/文章/标签/评论/图片管理"},
+{icon:"🔌",name:"API",desc:"RESTful 认证，图片独立存储，评论树形回复，点赞切换，搜索，数据导出"},
+{icon:"🗄️",name:"数据",desc:"D1 6 表：sites, settings, articles, comments, likes, images + 13 个迁移"},
+{icon:"🛡️",name:"安全",desc:"PBKDF2 密码哈希，API 白名单过滤，XSS 防护，Rate Limiting D1 存储"}
 ];
 
 var CATS=["全部","架构","首页","博客","后台","API","数据","安全","样式","修复","评论","性能"];
@@ -154,7 +190,7 @@ document.getElementById("stats").innerHTML=
   '<div class="stat-card"><div class="stat-num">'+LOGS.length+'</div><div class="stat-label">变更记录</div></div>'
  +'<div class="stat-card"><div class="stat-num">'+days+'</div><div class="stat-label">开发天数</div></div>'
  +'<div class="stat-card"><div class="stat-num">'+cats+'</div><div class="stat-label">涉及模块</div></div>'
- +'<div class="stat-card"><div class="stat-num">9</div><div class="stat-label">D1 迁移</div></div>';
+ +'<div class="stat-card"><div class="stat-num">13</div><div class="stat-label">D1 迁移</div></div>';
 
 // Architecture
 document.getElementById("arch").innerHTML=ARCH.map(function(a){
