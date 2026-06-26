@@ -1,4 +1,5 @@
 import { json, error } from '../../lib/response.js';
+import { clearAllSessions } from '../../lib/auth.js';
 
 // POST - 重置密码（需要 Cloudflare Secret 作为 master key）
 // 这是一个紧急恢复端点，删除数据库中的密码哈希，允许用 env.ADMIN_PASSWORD 重新登录
@@ -18,7 +19,7 @@ export async function onRequest(context) {
 
   // 删除密码哈希和所有会话
   await env.DB.prepare("DELETE FROM settings WHERE key='admin_password_hash'").run();
-  await env.DB.prepare("DELETE FROM settings WHERE key LIKE 'session_%'").run();
+  await clearAllSessions(env);
 
   return json({
     ok: true,

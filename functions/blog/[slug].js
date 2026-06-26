@@ -145,16 +145,18 @@ ${mobileMenu()}
   </footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
 <script>
 var aid=${a.id},fp=localStorage.getItem("fp")||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp",f);return f;})(),replyTo=null;
 
 function init(){
   if(typeof marked=="undefined"){setTimeout(init,100);return;}
-  var raw=${md}.replace(/\\\\n/g,"\\n");
-  document.getElementById("content").innerHTML=marked.parse(raw);
-  wrapCB();
-  buildTOC();
+  try{
+    var raw=${md}.replace(/\\\\n/g,"\\n");
+    document.getElementById("content").innerHTML=marked.parse(raw);
+    wrapCB();
+    buildTOC();
+  }catch(e){console.error("marked.parse failed:",e);}
 }
 
 function buildTOC(){

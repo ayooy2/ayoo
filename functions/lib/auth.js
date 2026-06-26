@@ -26,7 +26,7 @@ async function hashSHA256(password) {
 }
 
 // 新 PBKDF2 哈希，返回格式：salt_hex:hash_hex
-async function hashPassword(password) {
+export async function hashPassword(password) {
   const salt = new Uint8Array(SALT_BYTES);
   crypto.getRandomValues(salt);
   const keyMaterial = await crypto.subtle.importKey(
@@ -46,7 +46,7 @@ async function hashSessionToken(token) {
 
 // 验证密码：自动识别新格式（含冒号）和旧格式（纯 64 字符 hex）
 // 返回 { valid: boolean, needsRehash: boolean }
-async function verifyPassword(password, stored) {
+export async function verifyPassword(password, stored) {
   if (stored && stored.includes(':')) {
     // 新格式：salt_hex:hash_hex
     const [saltHex, hashHex] = stored.split(':');
@@ -181,5 +181,7 @@ export async function clearSession(request, env) {
 export async function clearAllSessions(env) {
   try {
     await env.DB.prepare("DELETE FROM settings WHERE key LIKE 'session_%'").run();
-  } catch (e) {}
+  } catch (e) {
+    console.error('clearAllSessions failed:', e);
+  }
 }

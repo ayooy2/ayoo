@@ -7,7 +7,7 @@ export async function onRequestGet(context) {
   const tagFilter = (url.searchParams.get('tag') || '').trim();
 
   // Build query with optional tag filter
-  var sql = `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.content_md, a.author, a.tags, a.created_at, a.views,
+  var sql = `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, SUBSTR(a.content_md, 1, 2000) as content_md, a.author, a.tags, a.created_at, a.views,
       (SELECT COUNT(*) FROM likes WHERE article_id=a.id) as likes,
       (SELECT COUNT(*) FROM comments WHERE article_id=a.id) as comments
     FROM articles a WHERE a.is_published=1 AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))`;
@@ -77,12 +77,15 @@ ${cmdOverlay()}
 }
 
 
-// 从 Markdown 内容中提取第一张图片 URL
+// 从 Markdown 内容中提取第一张图片 URL（支持绝对路径和相对路径）
 function extractFirstImage(content_md) {
   if (!content_md) return '';
   var md = content_md.replace(/\\n/g, '\n');
-  var m = md.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/);
-  return m ? m[1] : '';
+  var m = md.match(/!\[.*?\]\(([^\s)]+)\)/);
+  if (!m) return '';
+  var url = m[1];
+  if (/^javascript:/i.test(url)) return '';
+  return url;
 }
 
 function blogCard(a, index) {
