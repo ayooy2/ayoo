@@ -55,10 +55,8 @@ export async function onRequest(context) {
   if (request.method !== 'POST') return error('Method not allowed', 405);
 
   // Authenticate via Cookie session or Authorization header
-  const authResult = await requireAuth(request, env);
-  if (authResult && authResult.error) return authResult;
-  // 检查是否使用了恢复密钥（不需要验证旧密码）
-  const isRecovery = authResult && authResult._recovery === true;
+  const authErr = await requireAuth(request, env);
+  if (authErr) return authErr;
 
   // Parse body once
   let body;
@@ -66,17 +64,15 @@ export async function onRequest(context) {
   const currentPassword = (body.current_password || '').trim();
   const newPassword = (body.new_password || '').trim();
 
-  // 验证当前密码（恢复模式跳过验证）
-  if (!isRecovery) {
-    const storedHash = await env.DB.prepare("SELECT value FROM settings WHERE key='admin_password_hash'").first();
-    if (storedHash && storedHash.value) {
-      const valid = await verifyStoredPassword(currentPassword, storedHash.value);
-      if (!valid) return error('当前密码错误', 403);
-    } else {
-      // 无存储哈希，对比 env secret
-      if (env.ADMIN_PASSWORD && currentPassword !== env.ADMIN_PASSWORD) {
-        return error('当前密码错误', 403);
-      }
+  // 验证当前密码
+  const storedHash = await env.DB.prepare("SELECT value FROM settings WHERE key='admin_password_hash'").first();
+  if (storedHash && storedHash.value) {
+    const valid = await verifyStoredPassword(currentPassword, storedHash.value);
+    if (!valid) return error('当前密码错误', 403);
+  } else {
+    // 无存储哈希，对比 env secret
+    if (env.ADMIN_PASSWORD && currentPassword !== env.ADMIN_PASSWORD) {
+      return error('当前密码错误', 403);
     }
   }
 

@@ -47,8 +47,6 @@
     }
 
     // ---- 修改密码 ----
-    var _isRecovery = false;
-
     function togglePw(btn) {
         var inp = btn.parentElement.querySelector('input');
         if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '隐藏'; }
@@ -61,13 +59,6 @@
         document.getElementById('pw-current').value = '';
         document.getElementById('pw-new').value = '';
         document.getElementById('pw-confirm').value = '';
-        // 检查是否恢复模式
-        _isRecovery = new URLSearchParams(window.location.search).get('recovery') === '1';
-        if (_isRecovery) {
-            document.getElementById('pw-current-group').style.display = 'none';
-        } else {
-            document.getElementById('pw-current-group').style.display = 'block';
-        }
         document.getElementById('pw-modal').classList.add('active');
     }
 
@@ -82,9 +73,15 @@
         errEl.style.display = 'none';
         okEl.style.display = 'none';
 
-        var cur = _isRecovery ? '' : document.getElementById('pw-current').value;
+        var cur = document.getElementById('pw-current').value;
         var nw = document.getElementById('pw-new').value;
         var cf = document.getElementById('pw-confirm').value;
+
+        if (!cur) {
+            errEl.textContent = '请输入当前密码';
+            errEl.style.display = 'block';
+            return;
+        }
 
         if (nw !== cf) {
             errEl.textContent = '两次输入的新密码不一致';
@@ -111,7 +108,6 @@
                 return;
             }
             okEl.style.display = 'block';
-            _isRecovery = false;
             setTimeout(function() { window.location.href = '/login.html'; }, 1500);
         } catch (err) {
             errEl.textContent = '网络错误，请重试';
