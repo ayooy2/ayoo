@@ -25,7 +25,8 @@ function render(s) {
   var siteTitle = esc(s.title || 'Ayoo');
 
   // Simple markdown to HTML (client-side marked.js will enhance)
-  var contentHtml = content
+  // 先转义 HTML 再做 markdown 转换，防止 XSS（marked.js 会覆盖此内容）
+  var contentHtml = esc(content)
     .replace(/\\n/g, '\n')
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
@@ -71,7 +72,7 @@ ${mobileMenu()}
 <script src="/app.js"></script>
 <script>
 (function(){
-  var raw = ${JSON.stringify(content)};
+  var raw = ${JSON.stringify(content).replace(/\//g, '\\/')};
   if(raw && window.marked){
     var el = document.getElementById('about-content');
     if(el) el.innerHTML = marked.parse(raw.replace(/\\\\n/g, '\\n'));
@@ -80,7 +81,7 @@ ${mobileMenu()}
     var s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
     s.onload = function(){
-      var raw2 = ${JSON.stringify(content)};
+      var raw2 = ${JSON.stringify(content).replace(/\//g, '\\/')};
       if(raw2){
         var el2 = document.getElementById('about-content');
         if(el2) el2.innerHTML = marked.parse(raw2.replace(/\\\\n/g, '\\n'));

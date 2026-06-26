@@ -45,7 +45,8 @@ export async function onRequest(context) {
   return error('Method not allowed', 405);
 }
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp'];
+// SVG 已移除：可内嵌 script 导致存储型 XSS
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
 
 async function uploadImage(env, data) {
   const filename = (data.filename || 'image').slice(0, 200);
@@ -53,6 +54,8 @@ async function uploadImage(env, data) {
   if (!ALLOWED_MIME_TYPES.includes(mimeType)) return error('不支持的图片格式', 400);
   const imageData = (data.data || '').trim();
   if (!imageData) return error('data required', 400);
+  // 验证 base64 有效性
+  try { atob(imageData); } catch { return error('无效的图片数据', 400); }
   // D1 单列上限 256KB，base64 限制 250KB 留安全余量
   if (imageData.length > 250000) return error('Image too large (max ~180KB)', 400);
   const result = await env.DB.prepare(

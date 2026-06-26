@@ -36,7 +36,7 @@ export async function onRequestGet(context) {
       for (var j = 0; j < articles.length; j++) {
         var a = articles[j];
         var day = (a.created_at || '').slice(8, 10);
-        timeline += '<li class="archive-item"><span class="archive-item-day">' + esc(day) + '</span><a href="/blog/' + a.slug + '">' + esc(a.title) + '</a><span class="archive-item-views">' + (a.views || 0) + '</span></li>';
+        timeline += '<li class="archive-item"><span class="archive-item-day">' + esc(day) + '</span><a href="/blog/' + esc(a.slug) + '">' + esc(a.title) + '</a><span class="archive-item-views">' + (a.views || 0) + '</span></li>';
       }
       timeline += '</ul>';
     }

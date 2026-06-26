@@ -89,8 +89,8 @@ export async function requireAuth(request, env, password) {
   let token = password;
   if (!token) {
     const auth = request.headers.get('Authorization');
-    if (!auth) return error('Unauthorized', 401);
-    token = auth.replace('Bearer ', '');
+    if (!auth || !auth.startsWith('Bearer ')) return error('Unauthorized', 401);
+    token = auth.slice(7);
   }
   try {
     const storedHash = await env.DB.prepare("SELECT value FROM settings WHERE key='admin_password_hash'").first();

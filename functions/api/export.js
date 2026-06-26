@@ -16,7 +16,7 @@ export async function onRequest(context) {
   try {
     // 逐表查询，避免一次性占用过多内存
     const sites = (await env.DB.prepare('SELECT * FROM sites ORDER BY sort_order, id').all()).results || [];
-    const settings = (await env.DB.prepare('SELECT * FROM settings').all()).results || [];
+    const settings = (await env.DB.prepare("SELECT key, value FROM settings WHERE key NOT LIKE 'session_%' AND key != 'admin_password_hash'").all()).results || [];
     const articles = (await env.DB.prepare('SELECT * FROM articles ORDER BY id').all()).results || [];
     const comments = (await env.DB.prepare('SELECT * FROM comments ORDER BY id').all()).results || [];
     const likes = (await env.DB.prepare('SELECT * FROM likes ORDER BY id').all()).results || [];

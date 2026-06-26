@@ -70,7 +70,7 @@ ${mobileMenu()}
 <script src="/app.js"></script>
 ${cmdOverlay()}
 </body>
-</html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' } });
+</html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=3600' } });
   } catch (e) {
     return new Response('服务器错误，请稍后再试', { status: 500 });
   }

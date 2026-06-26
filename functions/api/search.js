@@ -9,7 +9,8 @@ export async function onRequest(context) {
   if (!q) return json({ results: [], total: 0 });
   if (q.length > 100) return error('Query too long', 400);
 
-  const like = '%' + q + '%';
+  const escaped = q.replace(/%/g, '\\%').replace(/_/g, '\\_');
+  const like = '%' + escaped + '%';
   const { results } = await env.DB.prepare(
     "SELECT id, title, slug, summary, author, tags, created_at, views "
     + "FROM articles WHERE is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) "

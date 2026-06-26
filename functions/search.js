@@ -8,7 +8,8 @@ export async function onRequestGet(context) {
   var results = [];
 
   if (q && q.length <= 100) {
-    const like = '%' + q + '%';
+    const escaped = q.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    const like = '%' + escaped + '%';
     const { results: rows } = await env.DB.prepare(
       "SELECT id, title, slug, summary, author, tags, created_at, views "
       + "FROM articles WHERE is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) "
