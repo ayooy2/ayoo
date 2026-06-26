@@ -86,7 +86,12 @@
                     errEl.textContent = result.data.error || '密码错误';
                     errEl.classList.add('show');
                 } else {
-                    window.location.href = '/admin.html';
+                    // 检查是否使用了恢复密钥
+                    if (result.data._recovery) {
+                        window.location.href = '/admin.html?recovery=1';
+                    } else {
+                        window.location.href = '/admin.html';
+                    }
                 }
             }).catch(function() {
                 errEl.textContent = '网络错误，请重试';

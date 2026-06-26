@@ -13,8 +13,18 @@
     // ---- 会话检查 ----
     (function() {
         apiFetch(API_AUTH, { credentials: 'same-origin' }).then(function(r) {
-            if (!r.ok) window.location.href = '/login.html';
-            else loadTable();
+            if (!r.ok) { window.location.href = '/login.html'; return; }
+            return r.json();
+        }).then(function(data) {
+            if (!data) return;
+            loadTable();
+            // 检查是否恢复模式
+            if (data._recovery) {
+                setTimeout(function() {
+                    alert('您正在使用紧急恢复密钥登录。\n为了安全，请立即修改密码！');
+                    openPwModal();
+                }, 500);
+            }
         }).catch(function() {
             window.location.href = '/login.html';
         });

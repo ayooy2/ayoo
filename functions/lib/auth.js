@@ -81,10 +81,15 @@ function generateToken() {
 
 // 核心认证函数：先检查 Cookie 会话，再检查密码
 // password 参数可选，不传时从 Cookie 或 Authorization header 读取
+// 返回 null 表示认证成功，返回 error 表示失败
+// 如果返回的对象有 _recovery=true 属性，表示使用了紧急恢复密钥
 export async function requireAuth(request, env, password) {
   // 1. 先检查 Cookie 会话
   const session = await getSessionFromCookie(request, env);
-  if (session) return null;
+  if (session) {
+    // 会话有效，返回恢复标志
+    return session.recovery ? { _recovery: true } : null;
+  }
   // 2. 再检查密码（Bearer 或直接传入）
   let token = password;
   if (!token) {
@@ -96,7 +101,14 @@ export async function requireAuth(request, env, password) {
     const storedHash = await env.DB.prepare("SELECT value FROM settings WHERE key='admin_password_hash'").first();
     if (storedHash && storedHash.value) {
       const result = await verifyPassword(token, storedHash.value);
-      if (!result.valid) return error('Unauthorized', 401);
+      if (!result.valid) {
+        // 数据库密码验证失败，检查紧急恢复密钥
+        if (env.ADMIN_PASSWORD && token === env.ADMIN_PASSWORD) {
+          // 使用恢复密钥登录，标记需要修改密码
+          return { _recovery: true };
+        }
+        return error('Unauthorized', 401);
+      }
       // 旧 SHA-256 格式验证成功，自动升级为 PBKDF2
       if (result.needsRehash) {
         const newHash = await hashPassword(token);
@@ -104,6 +116,15 @@ export async function requireAuth(request, env, password) {
           "UPDATE settings SET value=?, updated_at=CURRENT_TIMESTAMP WHERE key='admin_password_hash'"
         ).bind(newHash).run();
       }
+      return null;
+    }
+    // 数据库中没有密码哈希，使用 env.ADMIN_PASSWORD 作为初始密码
+    if (env.ADMIN_PASSWORD && token === env.ADMIN_PASSWORD) {
+      // 首次登录，自动保存密码哈希到数据库
+      const newHash = await hashPassword(token);
+      await env.DB.prepare(
+        "INSERT INTO settings (key, value, updated_at) VALUES ('admin_password_hash', ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value=?, updated_at=CURRENT_TIMESTAMP"
+      ).bind(newHash, newHash).run();
       return null;
     }
   } catch (e) {
@@ -114,6 +135,7 @@ export async function requireAuth(request, env, password) {
 }
 
 // 从 Cookie 中获取会话并验证
+// 返回 { token, recovery } 或 null
 export async function getSessionFromCookie(request, env) {
   const cookie = request.headers.get('Cookie') || '';
   const match = cookie.match(/admin_session=([a-f0-9]{64})/);
@@ -135,19 +157,21 @@ export async function getSessionFromCookie(request, env) {
     await env.DB.prepare(
       "UPDATE settings SET updated_at=CURRENT_TIMESTAMP WHERE key=?"
     ).bind('session_' + sessionHash).run();
-    return sessionToken;
+    return { token: sessionToken, recovery: row.value === 'recovery' };
   } catch (e) {
     return null;
   }
 }
 
 // 创建新会话，返回 session token
-export async function createSession(env) {
+// recovery=true 表示使用恢复密钥创建的会话
+export async function createSession(env, recovery = false) {
   const token = generateToken();
   const hash = await hashSessionToken(token);
+  const value = recovery ? 'recovery' : '';
   await env.DB.prepare(
-    "INSERT INTO settings (key, value, updated_at) VALUES (?, '', CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value='', updated_at=CURRENT_TIMESTAMP"
-  ).bind('session_' + hash).run();
+    "INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value=?, updated_at=CURRENT_TIMESTAMP"
+  ).bind('session_' + hash, value, value).run();
   return token;
 }
 

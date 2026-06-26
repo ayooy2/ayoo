@@ -5,11 +5,11 @@ import { requireAuth, createSession, getSessionFromCookie, clearSession } from '
 export async function onRequestGet(context) {
   const { request, env } = context;
   const session = await getSessionFromCookie(request, env);
-  if (session) return json({ ok: true });
+  if (session) return json({ ok: true, _recovery: session.recovery });
   // 也支持旧的 Bearer 方式（兼容）
-  const authErr = await requireAuth(request, env);
-  if (authErr) return authErr;
-  return json({ ok: true });
+  const authResult = await requireAuth(request, env);
+  if (authResult && authResult.error) return authResult;
+  return json({ ok: true, _recovery: authResult && authResult._recovery });
 }
 
 // POST - 登录（密码验证 + 设置 Cookie 会话）
@@ -27,16 +27,20 @@ export async function onRequestPost(context) {
   if (!password) return error('请输入密码', 400);
 
   // 验证密码
-  const authErr = await requireAuth(request, env, password);
-  if (authErr) {
+  const authResult = await requireAuth(request, env, password);
+  if (authResult && authResult.error) {
     await recordFailure(ip, env.DB);
-    return error('密码错误', 401);
+    return authResult;
   }
+  // 检查是否使用了恢复密钥
+  const isRecovery = authResult && authResult._recovery === true;
 
   // 创建会话并返回 Set-Cookie
   await clearRateLimit(ip, env.DB);
-  const sessionToken = await createSession(env);
-  return json({ ok: true }, {
+  const sessionToken = await createSession(env, isRecovery);
+  const response = { ok: true };
+  if (isRecovery) response._recovery = true; // 告知前端需要修改密码
+  return json(response, {
     'Set-Cookie': `admin_session=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`
   });
 }
