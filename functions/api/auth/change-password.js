@@ -59,7 +59,8 @@ export async function onRequest(context) {
   if (authErr) return authErr;
 
   // Parse body once
-  const body = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return error('请求格式错误', 400); }
   const currentPassword = (body.current_password || '').trim();
   const newPassword = (body.new_password || '').trim();
 

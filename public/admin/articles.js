@@ -163,8 +163,9 @@
         }
     }
 
-    function closeArticleEditor() {
+    function closeArticleEditor(skipAutoSave) {
         document.getElementById('article-modal').classList.remove('active');
+        if (skipAutoSave) return;
         // 关闭时如果有内容，自动保存一次草稿
         var content = document.getElementById('article-content-md').value;
         if (content) scheduleAutoSave();
@@ -201,7 +202,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-            if (res.ok) { clearDraft(); closeArticleEditor(); loadArticles(); }
+            if (res.ok) { clearDraft(); closeArticleEditor(true); loadArticles(); }
             else if (res.status === 401) { alert('登录已过期'); logout(); }
             else { alert('操作失败: ' + ((await res.json()).error || '')); }
         } catch(e) { alert('操作失败: 网络错误'); }
@@ -308,18 +309,27 @@
     function sanitizeHTML(html) {
         var div = document.createElement('div');
         div.innerHTML = html;
-        var scripts = div.querySelectorAll('script');
-        for (var i = 0; i < scripts.length; i++) scripts[i].remove();
+        // 移除危险标签
+        var dangerous = ['script','iframe','object','embed','base','form','link','meta'];
+        for (var d = 0; d < dangerous.length; d++) {
+            var els = div.querySelectorAll(dangerous[d]);
+            for (var i = 0; i < els.length; i++) els[i].remove();
+        }
+        // 移除 on* 事件属性和 javascript: 协议
         var all = div.querySelectorAll('*');
         for (var j = 0; j < all.length; j++) {
             var attrs = all[j].attributes;
             for (var k = attrs.length - 1; k >= 0; k--) {
-                if (attrs[k].name.indexOf('on') === 0) all[j].removeAttribute(attrs[k].name);
+                var name = attrs[k].name;
+                var val = attrs[k].value;
+                if (name.indexOf('on') === 0) all[j].removeAttribute(name);
+                if (/^\s*javascript:/i.test(val)) all[j].removeAttribute(name);
             }
         }
         return div.innerHTML;
     }
 
+    var _previewRetryCount = 0;
     function updateArticlePreview() {
         var md = document.getElementById('article-content-md').value || '';
         var chars = md.length;
@@ -329,10 +339,14 @@
         if (!md) { preview.innerHTML = ''; return; }
         try {
             if (typeof marked !== 'undefined' && marked.parse) {
+                _previewRetryCount = 0;
                 preview.innerHTML = sanitizeHTML(marked.parse(md));
-            } else {
+            } else if (_previewRetryCount < 20) {
+                _previewRetryCount++;
                 preview.innerHTML = '<em style="color:var(--color-text-muted);">marked.js 加载中...</em>';
                 setTimeout(updateArticlePreview, 300);
+            } else {
+                preview.innerHTML = '<em style="color:var(--color-danger);">Markdown 解析库加载失败</em>';
             }
         } catch(e) {
             preview.innerHTML = '<em style="color:var(--color-danger);">Markdown 解析错误</em>';

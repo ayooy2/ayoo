@@ -178,10 +178,10 @@ var CATS=["全部","架构","首页","博客","后台","API","数据","安全","
 
 // Theme
 function toggleTheme(){
-  var d=document.documentElement;if(d.dataset.theme==="dark"){d.dataset.theme="";localStorage.setItem("t","")}else{d.dataset.theme="dark";localStorage.setItem("t","dark")}
+  var d=document.documentElement;if(d.dataset.theme==="dark"){d.dataset.theme="";localStorage.setItem("theme","light")}else{d.dataset.theme="dark";localStorage.setItem("theme","dark")}
   document.querySelector(".theme-btn").textContent=d.dataset.theme==="dark"?"☀":"☽";
 }
-if(localStorage.getItem("t")==="dark"){document.documentElement.dataset.theme="dark";setTimeout(function(){document.querySelector(".theme-btn").textContent="☀"},0)}
+if(localStorage.getItem("theme")==="dark"){document.documentElement.dataset.theme="dark";setTimeout(function(){document.querySelector(".theme-btn").textContent="☀"},0)}
 
 // Stats
 var days=[...new Set(LOGS.map(function(l){return l.date}))].length;

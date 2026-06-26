@@ -45,14 +45,17 @@
         document.getElementById('icon-preview').innerHTML = '🌐';
         document.getElementById('modal-title').textContent = id ? '编辑网站' : '添加网站';
         if (id) {
-            apiFetch(API_BASE + '/' + id).then(function(r) { return r.json(); }).then(function(site) {
+            apiFetch(API_BASE + '/' + id).then(function(r) {
+                if (!r.ok) throw new Error('加载失败');
+                return r.json();
+            }).then(function(site) {
                 document.getElementById('edit-id').value = site.id;
                 document.getElementById('edit-title').value = site.title;
                 document.getElementById('edit-url').value = site.url;
                 document.getElementById('edit-icon').value = site.icon || '';
                 document.getElementById('edit-desc').value = site.description || '';
                 updateIconPreview(site.icon);
-            });
+            }).catch(function() { alert('加载站点数据失败'); closeModal(); });
         }
     }
 

@@ -19,7 +19,8 @@ export async function onRequest(context) {
   if (authErr) return authErr;
 
   if (request.method === 'PUT') {
-    const data = await request.json();
+    let data;
+    try { data = await request.json(); } catch { return error('请求格式错误', 400); }
     const existing = await env.DB.prepare('SELECT * FROM tags WHERE id=?').bind(id).first();
     if (!existing) return error('Not found', 404);
 

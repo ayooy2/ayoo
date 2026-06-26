@@ -102,7 +102,7 @@ function guestbookCard(entry, index) {
     + nameHtml
     + '<span class="comment-time">' + esc(date) + '</span>'
     + '</div></div>'
-    + '<div class="comment-text">' + esc(entry.message).replace(/\\n/g, '<br>') + '</div>'
+    + '<div class="comment-text">' + esc((entry.message || '').replace(/\\n/g, '\n')).replace(/\n/g, '<br>') + '</div>'
     + '</div>';
 }
 

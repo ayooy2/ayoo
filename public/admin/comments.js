@@ -156,7 +156,22 @@
                 method: 'DELETE',
                 headers: {}
             }).then(function(r) { if (!r.ok) throw new Error(); })
-            .then(function() { _allComments = _allComments.filter(function(c) { return c.id !== id; }); renderCommentPanel(); })
+            .then(function() {
+                // 递归收集所有后代 id
+                var toRemove = [id];
+                var changed = true;
+                while (changed) {
+                    changed = false;
+                    for (var i = 0; i < _allComments.length; i++) {
+                        if (toRemove.indexOf(_allComments[i].parent_id) >= 0 && toRemove.indexOf(_allComments[i].id) < 0) {
+                            toRemove.push(_allComments[i].id);
+                            changed = true;
+                        }
+                    }
+                }
+                _allComments = _allComments.filter(function(c) { return toRemove.indexOf(c.id) < 0; });
+                renderCommentPanel();
+            })
             .catch(function() { alert('删除失败'); });
         } catch(e) { alert('删除失败'); }
     }

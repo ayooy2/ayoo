@@ -52,7 +52,7 @@
         else if (k === 'i') { e.preventDefault(); insertMD('italic'); }
         else if (k === 'd') { e.preventDefault(); insertMD('code'); }
         else if (k === 'k') { e.preventDefault(); insertMD('link'); }
-        else if (k === 's') { e.preventDefault(); document.getElementById('article-form').requestSubmit(); }
+        else if (k === 's') { e.preventDefault(); doPublish('draft'); }
     });
 
     // ---- 自动保存监听 ----

@@ -43,7 +43,7 @@ function render(groups, categoryOrder, lastUpdated) {
     var catItems = groups[cat];
     var listHtml = '';
     for (var j = 0; j < catItems.length; j++) {
-      listHtml += '<li class="now-item">' + esc(catItems[j].content || '') + '</li>';
+      listHtml += '<li class="now-item">' + esc((catItems[j].content || '').replace(/\\n/g, '\n')).replace(/\n/g, '<br>') + '</li>';
     }
     sections += '<div class="now-section animate-in" style="animation-delay:' + (i * 80) + 'ms">'
       + '<h2 class="now-category">' + esc(cat) + '</h2>'

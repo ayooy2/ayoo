@@ -19,7 +19,9 @@ export async function onRequest(context) {
   if (method === 'POST') {
     const authErr = await requireAuth(request, env);
     if (authErr) return authErr;
-    return createArticle(env, await request.json());
+    let data;
+    try { data = await request.json(); } catch { return error('请求格式错误', 400); }
+    return createArticle(env, data);
   }
 
   return error('Method not allowed', 405);
@@ -32,21 +34,17 @@ async function listArticles(env, params) {
   const publishedOnly = params.get('all') !== '1';
 
   let where = publishedOnly
-    ? "WHERE is_published = 1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))"
+    ? "WHERE a.is_published = 1 AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))"
     : '';
-  const countResult = await env.DB.prepare(`SELECT COUNT(*) as total FROM articles ${where}`).first();
-  const total = countResult.total;
+  const countResult = await env.DB.prepare(`SELECT COUNT(*) as total FROM articles a ${where}`).first();
+  const total = countResult ? countResult.total : 0;
 
   const { results } = await env.DB.prepare(
-    `SELECT id, title, slug, summary, cover_image, author, tags, is_published, scheduled_at, created_at, updated_at, views FROM articles ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+    `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.author, a.tags, a.is_published, a.scheduled_at, a.created_at, a.updated_at, a.views,
+      (SELECT COUNT(*) FROM likes WHERE article_id=a.id) as likes,
+      (SELECT COUNT(*) FROM comments WHERE article_id=a.id) as comments
+    FROM articles a ${where} ORDER BY a.created_at DESC LIMIT ? OFFSET ?`
   ).bind(limit, offset).all();
-
-  for (const row of results || []) {
-    const likeResult = await env.DB.prepare('SELECT COUNT(*) as c FROM likes WHERE article_id = ?').bind(row.id).first();
-    row.likes = likeResult.c;
-    const commentResult = await env.DB.prepare('SELECT COUNT(*) as c FROM comments WHERE article_id = ?').bind(row.id).first();
-    row.comments = commentResult.c;
-  }
 
   return json({ articles: results || [], total, page, limit });
 }

@@ -20,7 +20,11 @@ export async function onRequest(context) {
   if (authErr) return authErr;
 
   try {
-    if (method === 'PUT') return updateArticle(env, id, await request.json());
+    if (method === 'PUT') {
+      let data;
+      try { data = await request.json(); } catch { return error('请求格式错误', 400); }
+      return updateArticle(env, id, data);
+    }
     if (method === 'DELETE') return deleteArticle(env, id);
     return error('Method not allowed', 405);
   } catch (e) {
