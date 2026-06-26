@@ -163,6 +163,10 @@ var LOGS=[
 {date:"2026/06/25",time:"02:00",desc:"Rate Limiting 改用 D1 存储（跨 Worker 实例共享）；新增数据导出 API（/api/export）+ 后台导出按钮",cat:"API"},
 {date:"2026/06/25",time:"03:00",desc:"修复 16 个高优先级 bug：XSS 注入、认证降级后门、草稿泄露、换行符、时区错误、MIME 验证、javascript: 协议过滤、数据库索引等",cat:"安全"},
 {date:"2026/06/25",time:"04:00",desc:"修复前端模块 7 个 bug：innerHTML XSS 转义、Markdown 预览消毒、async try-catch 错误处理、标签选择器事件委托",cat:"修复"},
+{date:"2026/06/26",time:"00:10",desc:"全面 bug 排查（5 个子 agent）：发现 56 个 bug，修复 34 个，涉及安全/功能/性能/渲染",cat:"修复"},
+{date:"2026/06/26",time:"01:00",desc:"监督 agent 第二轮排查：4 个子 agent 并行，修复 83 处改动（20 个文件），XSS/敏感数据/SVG/注入/Auth",cat:"安全"},
+{date:"2026/06/26",time:"02:00",desc:"<strong>密码恢复机制</strong>：env.ADMIN_PASSWORD 作为紧急恢复密钥，登录后强制修改密码，会话持久化恢复标志",cat:"安全"},
+{date:"2026/06/26",time:"03:00",desc:"后台交互优化：恢复模式自动弹出密码修改框，当前密码字段自动隐藏，密码复杂度实时校验",cat:"后台"},
 {date:"2026/06/26",time:"15:00",desc:"<strong>全面 Bug 排查</strong>：4 个并行 agent 检查前端/后端/SSR/功能，发现 40+ 问题；修复 20 个文件 83 处改动",cat:"修复"},
 {date:"2026/06/26",time:"15:10",desc:"安全修复：about 页面 script 逃逸 XSS、导出泄露密码哈希、SVG 上传 XSS、LIKE 注入、Bearer token 严格校验",cat:"安全"},
 {date:"2026/06/26",time:"15:20",desc:"功能修复：admin DOM 结构、Ctrl+S 快捷键、发布后草稿残留、N+1 查询优化、主题键名统一、评论级联删除、D1 换行处理",cat:"修复"}
