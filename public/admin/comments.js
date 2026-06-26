@@ -6,18 +6,22 @@
 
     function showCommentPanel() {
         var area = document.getElementById('article-list-area');
-        area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-text-muted);">加载评论...</div>';
-        apiFetch('/api/comments?all=1', { headers: {} })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                _allComments = d.comments || [];
-                _cpFilter = { article: '', name: '', content: '' };
-                _cpSort = { key: 'created_at', dir: 'desc' };
-                renderCommentPanel();
-            })
-            .catch(function() {
-                area.innerHTML = '<p style="text-align:center;color:var(--color-danger);padding:2rem;">加载失败</p>';
-            });
+        try {
+            area.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-text-muted);">加载评论...</div>';
+            apiFetch('/api/comments?all=1', { headers: {} })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    _allComments = d.comments || [];
+                    _cpFilter = { article: '', name: '', content: '' };
+                    _cpSort = { key: 'created_at', dir: 'desc' };
+                    renderCommentPanel();
+                })
+                .catch(function() {
+                    area.innerHTML = '<p style="text-align:center;color:var(--color-danger);padding:2rem;">加载失败</p>';
+                });
+        } catch(e) {
+            area.innerHTML = '<p style="text-align:center;color:var(--color-danger);padding:2rem;">加载失败</p>';
+        }
     }
 
     function renderCommentPanel() {
@@ -147,35 +151,39 @@
 
     function deleteSingleComment(id) {
         if (!confirm('确定删除这条评论及其所有回复？')) return;
-        apiFetch('/api/comments/' + id, {
-            method: 'DELETE',
-            headers: {}
-        }).then(function(r) { if (!r.ok) throw new Error(); })
-        .then(function() { _allComments = _allComments.filter(function(c) { return c.id !== id; }); renderCommentPanel(); })
-        .catch(function() { alert('删除失败'); });
+        try {
+            apiFetch('/api/comments/' + id, {
+                method: 'DELETE',
+                headers: {}
+            }).then(function(r) { if (!r.ok) throw new Error(); })
+            .then(function() { _allComments = _allComments.filter(function(c) { return c.id !== id; }); renderCommentPanel(); })
+            .catch(function() { alert('删除失败'); });
+        } catch(e) { alert('删除失败'); }
     }
 
     function batchDeleteComments() {
-        var cbs = document.querySelectorAll('.cp-cb:checked');
-        var ids = [];
-        for (var i = 0; i < cbs.length; i++) ids.push(parseInt(cbs[i].dataset.id));
-        if (!ids.length) return;
-        if (!confirm('确定删除选中的 ' + ids.length + ' 条评论及其回复？')) return;
-        var btn = document.querySelector('#cp-batch-bar .btn-danger');
-        if (btn) { btn.disabled = true; btn.textContent = '删除中...'; }
-        Promise.all(ids.map(function(id) {
-            return apiFetch('/api/comments/' + id, {
-                method: 'DELETE',
-                headers: {}
-            }).then(function(r) { return r.ok ? id : null; });
-        })).then(function(results) {
-            var deleted = results.filter(Boolean);
-            _allComments = _allComments.filter(function(c) { return deleted.indexOf(c.id) < 0; });
-            renderCommentPanel();
-        }).catch(function() {
-            alert('部分删除失败');
-            showCommentPanel();
-        });
+        try {
+            var cbs = document.querySelectorAll('.cp-cb:checked');
+            var ids = [];
+            for (var i = 0; i < cbs.length; i++) ids.push(parseInt(cbs[i].dataset.id));
+            if (!ids.length) return;
+            if (!confirm('确定删除选中的 ' + ids.length + ' 条评论及其回复？')) return;
+            var btn = document.querySelector('#cp-batch-bar .btn-danger');
+            if (btn) { btn.disabled = true; btn.textContent = '删除中...'; }
+            Promise.all(ids.map(function(id) {
+                return apiFetch('/api/comments/' + id, {
+                    method: 'DELETE',
+                    headers: {}
+                }).then(function(r) { return r.ok ? id : null; });
+            })).then(function(results) {
+                var deleted = results.filter(Boolean);
+                _allComments = _allComments.filter(function(c) { return deleted.indexOf(c.id) < 0; });
+                renderCommentPanel();
+            }).catch(function() {
+                alert('部分删除失败');
+                showCommentPanel();
+            });
+        } catch(e) { alert('删除失败'); }
     }
 
     // ---- 暴露到全局 ----

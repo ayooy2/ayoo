@@ -77,39 +77,43 @@
 
     async function saveTag(e) {
         e.preventDefault();
-        var id = document.getElementById('tag-edit-id').value;
-        var body = {
-            name: document.getElementById('tag-name').value.trim(),
-            slug: document.getElementById('tag-slug').value.trim(),
-            color: document.getElementById('tag-color').value
-        };
-        if (!body.name) { alert('请输入标签名'); return; }
+        try {
+            var id = document.getElementById('tag-edit-id').value;
+            var body = {
+                name: document.getElementById('tag-name').value.trim(),
+                slug: document.getElementById('tag-slug').value.trim(),
+                color: document.getElementById('tag-color').value
+            };
+            if (!body.name) { alert('请输入标签名'); return; }
 
-        var url = id ? '/api/tags/' + id : '/api/tags';
-        var res = await apiFetch(url, {
-            method: id ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (res.ok) { closeTagEditor(); loadTags(); }
-        else if (res.status === 401) { alert('登录已过期'); logout(); }
-        else {
-            var errData = await res.json().catch(function() { return {}; });
-            alert('保存失败: ' + (errData.error || res.status));
-        }
+            var url = id ? '/api/tags/' + id : '/api/tags';
+            var res = await apiFetch(url, {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) { closeTagEditor(); loadTags(); }
+            else if (res.status === 401) { alert('登录已过期'); logout(); }
+            else {
+                var errData = await res.json().catch(function() { return {}; });
+                alert('保存失败: ' + (errData.error || res.status));
+            }
+        } catch(e) { alert('保存失败: 网络错误'); }
     }
 
     async function deleteTag(id) {
-        var tag = _allTags.find(function(t) { return t.id === id; });
-        var name = tag ? tag.name : '';
-        if (!confirm('确定删除标签"' + name + '"？')) return;
-        var res = await apiFetch('/api/tags/' + id, {
-            method: 'DELETE',
-            headers: {}
-        });
-        if (res.ok) loadTags();
-        else if (res.status === 401) { alert('登录已过期'); logout(); }
-        else { alert('删除失败'); }
+        try {
+            var tag = _allTags.find(function(t) { return t.id === id; });
+            var name = tag ? tag.name : '';
+            if (!confirm('确定删除标签"' + name + '"？')) return;
+            var res = await apiFetch('/api/tags/' + id, {
+                method: 'DELETE',
+                headers: {}
+            });
+            if (res.ok) loadTags();
+            else if (res.status === 401) { alert('登录已过期'); logout(); }
+            else { alert('删除失败'); }
+        } catch(e) { alert('删除失败: 网络错误'); }
     }
 
     // ---- 文章编辑器中的标签选择器 ----
@@ -150,7 +154,7 @@
         dropdown.innerHTML = _allTags.map(function(t) {
             var isSelected = selected.indexOf(t.name) >= 0;
             var cls = 'tag-selector-item' + (isSelected ? ' selected' : '');
-            return '<span class="' + cls + '" style="background:' + escapeHtml(t.color || '#6366f1') + '" onclick="addTagToSelector(\'' + escapeHtml(t.name).replace(/'/g, "\\'") + '\')">' + escapeHtml(t.name) + '</span>';
+            return '<span class="' + cls + '" style="background:' + escapeHtml(t.color || '#6366f1') + '" data-tag="' + escapeHtml(t.name) + '">' + escapeHtml(t.name) + '</span>';
         }).join('');
         updateArticleTagChips();
     }
@@ -185,10 +189,28 @@
             var color = colorMap[name] || '#6b7280';
             return '<span class="tag-chip" style="background:' + escapeHtml(color) + '">'
                 + escapeHtml(name)
-                + '<span class="tag-chip-remove" onclick="removeTagChip(\'' + escapeHtml(name).replace(/'/g, "\\'") + '\')">&times;</span>'
+                + '<span class="tag-chip-remove" data-tag="' + escapeHtml(name) + '">&times;</span>'
                 + '</span>';
         }).join('');
     }
+
+    // ---- 事件委托：标签选择器和标签芯片 ----
+    (function() {
+        var dropdownEl = document.getElementById('tag-selector-dropdown');
+        if (dropdownEl) {
+            dropdownEl.addEventListener('click', function(e) {
+                var el = e.target.closest('.tag-selector-item[data-tag]');
+                if (el) addTagToSelector(el.dataset.tag);
+            });
+        }
+        var chipsEl = document.getElementById('article-tag-chips');
+        if (chipsEl) {
+            chipsEl.addEventListener('click', function(e) {
+                var el = e.target.closest('.tag-chip-remove[data-tag]');
+                if (el) removeTagChip(el.dataset.tag);
+            });
+        }
+    })();
 
     // ---- 暴露到全局 ----
     window._allTags = _allTags;

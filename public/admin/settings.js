@@ -49,32 +49,34 @@
 
     async function saveSettings(e) {
         e.preventDefault();
-        var bgVal = document.getElementById('set-bg-image').value.trim();
-        // 如果有预设选中且自定义为空，用预设值
-        if (!bgVal) {
-            var active = document.querySelector('.wallpaper-item.active');
-            if (active) bgVal = active.dataset.bg || '';
-        }
-        var body = {
-            title: document.getElementById('set-title').value.trim(),
-            subtitle: document.getElementById('set-subtitle').value.trim(),
-            footer: document.getElementById('set-footer').value.trim(),
-            bg_image: bgVal
-        };
-        var res = await apiFetch(API_SETTINGS, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (res.ok) {
-            var hint = document.getElementById('save-hint');
-            hint.classList.add('show');
-            setTimeout(function() { hint.classList.remove('show'); }, 2000);
-        } else if (res.status === 401) {
-            alert('登录已过期'); logout();
-        } else {
-            alert('保存失败');
-        }
+        try {
+            var bgVal = document.getElementById('set-bg-image').value.trim();
+            // 如果有预设选中且自定义为空，用预设值
+            if (!bgVal) {
+                var active = document.querySelector('.wallpaper-item.active');
+                if (active) bgVal = active.dataset.bg || '';
+            }
+            var body = {
+                title: document.getElementById('set-title').value.trim(),
+                subtitle: document.getElementById('set-subtitle').value.trim(),
+                footer: document.getElementById('set-footer').value.trim(),
+                bg_image: bgVal
+            };
+            var res = await apiFetch(API_SETTINGS, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) {
+                var hint = document.getElementById('save-hint');
+                hint.classList.add('show');
+                setTimeout(function() { hint.classList.remove('show'); }, 2000);
+            } else if (res.status === 401) {
+                alert('登录已过期'); logout();
+            } else {
+                alert('保存失败');
+            }
+        } catch(e) { alert('保存失败: 网络错误'); }
     }
 
     // ---- 暴露到全局 ----
