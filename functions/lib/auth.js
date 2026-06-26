@@ -106,8 +106,10 @@ export async function requireAuth(request, env, password) {
       }
       return null;
     }
-  } catch (e) {}
-  if (env.ADMIN_PASSWORD && token === env.ADMIN_PASSWORD) return null;
+  } catch (e) {
+    console.error('Auth DB error:', e);
+    return error('Service temporarily unavailable', 503);
+  }
   return error('Unauthorized', 401);
 }
 

@@ -17,7 +17,8 @@ export async function onRequest(context) {
     const authErr = await requireAuth(request, env);
     if (authErr) return authErr;
 
-    const data = await request.json();
+    let data;
+    try { data = await request.json(); } catch (e) { return error('请求格式错误', 400); }
     const name = (data.name || '').trim().slice(0, 50);
     if (!name) return error('标签名不能为空', 400);
 

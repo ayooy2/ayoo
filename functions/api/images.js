@@ -45,9 +45,12 @@ export async function onRequest(context) {
   return error('Method not allowed', 405);
 }
 
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp'];
+
 async function uploadImage(env, data) {
   const filename = (data.filename || 'image').slice(0, 200);
   const mimeType = (data.mime_type || 'image/png').slice(0, 50);
+  if (!ALLOWED_MIME_TYPES.includes(mimeType)) return error('不支持的图片格式', 400);
   const imageData = (data.data || '').trim();
   if (!imageData) return error('data required', 400);
 

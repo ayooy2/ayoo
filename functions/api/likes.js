@@ -19,7 +19,8 @@ export async function onRequest(context) {
 
   if (request.method !== 'POST') return error('Method not allowed', 405);
 
-  const data = await request.json();
+  let data;
+  try { data = await request.json(); } catch (e) { return error('请求格式错误', 400); }
   const articleId = data.article_id;
   const fp = (data.fingerprint || '').trim().slice(0, 100);
   if (!articleId || !fp) return error('article_id and fingerprint required', 400);
