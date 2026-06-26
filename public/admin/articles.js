@@ -176,33 +176,35 @@
     }
 
     async function doPublish(mode) {
-        var title = document.getElementById('article-title').value.trim();
-        if (!title) { alert('请填写标题'); return; }
-        var id = document.getElementById('article-edit-id').value;
-        var scheduledVal = document.getElementById('article-scheduled').value;
-        if (mode === 'schedule' && !scheduledVal) { alert('请选择定时发布时间'); return; }
+        try {
+            var title = document.getElementById('article-title').value.trim();
+            if (!title) { alert('请填写标题'); return; }
+            var id = document.getElementById('article-edit-id').value;
+            var scheduledVal = document.getElementById('article-scheduled').value;
+            if (mode === 'schedule' && !scheduledVal) { alert('请选择定时发布时间'); return; }
 
-        var body = {
-            title: title,
-            slug: document.getElementById('article-slug').value.trim(),
-            summary: document.getElementById('article-summary').value.trim(),
-            cover_image: document.getElementById('article-cover').value.trim(),
-            content_md: document.getElementById('article-content-md').value,
-            author: document.getElementById('article-author').value.trim(),
-            tags: document.getElementById('article-tags').value.trim(),
-            is_published: mode === 'publish' ? 1 : 0,
-            scheduled_at: mode === 'schedule' ? scheduledVal : null
-        };
+            var body = {
+                title: title,
+                slug: document.getElementById('article-slug').value.trim(),
+                summary: document.getElementById('article-summary').value.trim(),
+                cover_image: document.getElementById('article-cover').value.trim(),
+                content_md: document.getElementById('article-content-md').value,
+                author: document.getElementById('article-author').value.trim(),
+                tags: document.getElementById('article-tags').value.trim(),
+                is_published: mode === 'publish' ? 1 : 0,
+                scheduled_at: mode === 'schedule' ? scheduledVal : null
+            };
 
-        var url = id ? '/api/articles/' + id : '/api/articles';
-        var res = await apiFetch(url, {
-            method: id ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (res.ok) { clearDraft(); closeArticleEditor(); loadArticles(); }
-        else if (res.status === 401) { alert('登录已过期'); logout(); }
-        else { alert('操作失败: ' + ((await res.json()).error || '')); }
+            var url = id ? '/api/articles/' + id : '/api/articles';
+            var res = await apiFetch(url, {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) { clearDraft(); closeArticleEditor(); loadArticles(); }
+            else if (res.status === 401) { alert('登录已过期'); logout(); }
+            else { alert('操作失败: ' + ((await res.json()).error || '')); }
+        } catch(e) { alert('操作失败: 网络错误'); }
     }
 
     async function deleteArticle(id) {
@@ -303,6 +305,21 @@
     }
 
     // ---- Markdown 预览 ----
+    function sanitizeHTML(html) {
+        var div = document.createElement('div');
+        div.innerHTML = html;
+        var scripts = div.querySelectorAll('script');
+        for (var i = 0; i < scripts.length; i++) scripts[i].remove();
+        var all = div.querySelectorAll('*');
+        for (var j = 0; j < all.length; j++) {
+            var attrs = all[j].attributes;
+            for (var k = attrs.length - 1; k >= 0; k--) {
+                if (attrs[k].name.indexOf('on') === 0) all[j].removeAttribute(attrs[k].name);
+            }
+        }
+        return div.innerHTML;
+    }
+
     function updateArticlePreview() {
         var md = document.getElementById('article-content-md').value || '';
         var chars = md.length;
@@ -312,7 +329,7 @@
         if (!md) { preview.innerHTML = ''; return; }
         try {
             if (typeof marked !== 'undefined' && marked.parse) {
-                preview.innerHTML = marked.parse(md);
+                preview.innerHTML = sanitizeHTML(marked.parse(md));
             } else {
                 preview.innerHTML = '<em style="color:var(--color-text-muted);">marked.js 加载中...</em>';
                 setTimeout(updateArticlePreview, 300);

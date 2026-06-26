@@ -21,25 +21,27 @@
 
     async function saveAbout(e) {
         e.preventDefault();
-        var body = {
-            about_title: document.getElementById('about-title').value.trim(),
-            about_avatar: document.getElementById('about-avatar').value.trim(),
-            about_content: document.getElementById('about-content').value
-        };
-        var res = await apiFetch(API_SETTINGS, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (res.ok) {
-            var hint = document.getElementById('about-save-hint');
-            hint.classList.add('show');
-            setTimeout(function() { hint.classList.remove('show'); }, 2000);
-        } else if (res.status === 401) {
-            alert('登录已过期'); logout();
-        } else {
-            alert('保存失败');
-        }
+        try {
+            var body = {
+                about_title: document.getElementById('about-title').value.trim(),
+                about_avatar: document.getElementById('about-avatar').value.trim(),
+                about_content: document.getElementById('about-content').value
+            };
+            var res = await apiFetch(API_SETTINGS, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) {
+                var hint = document.getElementById('about-save-hint');
+                hint.classList.add('show');
+                setTimeout(function() { hint.classList.remove('show'); }, 2000);
+            } else if (res.status === 401) {
+                alert('登录已过期'); logout();
+            } else {
+                alert('保存失败');
+            }
+        } catch(e) { alert('保存失败: 网络错误'); }
     }
 
     // 关于页面内容实时预览

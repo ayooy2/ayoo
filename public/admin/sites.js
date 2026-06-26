@@ -82,9 +82,9 @@
     function updateIconPreview(src) {
         var preview = document.getElementById('icon-preview');
         if (src && src.startsWith('data:')) {
-            preview.innerHTML = '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">';
+            preview.innerHTML = '<img src="' + escapeHtml(src) + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">';
         } else if (src && src.startsWith('http')) {
-            preview.innerHTML = '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.parentElement.innerHTML=\'🌐\';">';
+            preview.innerHTML = '<img src="' + escapeHtml(src) + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.parentElement.innerHTML=\'🌐\';">';
         } else {
             preview.innerHTML = '🌐';
         }
