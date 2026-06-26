@@ -30,6 +30,9 @@ async function getSettings(env) {
   const { results } = await env.DB.prepare('SELECT key, value FROM settings').all();
   const config = {};
   for (const row of results || []) {
+    // 过滤敏感字段：密码哈希和会话数据
+    if (row.key === 'admin_password_hash') continue;
+    if (row.key.startsWith('session_')) continue;
     config[row.key] = row.value;
   }
   return json(config);
