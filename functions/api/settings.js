@@ -30,7 +30,9 @@ async function getSettings(env) {
   const { results } = await env.DB.prepare('SELECT key, value FROM settings').all();
   const config = {};
   for (const row of results || []) {
-    config[row.key] = row.value;
+    if (ALLOWED_KEYS.includes(row.key)) {
+      config[row.key] = row.value;
+    }
   }
   return json(config);
 }

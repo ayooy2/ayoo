@@ -8,7 +8,12 @@ export async function onRequest(context) {
   const method = request.method;
 
   if (method === 'GET') {
-    return listArticles(env, new URL(request.url).searchParams);
+    const params = new URL(request.url).searchParams;
+    if (params.get('all') === '1') {
+      const authErr = await requireAuth(request, env);
+      if (authErr) return authErr;
+    }
+    return listArticles(env, params);
   }
 
   if (method === 'POST') {
@@ -63,9 +68,13 @@ async function createArticle(env, data) {
   const is_published = data.is_published ? 1 : 0;
   const scheduled_at = data.scheduled_at || null;
 
-  const result = await env.DB.prepare(
-    'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
-  ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at).first();
-
-  return json(result, 201);
+  try {
+    const result = await env.DB.prepare(
+      'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
+    ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at).first();
+    return json(result, 201);
+  } catch (e) {
+    if (e.message && e.message.includes('UNIQUE')) return error('Slug already exists', 409);
+    throw e;
+  }
 }

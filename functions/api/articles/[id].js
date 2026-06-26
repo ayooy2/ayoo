@@ -11,7 +11,9 @@ export async function onRequest(context) {
   const slug = url.searchParams.get('slug');
 
   if (method === 'GET') {
-    return getArticle(env, id, slug);
+    const authErr = await requireAuth(request, env);
+    const isAdmin = !authErr;
+    return getArticle(env, id, slug, isAdmin);
   }
 
   const authErr = await requireAuth(request, env);
@@ -27,12 +29,16 @@ export async function onRequest(context) {
   }
 }
 
-async function getArticle(env, id, slug) {
+async function getArticle(env, id, slug, isAdmin) {
   let result;
   if (slug && slug !== 'undefined') {
     result = await env.DB.prepare("SELECT * FROM articles WHERE slug = ? AND is_published = 1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))").bind(slug).first();
   } else if (id && id !== 'new') {
-    result = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
+    if (isAdmin) {
+      result = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
+    } else {
+      result = await env.DB.prepare("SELECT * FROM articles WHERE id = ? AND is_published = 1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))").bind(id).first();
+    }
   }
   if (!result) return error('Not found', 404);
 
@@ -51,7 +57,7 @@ async function updateArticle(env, id, data) {
   const content_md = data.content_md !== undefined ? data.content_md : existing.content_md;
   const summary = (data.summary || '').trim() || existing.summary;
   const cover_image = data.cover_image !== undefined ? (data.cover_image || '').trim() : existing.cover_image;
-  const author = (data.author || 'Admin').trim();
+  const author = (data.author || existing.author || 'Admin').trim();
   const tags = (data.tags || '').trim();
   const is_published = data.is_published !== undefined ? (data.is_published ? 1 : 0) : existing.is_published;
   const scheduled_at = data.scheduled_at !== undefined ? data.scheduled_at : existing.scheduled_at;
