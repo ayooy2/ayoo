@@ -35,6 +35,7 @@ export async function onRequestGet(context) {
 
     return json({ items: items });
   } catch (e) {
-    return error(e.message);
+    console.error('Command index error:', e);
+    return error('服务器错误，请稍后再试', 500);
   }
 }

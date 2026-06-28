@@ -95,6 +95,9 @@
   --color-bg-card-icon:    var(--bg-secondary);
   --color-text-inverse:    #ffffff;
   --color-danger:          var(--danger);
+  --color-bg-secondary:    var(--bg-secondary);
+  --color-bg-card:         var(--bg-elevated);
+  --color-danger-border:   var(--danger);
   --shadow-card:           var(--shadow-xs);
   --content-max-width:     var(--max-w-text);
 }
@@ -1371,7 +1374,7 @@ body[style*="background-image"] .page-wrapper {
   gap: 1rem;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--border-primary);
+  border-top: 1px solid var(--border);
 }
 .mobile-post-nav-item {
   flex: 1;
@@ -1380,7 +1383,7 @@ body[style*="background-image"] .page-wrapper {
   gap: 0.3rem;
   padding: 1rem;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--border);
   border-radius: 10px;
   text-decoration: none;
   transition: all 0.2s;
@@ -1398,7 +1401,7 @@ body[style*="background-image"] .page-wrapper {
 }
 .mobile-post-nav-label {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

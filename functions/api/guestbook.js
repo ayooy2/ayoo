@@ -14,7 +14,7 @@ export async function onRequest(context) {
 
   if (request.method === 'POST') {
     // IP 频率限制：同一 IP 30 秒内只能提交一次
-    const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
     try {
       const recent = await env.DB.prepare(
         "SELECT COUNT(*) as c FROM guestbook WHERE ip = ? AND created_at > datetime('now', '-30 seconds')"

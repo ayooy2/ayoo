@@ -100,7 +100,7 @@ ${mobileMenu()}
   });
 
   /* Recent searches */
-  var q='${esc(q)}';
+  var q='${q.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/<\/script>/gi,'<\\/script>'}';
   if(q){saveRecent(q)}
   function saveRecent(t){
     try{var r=JSON.parse(localStorage.getItem('recent_searches')||'[]');r=r.filter(function(x){return x!==t});r.unshift(t);if(r.length>8)r=r.slice(0,8);localStorage.setItem('recent_searches',JSON.stringify(r))}catch(e){}

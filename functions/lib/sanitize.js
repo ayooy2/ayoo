@@ -2,7 +2,7 @@
  * HTML 转义
  */
 export function esc(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 /**
@@ -22,6 +22,10 @@ export function sanitizeMD(html) {
     .replace(/<embed[^>]*>/gi, '')
     .replace(/<form[^>]*>[\s\S]*?<\/form>/gi, '')
     .replace(/\son\w+\s*=\s*(['"])[\s\S]*?\1/gi, '')
-    .replace(/\son\w+\s*=\s*[^\s>]*/gi, '')
-    .replace(/javascript:/gi, '');
+    .replace(/\son\w+\s*=\s*[^\s>\/]*/gi, '')
+    .replace(/\/\s*on\w+\s*=\s*(['"])[\s\S]*?\1/gi, '')
+    .replace(/\/\s*on\w+\s*=\s*[^\s>]*/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    .replace(/vbscript:/gi, '');
 }

@@ -218,7 +218,9 @@ function articleCard(article, index) {
 }
 
 function navCard(site, index) {
-  return `<div class="nav-card" data-url="${esc(site.url)}" data-icon="${esc(site.icon || '')}" title="${esc(site.title)}" style="animation-delay:${index * 60}ms">
+  var safeUrl = site.url || '#';
+  if (/^(javascript|data|vbscript):/i.test(safeUrl)) safeUrl = '#';
+  return `<div class="nav-card" data-url="${esc(safeUrl)}" data-icon="${esc(site.icon || '')}" title="${esc(site.title)}" style="animation-delay:${index * 60}ms">
     <div class="nav-card-icon"><span class="nav-card-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></span></div>
     <div class="nav-card-text">
       <div class="nav-card-title">${esc(site.title)}</div>

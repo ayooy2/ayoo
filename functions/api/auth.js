@@ -17,7 +17,7 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   // 频率限制（D1 存储，跨 Worker 实例共享）
-  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   const rateErr = await checkRateLimit(ip, env.DB);
   if (rateErr) return rateErr;
 

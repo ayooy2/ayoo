@@ -125,7 +125,7 @@ function extractFirstImage(content_md) {
   var m = md.match(/!\[.*?\]\(([^\s)]+)\)/);
   if (!m) return '';
   var url = m[1];
-  if (/^javascript:/i.test(url)) return '';
+  if (/^(javascript|data|vbscript):/i.test(url)) return '';
   return url;
 }
 

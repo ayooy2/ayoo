@@ -18,7 +18,7 @@ export async function onRequest(context) {
     const sites = (await env.DB.prepare('SELECT * FROM sites ORDER BY sort_order, id').all()).results || [];
     const settings = (await env.DB.prepare("SELECT key, value FROM settings WHERE key NOT LIKE 'session_%' AND key != 'admin_password_hash'").all()).results || [];
     const articles = (await env.DB.prepare('SELECT * FROM articles ORDER BY id').all()).results || [];
-    const comments = (await env.DB.prepare('SELECT * FROM comments ORDER BY id').all()).results || [];
+    const comments = (await env.DB.prepare('SELECT id, article_id, parent_id, author_name, url, content, created_at FROM comments ORDER BY id').all()).results || [];
     const likes = (await env.DB.prepare('SELECT * FROM likes ORDER BY id').all()).results || [];
     const guestbook = (await env.DB.prepare('SELECT * FROM guestbook ORDER BY id').all()).results || [];
     const now_items = (await env.DB.prepare('SELECT * FROM now_items ORDER BY sort_order, id').all()).results || [];
