@@ -116,6 +116,7 @@ ${mobileMenu()}
             </div>
             <input type="url" id="comment-url" class="comment-input" placeholder="个人网址 (选填)" maxlength="200" style="min-height:auto;height:auto;">
             <textarea id="comment-input" class="comment-input" placeholder="写下想法... (5-500字)" required maxlength="500" rows="3"></textarea>
+            <div id="comment-counter" style="text-align:right;font-size:.75rem;color:var(--text-muted);margin-top:-0.5rem;">0/500</div>
             <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
             <div id="comment-error" class="comment-form-error" style="display:none"></div>
             <button type="submit" class="btn-submit" id="comment-submit-btn">发表评论</button>
@@ -146,7 +147,7 @@ ${mobileMenu()}
   </footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" async>
 <script src="/sanitize.js"></script>
 <script>
 var aid=${Number(a.id)||0},fp=localStorage.getItem("fp_"+aid)||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp_"+aid,f);return f;})(),replyTo=null;
@@ -279,6 +280,15 @@ if(_cForm){
   _cForm.addEventListener("submit",function(e){e.preventDefault();submitComment()});
   if(_cName)document.getElementById("comment-name").value=_cName;
   if(_cEmail)document.getElementById("comment-email").value=_cEmail;
+  /* Character counter */
+  var _cInput=document.getElementById("comment-input"),_cCounter=document.getElementById("comment-counter");
+  if(_cInput&&_cCounter){
+    _cInput.addEventListener("input",function(){
+      var len=_cInput.value.length;
+      _cCounter.textContent=len+"/500";
+      _cCounter.style.color=len>480?"var(--danger,#ef4444)":len<5?"var(--text-muted)":"var(--text-secondary)";
+    });
+  }
 }
 
 /* TOC topbar hover info */
