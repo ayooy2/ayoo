@@ -1170,7 +1170,7 @@ body[style*="background-image"] .page-wrapper {
 .code-block-wrapper.fullscreen {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 250;
   margin: 0;
   border-radius: 0;
   display: flex;
@@ -2222,7 +2222,7 @@ body[style*="background-image"] .page-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 300;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--duration-normal) var(--ease);
@@ -2276,7 +2276,8 @@ body[style*="background-image"] .page-wrapper {
   transition: border-color var(--duration-fast) var(--ease);
 }
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-subtle);
@@ -2848,7 +2849,7 @@ body[style*="background-image"] .page-wrapper {
 /* 尊重用户减少动画偏好 */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
   }
 }

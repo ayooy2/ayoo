@@ -15,7 +15,15 @@
         var content = document.getElementById('about-content').value;
         var preview = document.getElementById('about-preview');
         if (preview) {
-            preview.innerHTML = content ? '<p style="color:var(--text-muted);white-space:pre-wrap;">' + content.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>' : '<p style="color:var(--text-muted);">暂无内容</p>';
+            if (content && typeof marked !== 'undefined') {
+                try {
+                    preview.innerHTML = marked.parse(content.replace(/\\n/g, '\n'));
+                } catch (e) {
+                    preview.innerHTML = '<p style="color:var(--text-secondary);white-space:pre-wrap;">' + content.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>';
+                }
+            } else {
+                preview.innerHTML = content ? '<p style="color:var(--text-secondary);white-space:pre-wrap;">' + content.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>' : '<p style="color:var(--text-secondary);">暂无内容</p>';
+            }
         }
     }
 

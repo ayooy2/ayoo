@@ -31,6 +31,9 @@ export async function onRequest(context) {
     if (!name) return error('名字不能为空', 400);
     if (!message) return error('留言内容不能为空', 400);
 
+    // 垃圾内容过滤
+    if (hasSpam(name) || hasSpam(message)) return error('留言内容包含不允许的词汇', 400);
+
     try {
       const result = await env.DB.prepare(
         'INSERT INTO guestbook (name, url, message, ip) VALUES (?, ?, ?, ?) RETURNING *'
@@ -53,4 +56,10 @@ export async function onRequest(context) {
 
 function stripHtml(s) {
   return String(s).replace(/<[^>]*>/g, '');
+}
+
+function hasSpam(s) {
+  const lower = String(s || '').toLowerCase();
+  const words = ['buy now', 'click here', 'free money', 'casino', 'viagra', '彩票', '赌博', '代开发票'];
+  return words.some(w => lower.indexOf(w) >= 0);
 }

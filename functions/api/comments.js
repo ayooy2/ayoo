@@ -63,8 +63,8 @@ export async function onRequest(context) {
     try { data = await request.json(); }
     catch { return error('无效的请求数据', 400); }
 
-    const articleId = data.article_id;
-    const parentId = data.parent_id || null;
+    const articleId = parseInt(data.article_id);
+    const parentId = data.parent_id ? parseInt(data.parent_id) : null;
     const authorName = strip((data.author_name || '').trim());
     const email = (data.email || '').trim().toLowerCase();
     const urlStr = (data.url || '').trim();
@@ -88,7 +88,16 @@ export async function onRequest(context) {
       finalUrl = urlStr.slice(0, 200);
     }
 
-    if (!articleId) return error('article_id required', 400);
+    if (!articleId || isNaN(articleId)) return error('article_id required', 400);
+
+    // 验证 parent_id 存在且属于同一文章
+    if (parentId) {
+      const parent = await env.DB.prepare(
+        'SELECT id, article_id FROM comments WHERE id = ?'
+      ).bind(parentId).first();
+      if (!parent) return error('父评论不存在', 400);
+      if (parent.article_id !== articleId) return error('父评论不属于该文章', 400);
+    }
 
     // 防重复：30 秒内同一邮箱禁止连续发布
     const recent = await env.DB.prepare(

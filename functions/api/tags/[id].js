@@ -6,8 +6,8 @@ import { requireAuth } from '../../lib/auth.js';
 // DELETE: delete tag (auth required)
 export async function onRequest(context) {
   const { request, env, params } = context;
-  const id = parseInt(params.id);
-  if (!id) return error('Invalid id', 400);
+  const id = parseInt(params.id, 10);
+  if (!id || isNaN(id)) return error('Invalid id', 400);
 
   if (request.method === 'GET') {
     const tag = await env.DB.prepare('SELECT * FROM tags WHERE id=?').bind(id).first();

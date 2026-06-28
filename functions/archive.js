@@ -31,7 +31,7 @@ export async function onRequestGet(context) {
     for (var m = 0; m < monthKeys.length; m++) {
       var month = monthKeys[m];
       var articles = years[year][month];
-      var monthLabel = parseInt(month) + '月';
+      var monthLabel = parseInt(month, 10) + '月';
       timeline += '<div class="archive-month">' + monthLabel + ' <span class="archive-month-count">' + articles.length + '</span></div>';
       timeline += '<ul class="archive-list">';
       for (var j = 0; j < articles.length; j++) {

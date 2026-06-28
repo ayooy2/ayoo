@@ -59,6 +59,12 @@ async function updateArticle(env, id, data) {
   const title = (data.title || '').trim() || existing.title;
   const slug = (data.slug || '').trim() || existing.slug;
   const content_md = data.content_md !== undefined ? data.content_md : existing.content_md;
+
+  // 检查 slug 唯一性（排除当前文章）
+  if (slug !== existing.slug) {
+    const conflict = await env.DB.prepare('SELECT id FROM articles WHERE slug = ? AND id != ?').bind(slug, id).first();
+    if (conflict) return error('Slug 已存在，请使用不同的标识', 409);
+  }
   const summary = (data.summary || '').trim() || existing.summary;
   const cover_image = data.cover_image !== undefined ? (data.cover_image || '').trim() : existing.cover_image;
   const author = (data.author || existing.author || 'Admin').trim();

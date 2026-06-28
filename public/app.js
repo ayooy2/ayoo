@@ -56,7 +56,7 @@
   var overlay=document.getElementById('cmd-overlay'),input=document.getElementById('cmd-input'),list=document.getElementById('cmd-list');
   if(!overlay||!input||!list) return;
   var items=[],activeIdx=0,loaded=false;
-  function load(){if(loaded)return;loaded=true;fetch('/api/command-index').then(function(r){return r.json()}).then(function(d){items=d.items||[];render('')}).catch(function(){})}
+  function load(){if(loaded)return;loaded=true;fetch('/api/command-index').then(function(r){return r.json()}).then(function(d){items=d.items||[];render('')}).catch(function(){list.innerHTML='<div class="cmd-empty">加载失败，请稍后再试</div>'})}
   function render(q){
     var q2=q.toLowerCase(),filtered=q2?items.filter(function(x){return(x.title+' '+(x.desc||'')+' '+(x.tags||'')).toLowerCase().indexOf(q2)>=0}):items;
     activeIdx=0;

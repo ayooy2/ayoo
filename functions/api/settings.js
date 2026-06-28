@@ -37,11 +37,20 @@ async function getSettings(env) {
   return json(config);
 }
 
+// 每个 key 的最大长度限制
+const MAX_LENGTHS = {
+  title: 100, subtitle: 200, bg_image: 500, bg_color: 50,
+  about_title: 100, about_content: 10000, about_avatar: 500,
+  features_intro: 500
+};
+
 async function updateSettings(env, data) {
   const stmts = [];
   for (const key of ALLOWED_KEYS) {
     const value = data[key];
     if (typeof value !== 'string') continue;
+    const maxLen = MAX_LENGTHS[key] || 1000;
+    if (value.length > maxLen) return error(`${key} 不能超过 ${maxLen} 个字符`, 400);
     stmts.push(
       env.DB.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
         .bind(key, value)
