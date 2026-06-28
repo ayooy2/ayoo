@@ -153,7 +153,9 @@ ${mobileMenu()}
   </footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" async>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css" id="hljs-theme">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js" async></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" async></script>
 <script src="/sanitize.js"></script>
 <script>
 var aid=${Number(a.id)||0},fp=localStorage.getItem("fp_"+aid)||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp_"+aid,f);return f;})(),replyTo=null;
@@ -167,6 +169,10 @@ function init(){
     document.querySelectorAll("#content img").forEach(function(img){
       img.addEventListener("error",function(){this.alt="图片加载失败";this.style.opacity="0.5";this.style.maxWidth="200px";this.onerror=null;},{once:true});
     });
+    // 代码语法高亮
+    if(typeof hljs!=="undefined"){
+      document.querySelectorAll("#content pre code").forEach(function(block){hljs.highlightElement(block);});
+    }
     wrapCB();
     buildTOC();
   }catch(e){console.error("marked.parse failed:",e);}

@@ -2,11 +2,21 @@
 (function(){
   /* Theme toggle */
   var b=document.getElementById('theme-toggle'),st=localStorage.getItem('theme')||'light';
-  if(st==='dark') document.documentElement.setAttribute('data-theme','dark');
+  if(st==='dark'){
+    document.documentElement.setAttribute('data-theme','dark');
+    /* Set highlight.js dark theme */
+    var hljsLink=document.getElementById('hljs-theme');
+    if(hljsLink) hljsLink.href='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';
+  }
   if(b){b.textContent=st==='dark'?'☀':'☽';b.addEventListener('click',function(){
     var d=document.documentElement.getAttribute('data-theme')==='dark';
     if(d){document.documentElement.removeAttribute('data-theme');localStorage.setItem('theme','light');b.textContent='☽'}
     else{document.documentElement.setAttribute('data-theme','dark');localStorage.setItem('theme','dark');b.textContent='☀'}
+    /* Switch highlight.js theme */
+    var hljsLink=document.getElementById('hljs-theme');
+    if(hljsLink){hljsLink.href=d
+      ?'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css'
+      :'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';}
   })}
 
   /* Clock — navbar (HH:MM:SS) */

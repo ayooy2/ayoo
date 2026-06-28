@@ -10,6 +10,7 @@ export async function onRequest(context) {
     const articleId = url.searchParams.get('article_id');
     const fp = (url.searchParams.get('fingerprint') || '').trim().slice(0, 100);
     if (!articleId || !fp) return error('article_id and fingerprint required', 400);
+    if (isNaN(articleId)) return error('Invalid article_id', 400);
     const existing = await env.DB.prepare(
       'SELECT id FROM likes WHERE article_id = ? AND fingerprint = ?'
     ).bind(articleId, fp).first();
@@ -20,10 +21,14 @@ export async function onRequest(context) {
   if (request.method !== 'POST') return error('Method not allowed', 405);
 
   let data;
-  try { data = await request.json(); } catch (e) { return error('请求格式错误', 400); }
-  const articleId = data.article_id;
+  try { data = await request.json(); } catch { return error('请求格式错误', 400); }
+  const articleId = parseInt(data.article_id);
   const fp = (data.fingerprint || '').trim().slice(0, 100);
-  if (!articleId || !fp) return error('article_id and fingerprint required', 400);
+  if (!articleId || isNaN(articleId) || !fp) return error('article_id and fingerprint required', 400);
+
+  // 验证文章存在
+  const article = await env.DB.prepare('SELECT id FROM articles WHERE id = ?').bind(articleId).first();
+  if (!article) return error('文章不存在', 404);
 
   const existing = await env.DB.prepare(
     'SELECT id FROM likes WHERE article_id = ? AND fingerprint = ?'
