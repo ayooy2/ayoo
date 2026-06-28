@@ -82,7 +82,7 @@ function sanitizeMD(html){
     .replace(/<object[^>]*>[\s\S]*?<\/object>/gi,'')
     .replace(/<embed[^>]*>/gi,'')
     .replace(/<form[^>]*>[\s\S]*?<\/form>/gi,'')
-    .replace(/\son\w+\s*=\s*(['"])[\s\S]*?\1/gi,'')
+    .replace(/\son\w+\s*=\s*(['"])[\s\S]*?\\1/gi,'')
     .replace(/\son\w+\s*=\s*[^\s>]*/gi,'')
     .replace(/javascript:/gi,'');
 }
