@@ -1,4 +1,5 @@
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
+import { esc } from '../lib/sanitize.js';
 // 留言簿 Edge SSR
 export async function onRequestGet(context) {
   const { env } = context;
@@ -59,6 +60,7 @@ ${mobileMenu()}
 <script src="/app.js"></script>
 <script>
 (function(){
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
   /* Guestbook form */
   var form=document.getElementById('guestbook-form');
   var btn=document.getElementById('gb-submit');
@@ -73,7 +75,20 @@ ${mobileMenu()}
     btn.disabled=true;btn.textContent='提交中...';
     fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,url:url,message:message})})
     .then(function(r){if(!r.ok)throw new Error('fail');return r.json()})
-    .then(function(){window.location.reload()})
+    .then(function(d){
+      form.reset();
+      btn.disabled=false;btn.textContent='提交留言';
+      /* Insert new entry at top of list */
+      var list=document.querySelector('.comment-list')||document.querySelector('.content');
+      if(list){
+        var empty=list.querySelector('.empty-state');if(empty)empty.remove();
+        var div=document.createElement('div');div.className='comment-box';div.style.animationDelay='0ms';
+        var avatar='https://q1.qlogo.cn/g?b=qq&nk=0&s=100&fid='+Math.abs(name.split('').reduce(function(h,c){return((h<<5)-h)+c.charCodeAt(0)|0},0))%14+1;
+        var nameHtml=url?'<a href="'+esc(url)+'" target="_blank" rel="noopener" class="comment-author">'+esc(name)+'</a>':'<span class="comment-author">'+esc(name)+'</span>';
+        div.innerHTML='<div class="comment-header"><img class="comment-avatar" src="'+avatar+'" alt="" loading="lazy"><div class="comment-meta">'+nameHtml+'</div></div><div class="comment-body"><p>'+esc(message)+'</p></div>';
+        list.insertBefore(div,list.firstChild);
+      }
+    })
     .catch(function(){alert('提交失败，请稍后再试');btn.disabled=false;btn.textContent='提交留言'});
   });
 })()
@@ -106,4 +121,4 @@ function guestbookCard(entry, index) {
     + '</div>';
 }
 
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+

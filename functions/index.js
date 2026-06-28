@@ -1,4 +1,5 @@
 import { navbar, mobileMenu, cmdOverlay } from './lib/navbar.js';
+import { esc } from './lib/sanitize.js';
 // 首页 Edge SSR — Personal Operating System
 export async function onRequestGet(context) {
   const { env } = context;
@@ -233,4 +234,4 @@ function formatDate(dateStr) {
   return (d.getMonth() + 1) + '月' + d.getDate() + '日';
 }
 
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+

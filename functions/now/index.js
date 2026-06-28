@@ -1,4 +1,5 @@
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
+import { esc } from '../lib/sanitize.js';
 // Now 页面 Edge SSR — What I'm Doing Now
 export async function onRequestGet(context) {
   try {
@@ -96,4 +97,4 @@ ${cmdOverlay()}
 }
 
 
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+

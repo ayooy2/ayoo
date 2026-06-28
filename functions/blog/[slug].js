@@ -1,4 +1,5 @@
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
+import { esc } from '../lib/sanitize.js';
 // 文章详情 Edge SSR — Breadcrumb + Sidebar TOC + Modern Layout
 export async function onRequestGet(context) {
   try {
@@ -146,21 +147,9 @@ ${mobileMenu()}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+<script src="/sanitize.js"></script>
 <script>
-var aid=${Number(a.id)||0},fp=localStorage.getItem("fp")||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp",f);return f;})(),replyTo=null;
-
-function sanitizeMD(html){
-  return html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi,'')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi,'')
-    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi,'')
-    .replace(/<object[^>]*>[\s\S]*?<\/object>/gi,'')
-    .replace(/<embed[^>]*>/gi,'')
-    .replace(/<form[^>]*>[\s\S]*?<\/form>/gi,'')
-    .replace(/\son\w+\s*=\s*(['"])[\s\S]*?\\1/gi,'')
-    .replace(/\son\w+\s*=\s*[^\s>]*/gi,'')
-    .replace(/javascript:/gi,'');
-}
+var aid=${Number(a.id)||0},fp=localStorage.getItem("fp_"+aid)||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp_"+aid,f);return f;})(),replyTo=null;
 
 function init(){
   if(typeof marked=="undefined"){setTimeout(init,100);return;}
@@ -326,7 +315,13 @@ document.addEventListener("click",function(e){var link=e.target.closest(".reply-
 function onCBBtn(e){
   var btn=e.target.closest(".code-block-btn");if(!btn)return;
   var a=btn.dataset.a,w=btn.closest(".code-block-wrapper"),pre=w.querySelector("pre"),body=w.querySelector(".cb-body");
-  if(a==="copy") navigator.clipboard.writeText(pre.textContent);
+  if(a==="copy"){
+    navigator.clipboard.writeText(pre.textContent);
+    var orig=btn.innerHTML;
+    btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    btn.style.color="var(--success,#10b981)";
+    setTimeout(function(){btn.innerHTML=orig;btn.style.color=""},2e3);
+  }
   if(a==="fullscreen"){
     var bar=w.querySelector(".code-block-bar"),arrow=bar?bar.querySelector(".lang-arrow"):null;
     if(!w.classList.contains("fullscreen")){
@@ -482,8 +477,6 @@ function deleteComment(id){
   .then(function(){loadComments(1)})
   .catch(function(){alert("删除失败")});
 }
-
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 /* Reading progress bar */
 (function(){

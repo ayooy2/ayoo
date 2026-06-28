@@ -1,4 +1,5 @@
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
+import { esc } from '../lib/sanitize.js';
 // 关于我 页面 Edge SSR
 export async function onRequestGet(context) {
   try {
@@ -72,20 +73,8 @@ ${mobileMenu()}
   </footer>
 </div>
 <script src="/app.js"></script>
+<script src="/sanitize.js"></script>
 <script>
-function sanitizeMD(html){
-  // 移除危险标签和事件属性，保留安全的 HTML 标签
-  return html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi,'')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi,'')
-    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi,'')
-    .replace(/<object[^>]*>[\s\S]*?<\/object>/gi,'')
-    .replace(/<embed[^>]*>/gi,'')
-    .replace(/<form[^>]*>[\s\S]*?<\/form>/gi,'')
-    .replace(/\son\w+\s*=\s*(['"])[\s\S]*?\\1/gi,'')
-    .replace(/\son\w+\s*=\s*[^\s>]*/gi,'')
-    .replace(/javascript:/gi,'');
-}
 (function(){
   var raw = ${JSON.stringify(content).replace(/\//g, '\\/')};
   if(raw && window.marked){
@@ -112,4 +101,4 @@ ${cmdOverlay()}
 }
 
 
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+

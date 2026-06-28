@@ -23,6 +23,21 @@
 
   /* Remove animate-in after animation to prevent transform from breaking fixed positioning */
   document.querySelectorAll('.animate-in').forEach(function(el){el.addEventListener('animationend',function(){el.classList.remove('animate-in');el.style.opacity='1'},{once:true})});
+
+  /* Esc exit fullscreen code blocks */
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      var fs=document.querySelector('.code-block-wrapper.fullscreen');
+      if(fs){
+        fs.classList.remove('fullscreen');
+        document.body.style.overflow='';
+        var pre=fs.querySelector('pre');if(pre)pre.style.display='';
+        var bar=fs.querySelector('.code-block-bar'),arrow=bar?bar.querySelector('.lang-arrow'):null,body=fs.querySelector('.cb-body');
+        if(fs._wasFolded){fs.classList.add('folded');if(body)body.classList.add('hidden');if(arrow)arrow.textContent="›";if(bar)bar.title="展开";}
+        delete fs._wasFolded;
+      }
+    }
+  });
 })();
 
 /* Command Palette */

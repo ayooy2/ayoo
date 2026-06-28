@@ -1,4 +1,5 @@
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
+import { esc } from '../lib/sanitize.js';
 // 博客列表 Edge SSR — Card Grid Layout with Tag Filtering
 export async function onRequestGet(context) {
   const { env } = context;
@@ -79,6 +80,34 @@ ${mobileMenu()}
   </footer>
 </div>
 <script src="/app.js"></script>
+<script>
+(function(){
+  var bar=document.querySelector('.tag-filter-bar');
+  var grid=document.querySelector('.blog-grid');
+  var subtitle=document.querySelector('.page-subtitle');
+  if(!bar||!grid) return;
+  bar.addEventListener('click',function(e){
+    var a=e.target.closest('.tag-filter-item');
+    if(!a) return;
+    e.preventDefault();
+    var url=a.getAttribute('href');
+    bar.querySelectorAll('.tag-filter-item').forEach(function(el){el.classList.remove('active')});
+    a.classList.add('active');
+    grid.style.opacity='0.4';grid.style.pointerEvents='none';
+    fetch(url).then(function(r){return r.text()}).then(function(html){
+      var doc=new DOMParser().parseFromString(html,'text/html');
+      var newGrid=doc.querySelector('.blog-grid');
+      var newBar=doc.querySelector('.tag-filter-bar');
+      var newSub=doc.querySelector('.page-subtitle');
+      if(newGrid){grid.innerHTML=newGrid.innerHTML;grid.style.opacity='';grid.style.pointerEvents='';}
+      if(newBar) bar.innerHTML=newBar.innerHTML;
+      if(newSub&&subtitle) subtitle.innerHTML=newSub.innerHTML;
+      history.pushState({},'',url);
+    }).catch(function(){grid.style.opacity='';grid.style.pointerEvents='';window.location.href=url});
+  });
+  window.addEventListener('popstate',function(){window.location.reload()});
+})();
+</script>
 ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=3600' } });
@@ -147,4 +176,4 @@ function tagFilterBar(allTags, active) {
   return html;
 }
 
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+

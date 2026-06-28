@@ -183,7 +183,10 @@ var LOGS=[
 {date:"2026/06/26",time:"23:00",desc:"<strong>7 agent 全面排查</strong>：交互/显示/阅读体验/后台功能/安全审计/功能完整性/验收跟踪，发现约 80 个问题",cat:"修复"},
 {date:"2026/06/26",time:"23:10",desc:"<strong>P0 安全修复</strong>：about 页面 avatar URL 协议白名单校验；marked.parse() 输出 HTML 消毒（移除 script/style/iframe/on*/javascript:）；blog 详情页同样加固",cat:"安全"},
 {date:"2026/06/26",time:"23:20",desc:"<strong>P1 功能修复</strong>：创建 404.html 自定义错误页；about/now/features 错误消息改为通用文本；api/search.js 添加 try/catch；guestbook API 隐藏 IP 字段；admin.html marked.js 固定 v15.0.7；export.js 错误消息不泄露内部信息",cat:"修复"},
-{date:"2026/06/26",time:"23:30",desc:"<strong>CSP 安全头</strong>：添加 Content-Security-Policy 限制脚本/样式/图片/连接来源；login.html 添加 loading 状态和空密码提示；移动端菜单点击背景关闭",cat:"安全"}
+{date:"2026/06/26",time:"23:30",desc:"<strong>CSP 安全头</strong>：添加 Content-Security-Policy 限制脚本/样式/图片/连接来源；login.html 添加 loading 状态和空密码提示；移动端菜单点击背景关闭",cat:"安全"},
+{date:"2026/06/27",time:"00:00",desc:"<strong>P2 代码重构</strong>：提取 esc() 到 functions/lib/sanitize.js 共享模块（9 个 SSR 文件改为 import）；提取 sanitizeMD() 到 public/sanitize.js 客户端共享文件",cat:"架构"},
+{date:"2026/06/27",time:"00:10",desc:"<strong>P3 体验优化</strong>：代码块复制按钮添加 ✓ 反馈（2秒恢复）；Esc 键退出全屏代码块；点赞指纹改为每篇文章独立（fp_&lt;id&gt;）；博客标签过滤改为 AJAX 无刷新",cat:"优化"},
+{date:"2026/06/27",time:"00:20",desc:"<strong>P3 功能完善</strong>：留言簿提交后表单重置 + 新留言即时插入顶部（无需刷新）；静态资源添加长期缓存头（1天客户端/7天CDN）",cat:"优化"}
 ];
 
 var ARCH=[
