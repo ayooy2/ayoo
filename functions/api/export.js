@@ -58,6 +58,6 @@ export async function onRequest(context) {
     });
   } catch (e) {
     console.error('Export error:', e);
-    return error('Export failed: ' + e.message, 500);
+    return error('导出失败，请稍后再试', 500);
   }
 }

@@ -32,7 +32,7 @@ export async function onRequestGet(context) {
     return new Response(html, {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=3600' }
     });
-  } catch (e) { return new Response('Error: ' + e.message, { status: 500 }); }
+  } catch (e) { console.error('Now page error:', e); return new Response('服务器错误，请稍后再试', { status: 500 }); }
 }
 
 function render(groups, categoryOrder, lastUpdated) {

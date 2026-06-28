@@ -149,11 +149,24 @@ ${mobileMenu()}
 <script>
 var aid=${Number(a.id)||0},fp=localStorage.getItem("fp")||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp",f);return f;})(),replyTo=null;
 
+function sanitizeMD(html){
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi,'')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi,'')
+    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi,'')
+    .replace(/<object[^>]*>[\s\S]*?<\/object>/gi,'')
+    .replace(/<embed[^>]*>/gi,'')
+    .replace(/<form[^>]*>[\s\S]*?<\/form>/gi,'')
+    .replace(/\son\w+\s*=\s*(['"])[\s\S]*?\1/gi,'')
+    .replace(/\son\w+\s*=\s*[^\s>]*/gi,'')
+    .replace(/javascript:/gi,'');
+}
+
 function init(){
   if(typeof marked=="undefined"){setTimeout(init,100);return;}
   try{
     var raw=${md}.replace(/\\\\n/g,"\\n");
-    document.getElementById("content").innerHTML=marked.parse(raw);
+    document.getElementById("content").innerHTML=sanitizeMD(marked.parse(raw));
     // 为所有内容图片添加加载失败处理
     document.querySelectorAll("#content img").forEach(function(img){
       img.addEventListener("error",function(){this.alt="图片加载失败";this.style.opacity="0.5";this.style.maxWidth="200px";this.onerror=null;},{once:true});

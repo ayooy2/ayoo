@@ -7,7 +7,7 @@ export async function onRequest(context) {
 
   if (request.method === 'GET') {
     const { results } = await env.DB.prepare(
-      'SELECT * FROM guestbook ORDER BY created_at DESC LIMIT 50'
+      'SELECT id, name, url, message, created_at FROM guestbook ORDER BY created_at DESC LIMIT 50'
     ).all();
     return json(results || []);
   }

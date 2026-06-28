@@ -19,6 +19,7 @@
   var closeBtn=document.getElementById('mobile-menu-close');
   if(hamburger&&menu) hamburger.addEventListener('click',function(){menu.classList.add('active')});
   if(closeBtn&&menu) closeBtn.addEventListener('click',function(){menu.classList.remove('active')});
+  if(menu) menu.addEventListener('click',function(e){if(e.target===menu)menu.classList.remove('active')});
 
   /* Remove animate-in after animation to prevent transform from breaking fixed positioning */
   document.querySelectorAll('.animate-in').forEach(function(el){el.addEventListener('animationend',function(){el.classList.remove('animate-in');el.style.opacity='1'},{once:true})});

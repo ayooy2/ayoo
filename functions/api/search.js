@@ -11,12 +11,16 @@ export async function onRequest(context) {
 
   const escaped = q.replace(/%/g, '\\%').replace(/_/g, '\\_');
   const like = '%' + escaped + '%';
-  const { results } = await env.DB.prepare(
-    "SELECT id, title, slug, summary, author, tags, created_at, views "
-    + "FROM articles WHERE is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) "
-    + "AND (title LIKE ? OR summary LIKE ? OR content_md LIKE ? OR tags LIKE ?) "
-    + "ORDER BY created_at DESC LIMIT 20"
-  ).bind(like, like, like, like).all();
-
-  return json({ results: results || [], total: (results || []).length, query: q });
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT id, title, slug, summary, author, tags, created_at, views "
+      + "FROM articles WHERE is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) "
+      + "AND (title LIKE ? OR summary LIKE ? OR content_md LIKE ? OR tags LIKE ?) "
+      + "ORDER BY created_at DESC LIMIT 20"
+    ).bind(like, like, like, like).all();
+    return json({ results: results || [], total: (results || []).length, query: q });
+  } catch (e) {
+    console.error('Search API error:', e);
+    return error('搜索服务暂时不可用', 500);
+  }
 }

@@ -15,7 +15,7 @@ export async function onRequestGet(context) {
     return new Response(html, {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=3600' }
     });
-  } catch (e) { return new Response('Error: ' + e.message, { status: 500 }); }
+  } catch (e) { console.error('About page error:', e); return new Response('服务器错误，请稍后再试', { status: 500 }); }
 }
 
 function render(s) {
@@ -32,9 +32,11 @@ function render(s) {
     .replace(/\n/g, '<br>');
   contentHtml = '<p>' + contentHtml + '</p>';
 
-  var avatarHtml = avatar
-    ? '<div class="about-avatar"><img src="' + avatar + '" alt="avatar"></div>'
-    : '';
+  // 校验 avatar URL 协议白名单
+  var avatarHtml = '';
+  if (avatar && /^https?:\/\//i.test(avatar)) {
+    avatarHtml = '<div class="about-avatar"><img src="' + avatar + '" alt="avatar"></div>';
+  }
 
   var seo = '<meta name="description" content="关于 ' + siteTitle + ' — 个人简介">'
     + '\n<meta property="og:type" content="profile">'
@@ -71,20 +73,33 @@ ${mobileMenu()}
 </div>
 <script src="/app.js"></script>
 <script>
+function sanitizeMD(html){
+  // 移除危险标签和事件属性，保留安全的 HTML 标签
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi,'')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi,'')
+    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi,'')
+    .replace(/<object[^>]*>[\s\S]*?<\/object>/gi,'')
+    .replace(/<embed[^>]*>/gi,'')
+    .replace(/<form[^>]*>[\s\S]*?<\/form>/gi,'')
+    .replace(/\son\w+\s*=\s*(['"])[\s\S]*?\1/gi,'')
+    .replace(/\son\w+\s*=\s*[^\s>]*/gi,'')
+    .replace(/javascript:/gi,'');
+}
 (function(){
   var raw = ${JSON.stringify(content).replace(/\//g, '\\/')};
   if(raw && window.marked){
     var el = document.getElementById('about-content');
-    if(el) el.innerHTML = marked.parse(raw.replace(/\\\\n/g, '\\n'));
+    if(el) el.innerHTML = sanitizeMD(marked.parse(raw.replace(/\\\\n/g, '\\n')));
   }
   if(!window.marked){
     var s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+    s.src = 'https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js';
     s.onload = function(){
       var raw2 = ${JSON.stringify(content).replace(/\//g, '\\/')};
       if(raw2){
         var el2 = document.getElementById('about-content');
-        if(el2) el2.innerHTML = marked.parse(raw2.replace(/\\\\n/g, '\\n'));
+        if(el2) el2.innerHTML = sanitizeMD(marked.parse(raw2.replace(/\\\\n/g, '\\n')));
       }
     };
     document.head.appendChild(s);

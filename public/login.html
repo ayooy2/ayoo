@@ -28,7 +28,7 @@
         margin-bottom: 1rem;
         box-sizing: border-box;
     }
-    .login-box input:focus { outline:none; border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
+    .login-box input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-subtle); }
     .pw-input-wrap { position:relative; display:flex; align-items:center; }
     .pw-input-wrap input { padding-right:3.2rem; }
     .login-box button {
@@ -73,9 +73,16 @@
 
         function doLogin() {
             var pwd = document.getElementById('password').value.trim();
-            if (!pwd) return;
+            if (!pwd) {
+                var errEl = document.getElementById('login-error');
+                errEl.textContent = '请输入密码';
+                errEl.classList.add('show');
+                return;
+            }
+            var btn = document.querySelector('.login-box button[type="button"], .login-box button:not([type])');
             var errEl = document.getElementById('login-error');
             errEl.classList.remove('show');
+            if(btn){btn.disabled=true;btn.textContent='登录中...';}
             fetch('/api/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -91,7 +98,7 @@
             }).catch(function() {
                 errEl.textContent = '网络错误，请重试';
                 errEl.classList.add('show');
-            });
+            }).finally(function(){if(btn){btn.disabled=false;btn.textContent='登录';}});
         }
     </script>
 </body>
