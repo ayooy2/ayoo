@@ -2590,7 +2590,7 @@ body[style*="background-image"] .page-wrapper {
 .cmd-item-type {
   font-size: var(--text-xs);
   color: var(--text-placeholder);
-  background: var(--bg-tertiary, var(--bg-secondary));
+  background: var(--bg-secondary);
   padding: 1px 6px;
   border-radius: 3px;
   flex-shrink: 0;
@@ -2789,10 +2789,18 @@ body[style*="background-image"] .page-wrapper {
 .pw-toggle {
   position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
   background: none; border: none; cursor: pointer;
-  font-size: 0.78rem; color: var(--text-muted);
+  font-size: 0.78rem; color: var(--text-tertiary);
   padding: 0.2rem 0.4rem; border-radius: 4px;
   transition: color 0.15s, background 0.15s;
 }
 .pw-toggle:hover { color: var(--accent); background: var(--accent-subtle); }
 [data-theme="dark"] .pw-modal-box { background: var(--bg-secondary); border-color: var(--border); }
-.pw-modal-box { background: #fff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); }
+.pw-modal-box { background: var(--bg-elevated); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); }
+
+/* 尊重用户减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -23,9 +23,20 @@ export async function onRequestGet(context) {
   const { results } = await stmt.all();
   const articles = results || [];
 
-  // Fetch all tags for filter bar
-  const { results: allTags } = await env.DB.prepare('SELECT * FROM tags ORDER BY name ASC').all();
-  const tags = allTags || [];
+  // Fetch all tags for filter bar (fallback to extracting from articles if tags table is empty)
+  var tags = [];
+  try {
+    const { results: allTags } = await env.DB.prepare('SELECT * FROM tags ORDER BY name ASC').all();
+    tags = allTags || [];
+  } catch (e) { /* tags table may not exist */ }
+  if (!tags.length) {
+    var tagSet = {};
+    for (var i = 0; i < articles.length; i++) {
+      var ts = (articles[i].tags || '').split(',').filter(Boolean);
+      for (var j = 0; j < ts.length; j++) { tagSet[ts[j].trim()] = true; }
+    }
+    tags = Object.keys(tagSet).sort().map(function(name) { return { name: name }; });
+  }
 
   // Blog cards
   var cards = '';
@@ -72,6 +83,7 @@ ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=3600' } });
   } catch (e) {
+    console.error('Blog list error:', e);
     return new Response('服务器错误，请稍后再试', { status: 500 });
   }
 }

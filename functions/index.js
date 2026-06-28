@@ -21,6 +21,7 @@ export async function onRequestGet(context) {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=86400' }
     });
   } catch (e) {
+    console.error('Homepage error:', e);
     return new Response('服务器错误，请稍后再试', { status: 500 });
   }
 }
@@ -160,9 +161,14 @@ ${mobileMenu()}
   var gEl=document.getElementById('greeting');
   if(gEl) gEl.textContent=g;
 
-  /* Double-click nav cards */
+  /* Click nav cards */
   document.querySelectorAll('.nav-card').forEach(function(x){
-    x.addEventListener('dblclick',function(){
+    x.addEventListener('click',function(e){
+      var u=x.dataset.url;
+      if(u) window.location.href=u;
+    });
+    x.addEventListener('dblclick',function(e){
+      e.preventDefault();
       var u=x.dataset.url;
       if(u) window.open(u,'_blank','noopener,noreferrer');
     });
