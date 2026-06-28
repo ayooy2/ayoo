@@ -134,8 +134,47 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         } catch (e) {
-            alert('导出失败: ' + e.message);
+            alert('导出失败，请稍后再试');
         }
+    }
+
+    // ---- 导入数据 ----
+    async function importData() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async function() {
+            var file = input.files[0];
+            if (!file) return;
+            if (!confirm('⚠️ 导入将覆盖当前所有数据，确定继续吗？')) return;
+            try {
+                var text = await file.text();
+                var data = JSON.parse(text);
+                if (!data.tables) { alert('数据格式错误：缺少 tables 字段'); return; }
+                var res = await apiFetch('/api/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) {
+                    var err = await res.json().catch(function(){ return {error:'未知错误'} });
+                    alert('导入失败: ' + (err.error || res.status));
+                    return;
+                }
+                var result = await res.json();
+                var summary = [];
+                for (var t in result.results) {
+                    var r = result.results[t];
+                    if (r.skipped) continue;
+                    summary.push(t + ': ' + r.imported + ' 条' + (r.error ? ' (错误: ' + r.error + ')' : ''));
+                }
+                alert('导入完成！\n\n' + summary.join('\n'));
+                location.reload();
+            } catch (e) {
+                alert('导入失败: ' + e.message);
+            }
+        };
+        input.click();
     }
 
     // ---- 暴露到全局 ----
@@ -150,4 +189,5 @@
     window.closePwModal = closePwModal;
     window.changePassword = changePassword;
     window.exportData = exportData;
+    window.importData = importData;
 })();

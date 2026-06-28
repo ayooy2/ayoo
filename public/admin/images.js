@@ -50,7 +50,54 @@
         }
     }
 
+    // ---- 图片管理 ----
+    async function loadImages() {
+        try {
+            var res = await apiFetch('/api/images?list=1');
+            if (!res.ok) return;
+            var data = await res.json();
+            var container = document.getElementById('images-grid');
+            var countEl = document.getElementById('images-count');
+            if (!container) return;
+            var images = data.images || [];
+            if (countEl) countEl.textContent = images.length;
+            if (!images.length) {
+                container.innerHTML = '<div class="empty-state"><p>暂无图片</p></div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < images.length; i++) {
+                var img = images[i];
+                var date = (img.created_at || '').slice(0, 16).replace('T', ' ');
+                html += '<div class="image-card" data-id="' + img.id + '">'
+                    + '<img src="/api/images?id=' + img.id + '" alt="' + escapeHtml(img.filename) + '" loading="lazy">'
+                    + '<div class="image-info">'
+                    + '<span class="image-name">' + escapeHtml(img.filename) + '</span>'
+                    + '<span class="image-date">' + date + '</span>'
+                    + '</div>'
+                    + '<button class="image-delete-btn" onclick="deleteImage(' + img.id + ')" title="删除">🗑️</button>'
+                    + '</div>';
+            }
+            container.innerHTML = html;
+        } catch(e) { console.error('Load images error:', e); }
+    }
+
+    async function deleteImage(id) {
+        if (!confirm('确定删除这张图片？')) return;
+        try {
+            var res = await apiFetch('/api/images?id=' + id, { method: 'DELETE' });
+            if (res.ok) {
+                var card = document.querySelector('.image-card[data-id="' + id + '"]');
+                if (card) card.remove();
+            } else {
+                alert('删除失败');
+            }
+        } catch(e) { alert('删除失败'); }
+    }
+
     // ---- 暴露到全局 ----
     window.uploadMDImage = uploadMDImage;
     window.uploadToServer = uploadToServer;
+    window.loadImages = loadImages;
+    window.deleteImage = deleteImage;
 })();

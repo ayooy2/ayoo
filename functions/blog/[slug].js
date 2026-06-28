@@ -125,6 +125,12 @@ ${mobileMenu()}
         </section>
       </article>
 
+      <!-- Mobile prev/next navigation -->
+      <nav class="mobile-post-nav">
+        ${prev ? '<a class="mobile-post-nav-item prev" href="/blog/' + esc(prev.slug) + '"><span class="mobile-post-nav-label">← 上一篇</span><span class="mobile-post-nav-title">' + esc(prev.title) + '</span></a>' : '<div class="mobile-post-nav-item prev disabled"></div>'}
+        ${next ? '<a class="mobile-post-nav-item next" href="/blog/' + esc(next.slug) + '"><span class="mobile-post-nav-label">下一篇 →</span><span class="mobile-post-nav-title">' + esc(next.title) + '</span></a>' : '<div class="mobile-post-nav-item next disabled"></div>'}
+      </nav>
+
       <!-- Sidebar TOC (desktop) -->
       <aside class="article-toc" id="article-toc">
         <div class="toc-topbar">

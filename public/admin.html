@@ -15,7 +15,8 @@
             <h1>后台管理 <span onclick="openPwModal()" style="font-size:0.55em;font-weight:400;color:var(--color-text-muted);cursor:pointer;vertical-align:middle;">修改密码</span></h1>
             <div style="display:flex;align-items:center;gap:0.8rem;">
                 <button class="theme-toggle" id="theme-toggle" aria-label="切换主题" title="切换日间/夜间模式" style="width:40px;height:40px;font-size:1.1rem;">☽</button>
-                <button class="btn btn-secondary" onclick="exportData()" title="导出所有数据为 JSON 文件">导出数据</button>
+                <button class="btn btn-secondary" onclick="importData()" title="从 JSON 文件导入数据">📥 导入</button>
+                <button class="btn btn-secondary" onclick="exportData()" title="导出所有数据为 JSON 文件">📦 导出</button>
                 <button class="btn btn-secondary" onclick="logout()">退出登录</button>
             </div>
         </header>
@@ -27,13 +28,15 @@
             <button class="tab-btn" data-tab="about" onclick="switchTab('about')">关于我</button>
             <button class="tab-btn" data-tab="articles" onclick="switchTab('articles')">文章管理</button>
             <button class="tab-btn" data-tab="tags" onclick="switchTab('tags')">标签管理</button>
+            <button class="tab-btn" data-tab="images" onclick="switchTab('images');loadImages()">图片管理</button>
         </nav>
 
         <!-- ========== 网站管理 ========== -->
         <div id="tab-sites" class="tab-content">
             <div class="toolbar">
                 <button class="btn btn-primary" onclick="openModal()">+ 添加网站</button>
-                <button class="btn btn-secondary" onclick="exportData()" style="margin-left:auto;">📦 导出数据</button>
+                <button class="btn btn-secondary" onclick="importData()" title="从 JSON 文件导入数据">📥 导入数据</button>
+                <button class="btn btn-secondary" onclick="exportData()">📦 导出数据</button>
             </div>
             <table class="data-table">
                 <thead>
@@ -186,6 +189,16 @@
             </thead>
             <tbody id="tags-table-body"></tbody>
         </table>
+    </div>
+
+    <!-- ========== 图片管理 ========== -->
+    <div id="tab-images" class="tab-content hidden">
+        <div class="toolbar">
+            <span class="toolbar-info">共 <span id="images-count">0</span> 张图片</span>
+        </div>
+        <div id="images-grid" class="images-grid">
+            <div class="empty-state"><p>加载中...</p></div>
+        </div>
     </div>
     </div>
 

@@ -9,6 +9,13 @@ export async function onRequest(context) {
   // 读取图片（公开）
   if (request.method === 'GET') {
     const id = url.searchParams.get('id');
+    // 列表查询（需认证）
+    if (url.searchParams.get('list') === '1') {
+      const authErr = await requireAuth(request, env);
+      if (authErr) return authErr;
+      const { results } = await env.DB.prepare('SELECT id, filename, mime_type, created_at FROM images ORDER BY id DESC LIMIT 200').all();
+      return json({ images: results || [] });
+    }
     if (!id) return error('id required', 400);
     const img = await env.DB.prepare('SELECT * FROM images WHERE id = ?').bind(id).first();
     if (!img) return error('Not found', 404);

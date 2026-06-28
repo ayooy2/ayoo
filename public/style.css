@@ -1365,9 +1365,54 @@ body[style*="background-image"] .page-wrapper {
 
 .toc-mobile-content.open { display: block; }
 
+/* ===== MOBILE POST NAVIGATION ===== */
+.mobile-post-nav {
+  display: none;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-primary);
+}
+.mobile-post-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.mobile-post-nav-item:hover {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+.mobile-post-nav-item.next {
+  text-align: right;
+}
+.mobile-post-nav-item.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+.mobile-post-nav-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.mobile-post-nav-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
 @media (max-width: 1024px) {
   .article-toc { display: none; }
   .toc-mobile { display: block; }
+  .mobile-post-nav { display: flex; }
 }
 
 /* ===== ARTICLE ACTIONS (like, etc.) ===== */
