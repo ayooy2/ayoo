@@ -802,32 +802,6 @@ body[style*="background-image"] .page-wrapper {
 }
 
 /* ===== ARTICLE DETAIL ===== */
-.article-top-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xl);
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
-}
-
-.article-top-bar a {
-  color: var(--text-tertiary);
-  transition: color var(--duration-fast) var(--ease);
-}
-.article-top-bar a:hover { color: var(--accent); }
-.article-top-bar svg {
-  width: 14px;
-  height: 14px;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  fill: none;
-}
-.article-breadcrumb-sep {
-  color: var(--text-placeholder);
-  font-size: var(--text-xs);
-}
-
 .article-layout {
   display: grid;
   grid-template-columns: 1fr 220px;

@@ -1,4 +1,4 @@
-import { mobileMenu, cmdOverlay } from '../lib/navbar.js';
+import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 import { esc } from '../lib/sanitize.js';
 // 文章详情 Edge SSR — Breadcrumb + Sidebar TOC + Modern Layout
 export async function onRequestGet(context) {
@@ -57,16 +57,10 @@ function render(a, likes, prev, next) {
 </head>
 <body>
 <div class="reading-progress" id="reading-progress"></div>
+${navbar('Blog', '/blog', '')}
 ${mobileMenu()}
 <div class="page-wrapper">
   <div class="content">
-
-    <!-- Breadcrumb -->
-    <div class="article-top-bar animate-in">
-      <a href="/blog"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg> Blog</a>
-      <span class="article-breadcrumb-sep">/</span>
-      <span style="color:var(--text-primary)">${esc(a.title)}</span>
-    </div>
 
     <!-- Mobile TOC (placeholder, built by JS) -->
     <div class="toc-mobile" id="toc-mobile" style="display:none">
