@@ -29,7 +29,8 @@ export async function onRequestGet(context) {
 
 function render(s, sites, articles, stats) {
   var t = esc(s.title || 'Ayoo');
-  var sub = esc(s.subtitle || '');
+  var subRaw = s.subtitle || '';
+  var sub = esc(subRaw);
   var foot = esc(s.footer || '');
   var bg = esc(s.bg_image || '');
 
@@ -82,7 +83,7 @@ ${navbar(t, '/', '')}
     <div class="home-profile animate-in" style="animation-delay:100ms">
       <div class="home-profile-info">
         <div class="home-profile-name">${t}</div>
-        <div class="home-profile-bio">${sub || 'Personal Operating System'}</div>
+        <div class="home-profile-bio">${subRaw ? sub : 'Personal Operating System'}</div>
         <div class="home-profile-stats">
           <span class="home-profile-stat"><strong>${stats.count}</strong> 文章</span>
           <span class="home-profile-stat"><strong>${stats.tag_count}</strong> 标签</span>

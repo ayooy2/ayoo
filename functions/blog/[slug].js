@@ -27,7 +27,9 @@ function render(a, likes, prev, next) {
   var desc = esc(a.summary || (a.content_md || '').replace(/[#*`\[\]()!>|-]/g, '').replace(/\\n/g, ' ').trim().slice(0, 160));
   var kw = ts.map(function(t){ return esc(t.trim()); }).join(',');
   var url = 'https://ayoow.pages.dev/blog/' + esc(a.slug);
-  var img = a.cover_image ? esc(a.cover_image) : '';
+  var rawImg = a.cover_image || '';
+  if (/^javascript:|^data:|^vbscript:/i.test(rawImg)) rawImg = '';
+  var img = rawImg ? esc(rawImg) : '';
 
   // Estimate reading time
   var wordCount = (a.content_md || '').replace(/\\n/g, '\n').replace(/[#*`\[\]()!>-]/g, '').length;
@@ -75,7 +77,7 @@ ${mobileMenu()}
       <!-- Main Content -->
       <article class="article-wrapper animate-in" style="animation-delay:100ms">
         <header class="article-header">
-          ${a.cover_image ? '<img src="' + esc(a.cover_image) + '" class="article-cover" alt="" onerror="this.remove()">' : ''}
+          ${rawImg ? '<img src="' + img + '" class="article-cover" alt="" onerror="this.remove()">' : ''}
           <h1 class="article-title">${esc(a.title)}</h1>
           <div class="article-meta">
             <span class="article-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${esc(a.author)}</span>
@@ -387,6 +389,7 @@ function loadComments(page){
 
 function retroAv(seed){var h=0,s=String(seed);for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return"https://q1.qlogo.cn/g?b=qq&nk="+(Math.abs(h)%90000+10000)+"&s=100";}
 
+function safeUrl(u){if(!u)return'';if(/^javascript:|^data:|^vbscript:/i.test(u))return'#';return u;}
 function rc(list,d){
   d=d||0;var h="";
   for(var i=0;i<list.length;i++){
@@ -395,7 +398,7 @@ function rc(list,d){
     if(!avatarHash&&_cEmail&&c.author_name===_cName){avatarHash=md5c(_cEmail.trim().toLowerCase());}
     var avatar=retroAv(avatarHash||c.author_name||"default");
     var nameHtml=c.url
-      ?'<a href="'+escR(c.url)+'" target="_blank" rel="noopener noreferrer" class="comment-author">'+escR(c.author_name)+'</a>'
+      ?'<a href="'+escR(safeUrl(c.url))+'" target="_blank" rel="noopener noreferrer" class="comment-author">'+escR(c.author_name)+'</a>'
       :'<span class="comment-author">'+escR(c.author_name)+'</span>';
     var time=((c.created_at||"").slice(0,16).replace("T"," "));
     h+='<div class="comment-box'+(d?' comment-children':'')+'">';

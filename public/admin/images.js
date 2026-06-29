@@ -37,7 +37,7 @@
                 var mdImg = '\n![' + filename + '](' + result.url + ')\n';
                 var ta = document.getElementById('article-content-md');
                 ta.focus();
-                _saveUndoState(ta);
+                if (window._saveUndoState) window._saveUndoState(ta);
                 var pos = ta.selectionStart;
                 ta.value = ta.value.substring(0, pos) + mdImg + ta.value.substring(ta.selectionEnd);
                 ta.selectionStart = ta.selectionEnd = pos + mdImg.length;
