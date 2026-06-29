@@ -62,13 +62,11 @@ ${mobileMenu()}
 <div class="page-wrapper">
   <div class="content">
 
-    <!-- Mobile TOC (placeholder, built by JS) -->
-    <div class="toc-mobile" id="toc-mobile" style="display:none">
-      <button class="toc-mobile-toggle" onclick="toggleMobileTOC()">
-        <span>目录</span>
-        <svg id="toc-mobile-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <div class="toc-mobile-content" id="toc-mobile-content"></div>
+    <!-- Breadcrumb -->
+    <div class="article-top-bar animate-in">
+      <a href="/blog"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg> Blog</a>
+      <span class="article-breadcrumb-sep">/</span>
+      <span style="color:var(--text-primary)">${esc(a.title)}</span>
     </div>
 
     <!-- Article Layout: Content + Sidebar TOC -->
@@ -195,21 +193,6 @@ function buildTOC(){
     tocList.innerHTML=html;
   }
 
-  // Mobile TOC
-  var mobile=document.getElementById("toc-mobile");
-  var mobileContent=document.getElementById("toc-mobile-content");
-  if(mobile&&mobileContent&&items.length>=2){
-    mobile.style.display="block";
-    var html='<ul class="toc-list" style="border:none">';
-    for(var i=0;i<items.length;i++){
-      var it=items[i];
-      var cls=it.level==="H3"?"toc-item toc-h3":"toc-item";
-      html+='<li class="'+cls+'"><a href="#'+it.id+'" data-target="'+it.id+'" onclick="closeMobileTOC()">'+escTOC(it.text)+'</a></li>';
-    }
-    html+='</ul>';
-    mobileContent.innerHTML=html;
-  }
-
   // Scroll spy
   if(items.length>=2) initScrollSpy(items);
 }
@@ -245,19 +228,6 @@ function initScrollSpy(items){
     if(!ticking){requestAnimationFrame(function(){updateActive();ticking=false});ticking=true;}
   });
   updateActive();
-}
-
-function toggleMobileTOC(){
-  var content=document.getElementById("toc-mobile-content");
-  var arrow=document.getElementById("toc-mobile-arrow");
-  if(content){
-    var open=content.classList.toggle("open");
-    if(arrow) arrow.style.transform=open?"rotate(180deg)":"";
-  }
-}
-function closeMobileTOC(){
-  var content=document.getElementById("toc-mobile-content");
-  if(content) content.classList.remove("open");
 }
 
 function toggleCB(bar){
