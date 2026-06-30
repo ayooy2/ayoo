@@ -1,7 +1,7 @@
 import { json, error } from '../lib/response.js';
 import { requireAuth } from '../lib/auth.js';
 
-// GET ?id=:id 读取单张图片 / POST 上传（需认证）/ DELETE 删除（需认证）
+// GET ?id=:id 读取单张图片 / GET ?list=1 列表 / POST 上传（需认证）/ DELETE 删除（需认证）
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -9,23 +9,29 @@ export async function onRequest(context) {
   // 读取图片（公开）
   if (request.method === 'GET') {
     const id = url.searchParams.get('id');
-    // 列表查询（需认证）
+    // 列表查询（需认证，支持分页）
     if (url.searchParams.get('list') === '1') {
       const authErr = await requireAuth(request, env);
       if (authErr) return authErr;
-      const { results } = await env.DB.prepare('SELECT id, filename, mime_type, created_at FROM images ORDER BY id DESC LIMIT 200').all();
-      return json({ images: results || [] });
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10)));
+      const offset = (page - 1) * limit;
+      const countRow = await env.DB.prepare('SELECT COUNT(*) as total FROM images').first();
+      const total = countRow ? countRow.total : 0;
+      const { results } = await env.DB.prepare('SELECT id, filename, mime_type, created_at FROM images ORDER BY id DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
+      return json({ images: results || [], total, page, limit, hasMore: offset + limit < total });
     }
     if (!id) return error('id required', 400);
-    const img = await env.DB.prepare('SELECT * FROM images WHERE id = ?').bind(id).first();
+    const numId = parseInt(id, 10);
+    if (isNaN(numId) || numId < 1) return error('无效的图片 ID', 400);
+    const img = await env.DB.prepare('SELECT id, filename, mime_type, data FROM images WHERE id = ?').bind(numId).first();
     if (!img) return error('Not found', 404);
-    // 检查图片数据是否有效
     if (!img.data) return error('Image data missing', 410);
-    // 从 base64 解码
     const binary = Uint8Array.from(atob(img.data), c => c.charCodeAt(0));
     return new Response(binary, {
       headers: {
         'Content-Type': img.mime_type || 'image/png',
+        'Content-Length': String(binary.length),
         'Cache-Control': 'public, max-age=31536000, immutable',
       }
     });
@@ -35,11 +41,9 @@ export async function onRequest(context) {
   if (request.method === 'POST') {
     const authErr = await requireAuth(request, env);
     if (authErr) return authErr;
-    try {
-      return uploadImage(env, await request.json());
-    } catch (e) {
-      return error('请求格式错误', 400);
-    }
+    let data;
+    try { data = await request.json(); } catch { return error('请求格式错误', 400); }
+    return uploadImage(env, data);
   }
 
   // 删除（需认证）
@@ -48,7 +52,9 @@ export async function onRequest(context) {
     if (authErr) return authErr;
     const id = url.searchParams.get('id');
     if (!id) return error('id required', 400);
-    return deleteImage(env, id);
+    const numId = parseInt(id, 10);
+    if (isNaN(numId) || numId < 1) return error('无效的图片 ID', 400);
+    return deleteImage(env, numId);
   }
 
   return error('Method not allowed', 405);
@@ -58,7 +64,7 @@ export async function onRequest(context) {
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
 
 async function uploadImage(env, data) {
-  const filename = (data.filename || 'image').slice(0, 200);
+  const filename = (data.filename || 'image').replace(/<[^>]*>/g, '').slice(0, 200);
   const mimeType = (data.mime_type || 'image/png').slice(0, 50);
   if (!ALLOWED_MIME_TYPES.includes(mimeType)) return error('不支持的图片格式', 400);
   const imageData = (data.data || '').trim();
@@ -74,8 +80,13 @@ async function uploadImage(env, data) {
 }
 
 async function deleteImage(env, id) {
-  const img = await env.DB.prepare('SELECT id FROM images WHERE id = ?').bind(id).first();
-  if (!img) return error('Not found', 404);
-  await env.DB.prepare('DELETE FROM images WHERE id = ?').bind(id).run();
-  return json({ success: true });
+  try {
+    const img = await env.DB.prepare('SELECT id FROM images WHERE id = ?').bind(id).first();
+    if (!img) return error('Not found', 404);
+    await env.DB.prepare('DELETE FROM images WHERE id = ?').bind(id).run();
+    return json({ success: true });
+  } catch (e) {
+    console.error('Delete image error:', e);
+    return error('删除失败', 500);
+  }
 }
