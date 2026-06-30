@@ -195,13 +195,6 @@ ${mobileMenu()}
     img.src=iu;
   }
 
-  /* Scroll reveal animation */
-  if('IntersectionObserver' in window){
-    var observer=new IntersectionObserver(function(entries){
-      entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})
-    },{threshold:0.1});
-    document.querySelectorAll('.scroll-reveal').forEach(function(el){observer.observe(el)});
-  }
 })()
 </script>
 ${cmdOverlay()}

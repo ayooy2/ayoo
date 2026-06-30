@@ -9,7 +9,8 @@ export function esc(s) {
  * 清理 marked 生成的 HTML 中的危险标签和属性
  * - 移除 script/style/iframe/object/embed/form
  * - 移除所有 on* 事件属性
- * - 移除 javascript: 协议
+ * - 移除 javascript:/vbscript: 协议
+ * - 阻止危险的 data: URI（text/html, application/javascript 等），允许安全的（image/*）
  * 保留常用 Markdown HTML 标签：h1-h6, p, a, img, ul/ol/li, table/thead/tbody/tr/th/td,
  * blockquote, pre, code, strong, em, del, br, hr, span, div, sup, sub, details, summary
  */
@@ -26,6 +27,6 @@ export function sanitizeMD(html) {
     .replace(/\/\s*on\w+\s*=\s*(['"])[\s\S]*?\1/gi, '')
     .replace(/\/\s*on\w+\s*=\s*[^\s>]*/gi, '')
     .replace(/javascript:/gi, '')
-    .replace(/data:/gi, '')
+    .replace(/data:(?!image\/)/gi, '')
     .replace(/vbscript:/gi, '');
 }
