@@ -32,7 +32,10 @@ function render(s, sites, articles, stats) {
   var subRaw = s.subtitle || '';
   var sub = esc(subRaw);
   var foot = esc(s.footer || '');
-  var bg = esc(s.bg_image || '');
+  var bgRaw = s.bg_image || '';
+  // 防止 CSS 注入：只允许 http/https 或相对路径
+  if (bgRaw && !/^https?:\/\/|^\/[^\/]/i.test(bgRaw)) bgRaw = '';
+  var bg = bgRaw ? esc(bgRaw) : '';
 
   var bgStyle = bg ? ' style="background-image:url(\'' + bg + '\');background-size:cover;background-position:center;background-attachment:fixed;"' : '';
 

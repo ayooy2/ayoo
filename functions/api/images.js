@@ -13,8 +13,8 @@ export async function onRequest(context) {
     if (url.searchParams.get('list') === '1') {
       const authErr = await requireAuth(request, env);
       if (authErr) return authErr;
-      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
-      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10)));
+      const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10) || 50));
       const offset = (page - 1) * limit;
       const countRow = await env.DB.prepare('SELECT COUNT(*) as total FROM images').first();
       const total = countRow ? countRow.total : 0;

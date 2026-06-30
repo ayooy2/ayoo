@@ -162,10 +162,15 @@ function init(){
     document.querySelectorAll("#content img").forEach(function(img){
       img.addEventListener("error",function(){this.alt="图片加载失败";this.style.opacity="0.5";this.style.maxWidth="200px";this.onerror=null;},{once:true});
     });
-    // 代码语法高亮
-    if(typeof hljs!=="undefined"){
-      document.querySelectorAll("#content pre code").forEach(function(block){hljs.highlightElement(block);});
+    // 代码语法高亮（hljs 可能比 marked 晚加载）
+    function tryHighlight(){
+      if(typeof hljs!=="undefined"){
+        document.querySelectorAll("#content pre code").forEach(function(block){hljs.highlightElement(block);});
+      } else {
+        setTimeout(tryHighlight, 100);
+      }
     }
+    tryHighlight();
     wrapCB();
     buildTOC();
   }catch(e){console.error("marked.parse failed:",e);}
@@ -410,7 +415,7 @@ function rc(list,d){
     h+='</div>';
     h+='<button class="comment-delete-btn" data-id="'+c.id+'" onclick="deleteComment('+c.id+')" title="删除" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>';
     h+='</div>';
-    h+='<div class="comment-text">'+escR(c.content).replace(/\\n/g,"<br>")+'</div>';
+    h+='<div class="comment-text">'+escR(c.content).replace(/\\\\n/g,"<br>")+'</div>';
     h+='<a class="reply-link" data-reply-id="'+c.id+'" data-reply-name="'+escR(c.author_name)+'">回复</a>';
     h+='</div>';
     if(c.replies&&c.replies.length) h+=rc(c.replies,d+1);
@@ -514,12 +519,14 @@ function simpleMD(md) {
   t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   t = t.replace(/\*(?!\*)(.+?)\*/g, '<em>$1</em>');
   t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(m, alt, src) {
-    if (/^javascript:/i.test(src)) return m;
-    return '<img src="' + esc(src) + '" alt="' + esc(alt) + '">';
+    if (/^javascript:|^data:|^vbscript:/i.test(src)) return m;
+    // src 已经被 esc(t) 转义过，不需要再次转义
+    return '<img src="' + src + '" alt="' + esc(alt) + '">';
   });
   t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(m, text, href) {
-    if (/^javascript:/i.test(href)) return esc(m);
-    return '<a href="' + esc(href) + '">' + esc(text) + '</a>';
+    if (/^javascript:|^data:|^vbscript:/i.test(href)) return esc(m);
+    // href 已经被 esc(t) 转义过，不需要再次转义
+    return '<a href="' + href + '">' + esc(text) + '</a>';
   });
   t = t.replace(/(^|\n)### (.+)/g, '$1<h3>$2</h3>');
   t = t.replace(/(^|\n)## (.+)/g, '$1<h2>$2</h2>');
