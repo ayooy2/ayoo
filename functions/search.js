@@ -1,5 +1,7 @@
 import { navbar, mobileMenu, cmdOverlay } from './lib/navbar.js';
 import { esc } from './lib/sanitize.js';
+import { htmlHead, pageStart, pageEnd, htmlResponse, errorResponse } from './lib/template.js';
+
 // GET /search?q=xxx — 搜索结果页 SSR
 export async function onRequestGet(context) {
   const { env } = context;
@@ -35,7 +37,6 @@ export async function onRequestGet(context) {
   if (!q) emptyHtml = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p class="empty-state-text">输入关键词搜索</p></div>';
 
   // Highlight keywords in results
-  var highlightQ = esc(q);
   if (q) {
     items = items.replace(/(>)([^<]*?)(<)/g, function(match, pre, text, post) {
       var highlighted = text.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>');
@@ -54,41 +55,12 @@ export async function onRequestGet(context) {
     </div>`;
   }
 
-  return new Response(`<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${title}</title>
-<meta name="robots" content="noindex">
-<link rel="stylesheet" href="/style.css?v=4">
-</head>
-<body>
-${navbar('搜索', '/', '/search')}
-${mobileMenu()}
-<div class="page-wrapper">
-  <div class="page-header animate-in">
+  var header = `<div class="page-header animate-in">
     <h1 class="page-title">搜索</h1>
     ${q ? '<p class="page-subtitle">关键词: ' + esc(q) + '</p>' : ''}
-  </div>
-  <div class="content">
-    <div class="search-container">
-      <form action="/search" method="get" class="search-form animate-in">
-        <div class="search-input-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" name="q" value="${esc(q)}" placeholder="搜索文章..." class="search-input" autofocus></div>
-        <button type="submit" class="search-btn">搜索</button>
-      </form>
-      <div class="search-results">
-        ${items || emptyHtml}
-      </div>
-      ${recentHtml}
-    </div>
-  </div>
-  <footer class="page-footer">
-    <span class="footer-text"><a href="/">← 返回首页</a></span>
-  </footer>
-</div>
-<script src="/app.js"></script>
-<script>
+  </div>`;
+
+  var scripts = `<script>
 (function(){
   function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
@@ -111,12 +83,27 @@ ${mobileMenu()}
     try{var r=JSON.parse(localStorage.getItem('recent_searches')||'[]');if(r.length){recentDiv.style.display='block';var h='';for(var i=0;i<r.length;i++){h+='<a class="search-recent-item" href="/search?q='+encodeURIComponent(r[i])+'">'+esc(r[i])+'</a>'}recentList.innerHTML=h}}catch(e){}
   }
 })();
-</script>
-${cmdOverlay()}
-</body>
-</html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60' } });
+</script>`;
+
+  var body = `<div class="search-container">
+      <form action="/search" method="get" class="search-form animate-in">
+        <div class="search-input-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" name="q" value="${esc(q)}" placeholder="搜索文章..." class="search-input" autofocus></div>
+        <button type="submit" class="search-btn">搜索</button>
+      </form>
+      <div class="search-results">
+        ${items || emptyHtml}
+      </div>
+      ${recentHtml}
+    </div>`;
+
+  var html = htmlHead(title, '<meta name="robots" content="noindex">')
+    + pageStart(navbar('搜索', '/', '/search'), mobileMenu(), header)
+    + body
+    + pageEnd('<a href="/">← 返回首页</a>', scripts, cmdOverlay());
+
+  return htmlResponse(html, { cacheAge: 60 });
   } catch (e) {
-    return new Response('服务器错误，请稍后再试', { status: 500 });
+    return errorResponse();
   }
 }
 
