@@ -331,6 +331,16 @@ function onCBBtn(e){
         var ln=document.createElement("div");ln.className="line-numbers";ln.textContent=nums;
         pre.insertBefore(ln,pre.firstChild);
       }
+      /* 添加触摸关闭按钮 */
+      if(bar&&!bar.querySelector(".cb-close-btn")){
+        var closeBtn=document.createElement("button");
+        closeBtn.className="cb-close-btn";
+        closeBtn.title="退出全屏";
+        closeBtn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        closeBtn.onclick=function(e){e.stopPropagation();onCBBtn(e)};
+        closeBtn.setAttribute("data-a","fullscreen");
+        bar.appendChild(closeBtn);
+      }
     }else{
       /* exiting fullscreen */
       w.classList.remove("fullscreen");
@@ -343,6 +353,9 @@ function onCBBtn(e){
         if(bar) bar.title="展开";
       }
       delete w._wasFolded;
+      /* 移除触摸关闭按钮 */
+      var closeBtn=bar?bar.querySelector(".cb-close-btn"):null;
+      if(closeBtn) closeBtn.remove();
     }
   }
 }

@@ -372,8 +372,26 @@ body[style*="background-image"] .navbar {
   padding: var(--space-md) 0;
   border-bottom: 1px solid var(--border-subtle);
   transition: color var(--duration-fast) var(--ease);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
 }
 .mobile-menu-link:hover { color: var(--accent); }
+.mobile-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.mobile-menu-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+}
 
 @media (max-width: 768px) {
   .nav-links { display: none; }
@@ -2142,7 +2160,6 @@ body[style*="background-image"] .page-wrapper {
   width: 100%;
   background: var(--bg-elevated);
   border-radius: var(--radius-sm);
-  overflow: hidden;
   box-shadow: var(--shadow-xs);
   border-collapse: collapse;
   border: 1px solid var(--border);
@@ -2460,7 +2477,7 @@ body[style*="background-image"] .page-wrapper {
     align-items: flex-start;
   }
 
-  .data-table { font-size: var(--text-xs); }
+  .data-table { font-size: var(--text-xs); display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .data-table th, .data-table td { padding: 0.5rem 0.6rem; }
 
   .nav-card-desc {
@@ -2788,6 +2805,57 @@ body[style*="background-image"] .page-wrapper {
   .feature-grid { grid-template-columns: 1fr; }
   .home-profile { flex-direction: column; text-align: center; }
   .home-profile-stats { justify-content: center; }
+
+  /* 文章表格可横向滚动 */
+  .article-body table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 评论嵌套缩小边距 */
+  .comment-children {
+    margin-left: var(--space-md);
+    padding-left: var(--space-sm);
+  }
+
+  /* 代码块字体增大 */
+  .article-body pre,
+  .code-block-wrapper code,
+  .code-block-wrapper pre {
+    font-size: 0.85rem;
+  }
+
+  /* 留言板消息内边距缩小 */
+  .gb-msg { padding: var(--space-md); }
+
+  /* 全屏代码块关闭按钮 */
+  .cb-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    transition: background var(--duration-fast), color var(--duration-fast);
+  }
+  .cb-close-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+}
+
+/* 全屏代码块关闭按钮（所有尺寸通用） */
+.cb-close-btn {
+  display: none;
+}
+.code-block-wrapper.fullscreen .cb-close-btn {
+  display: inline-flex;
 }
 
 /* 密码输入框 + 显示/隐藏按钮 */

@@ -42,7 +42,8 @@ export function mobileMenu() {
   var links = '';
   for (var i = 0; i < ALL_LINKS.length; i++) {
     var link = ALL_LINKS[i];
-    links += '<a href="' + link.href + '" class="mobile-menu-link">' + link.label + '</a>';
+    var iconHtml = link.icon ? '<span class="mobile-menu-icon">' + link.icon + '</span>' : '';
+    links += '<a href="' + link.href + '" class="mobile-menu-link">' + iconHtml + link.label + '</a>';
   }
   return '<div class="mobile-menu" id="mobile-menu">' +
     '<button class="mobile-menu-close" id="mobile-menu-close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>' +
