@@ -6,6 +6,15 @@ export function esc(s) {
 }
 
 /**
+ * URL 安全检查：阻止 javascript:/data:/vbscript: 协议
+ */
+export function safeUrl(u) {
+  if (!u) return '';
+  if (/^javascript:|^data:|^vbscript:/i.test(u)) return '#';
+  return u;
+}
+
+/**
  * 清理 marked 生成的 HTML 中的危险标签和属性
  * - 移除 script/style/iframe/object/embed/form
  * - 移除所有 on* 事件属性

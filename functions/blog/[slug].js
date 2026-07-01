@@ -1,5 +1,5 @@
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
-import { esc } from '../lib/sanitize.js';
+import { esc, safeUrl } from '../lib/sanitize.js';
 // 文章详情 Edge SSR — Breadcrumb + Sidebar TOC + Modern Layout
 export async function onRequestGet(context) {
   try {
@@ -394,7 +394,6 @@ function loadComments(page){
 
 function retroAv(seed){var h=0,s=String(seed);for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return"https://q1.qlogo.cn/g?b=qq&nk="+(Math.abs(h)%90000+10000)+"&s=100";}
 
-function safeUrl(u){if(!u)return'';if(/^javascript:|^data:|^vbscript:/i.test(u))return'#';return u;}
 function rc(list,d){
   d=d||0;var h="";
   for(var i=0;i<list.length;i++){

@@ -8,6 +8,7 @@
         if (name === 'sites') loadTable();
         if (name === 'articles') loadArticles();
         if (name === 'tags') loadTags();
+        if (name === 'logs') loadLogs();
     }
 
     // ---- 会话检查 ----

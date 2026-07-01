@@ -5,10 +5,13 @@
   "scripts": {
     "dev": "wrangler pages dev public --compatibility-date=2026-05-10",
     "deploy": "wrangler pages deploy public",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:create": "wrangler d1 create a-site-db",
     "db:migrate": "wrangler d1 migrations apply a-site-db"
   },
   "devDependencies": {
+    "vitest": "^4.1.9",
     "wrangler": "^4.104.0"
   }
 }

@@ -29,6 +29,7 @@
             <button class="tab-btn" data-tab="articles" onclick="switchTab('articles')">文章管理</button>
             <button class="tab-btn" data-tab="tags" onclick="switchTab('tags')">标签管理</button>
             <button class="tab-btn" data-tab="images" onclick="switchTab('images');loadImages()">图片管理</button>
+            <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')">错误日志</button>
         </nav>
 
         <!-- ========== 网站管理 ========== -->
@@ -197,6 +198,23 @@
             <span class="toolbar-info">共 <span id="images-count">0</span> 张图片</span>
         </div>
         <div id="images-grid" class="images-grid">
+            <div class="empty-state"><p>加载中...</p></div>
+        </div>
+    </div>
+
+    <!-- ========== 错误日志 ========== -->
+    <div id="tab-logs" class="tab-content hidden">
+        <div class="toolbar">
+            <select id="logs-filter-level" onchange="loadLogs()" style="padding:0.35rem 0.6rem;border:1px solid var(--color-border);border-radius:6px;font-size:0.85rem;">
+                <option value="">全部级别</option>
+                <option value="error">Error</option>
+                <option value="warn">Warning</option>
+                <option value="info">Info</option>
+            </select>
+            <button class="btn btn-danger btn-sm" onclick="clearLogs()">清空日志</button>
+            <span class="toolbar-info">共 <span id="logs-count">0</span> 条</span>
+        </div>
+        <div id="logs-table-area">
             <div class="empty-state"><p>加载中...</p></div>
         </div>
     </div>
@@ -394,6 +412,7 @@
     <script src="admin/articles.js"></script>
     <script src="admin/comments.js"></script>
     <script src="admin/images.js"></script>
+    <script src="admin/logs.js"></script>
     <script src="admin/app.js"></script>
 </body>
 </html>
