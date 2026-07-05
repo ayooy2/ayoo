@@ -2806,11 +2806,134 @@ body[style*="background-image"] .page-wrapper {
   .home-profile { flex-direction: column; text-align: center; }
   .home-profile-stats { justify-content: center; }
 
-  /* 文章表格可横向滚动 */
+  /* ── 移动端博客阅读体验优化 ── */
+
+  /* 文章标题：适当缩小但保持醒目 */
+  .article-title { font-size: 1.4rem; line-height: 1.35; }
+  .article-cover { max-height: 220px; border-radius: var(--radius-sm); }
+
+  /* 文章正文：增大字体至 16px（防止 iOS 缩放），增大行高和段落间距 */
+  .article-body {
+    font-size: 1rem;         /* 16px，iOS 不会触发缩放 */
+    line-height: 1.85;       /* 稍大行高提升移动端可读性 */
+    letter-spacing: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .article-body p {
+    margin: 1em 0;           /* 段落间距加大 */
+  }
+
+  /* 标题层级：保持清晰 */
+  .article-body h1 { font-size: 1.4rem; margin: 2rem 0 0.6rem; }
+  .article-body h2 { font-size: 1.2rem; margin: 1.6rem 0 0.5rem; }
+  .article-body h3 { font-size: 1.05rem; margin: 1.2rem 0 0.4rem; }
+
+  /* 代码块：增大字体，改善触摸滚动 */
+  .article-body pre,
+  .code-block-wrapper code,
+  .code-block-wrapper pre,
+  .cb-body pre {
+    font-size: 0.88rem;      /* 增大代码字体 */
+    line-height: 1.6;
+  }
+  .article-body pre {
+    padding: 0.8rem 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 代码块容器：去掉宽度限制，适配屏幕 */
+  .code-block-wrapper {
+    max-width: 100%;
+  }
+  .code-block-wrapper pre,
+  .cb-body pre {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 行内代码：增大以方便触摸阅读 */
+  .article-body p code,
+  .article-body li code {
+    font-size: 0.9em;
+    padding: 0.15rem 0.4rem;
+  }
+
+  /* 引用块：增大内边距 */
+  .article-body blockquote {
+    padding: 0.6rem 1rem;
+    margin: 1.2em 0;
+  }
+
+  /* 列表：增大行间距 */
+  .article-body ul, .article-body ol {
+    padding-left: 1.3rem;
+    margin: 0.8em 0;
+  }
+  .article-body li {
+    margin: 0.4em 0;
+    line-height: 1.7;
+  }
+
+  /* 链接：增大触摸区域 */
+  .article-body a {
+    padding: 0.15em 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* 图片：确保自适应，增大间距 */
+  .article-body img {
+    margin: 0.8em 0;
+    border-radius: var(--radius-sm);
+  }
+
+  /* 表格可横向滚动 */
   .article-body table {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    margin: 1.2em 0;
+  }
+  .article-body table th,
+  .article-body table td {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  /* 分隔线 */
+  .article-body hr {
+    margin: 1.5rem 0;
+  }
+
+  /* ── 点赞按钮：增大触摸区域 ── */
+  .btn-like {
+    padding: 0.6rem 1.2rem;
+    font-size: var(--text-base);  /* 16px */
+    min-height: 44px;             /* 最小触摸目标 */
+  }
+  .article-actions {
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  /* ── 评论区：触摸友好 ── */
+  .comment-input {
+    font-size: 1rem;         /* 16px，防止 iOS 缩放 */
+    padding: 0.7rem 0.9rem;
+    min-height: 80px;
+  }
+  .comment-form-row .comment-input {
+    min-width: 0;            /* 防止溢出 */
+  }
+  .btn-submit {
+    padding: 0.6rem 1.2rem;
+    font-size: var(--text-base);  /* 16px */
+    min-height: 44px;             /* 最小触摸目标 */
+    width: 100%;                  /* 全宽按钮更易点击 */
+  }
+  .reply-link {
+    padding: 0.3rem 0.5rem;  /* 增大触摸区域 */
   }
 
   /* 评论嵌套缩小边距 */
@@ -2819,17 +2942,41 @@ body[style*="background-image"] .page-wrapper {
     padding-left: var(--space-sm);
   }
 
-  /* 代码块字体增大 */
-  .article-body pre,
-  .code-block-wrapper code,
-  .code-block-wrapper pre {
-    font-size: 0.85rem;
+  /* ── 文章元信息和标签 ── */
+  .article-meta {
+    gap: var(--space-md);
+    row-gap: var(--space-sm);
+  }
+  .article-tags {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+  .tag {
+    padding: 0.2rem 0.6rem;
+    font-size: var(--text-sm);
   }
 
-  /* 留言板消息内边距缩小 */
+  /* ── 移动端导航文章卡片 ── */
+  .mobile-post-nav-item {
+    padding: 0.8rem;
+    min-height: 44px;
+  }
+
+  /* ── 留言板消息内边距缩小 ── */
   .gb-msg { padding: var(--space-md); }
 
-  /* 全屏代码块关闭按钮 */
+  /* ── 搜索页面优化 ── */
+  .search-input {
+    font-size: 1rem;         /* 16px，防止 iOS 缩放 */
+    padding: 0.8rem 1rem 0.8rem 2.6rem;
+  }
+  .search-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: var(--text-base);
+    min-height: 44px;
+  }
+
+  /* ── 全屏代码块关闭按钮 ── */
   .cb-close-btn {
     display: inline-flex;
     align-items: center;
@@ -2847,6 +2994,16 @@ body[style*="background-image"] .page-wrapper {
   .cb-close-btn:hover {
     background: var(--bg-secondary);
     color: var(--text-primary);
+  }
+
+  /* ── 文章正文中的代码块折叠/复制按钮 ── */
+  .code-block-bar {
+    padding: 0.4rem 0.8rem;
+    min-height: 36px;
+  }
+  .code-block-btn {
+    padding: 4px 8px;
+    min-height: 32px;
   }
 }
 
