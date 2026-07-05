@@ -2501,8 +2501,28 @@ body[style*="background-image"] .page-wrapper {
   .search-input { border-right: 1px solid var(--border); border-radius: var(--radius-sm); }
   .search-btn { border-radius: var(--radius-sm); }
 
-  /* Archive timeline */
+  /* Archive timeline: fix dot alignment for reduced padding */
   .archive-timeline { padding-left: var(--space-lg); }
+  .archive-year::before { left: calc(-1 * var(--space-lg) - 3px); }
+  .archive-item-views { display: none; }
+
+  /* About page: smaller avatar */
+  .about-avatar img { width: 90px; height: 90px; }
+
+  /* Now page: tighter section spacing */
+  .now-section { margin-bottom: var(--space-xl); }
+
+  /* Form inputs: 16px prevents iOS auto-zoom */
+  .gb-field input,
+  .gb-field textarea,
+  .comment-input { font-size: 16px; }
+
+  /* Submit button: larger touch target */
+  .btn-submit { min-height: 44px; padding: 0.6rem 1.2rem; }
+
+  /* Feature page: allow stat wrapping */
+  .feature-stats { gap: 1.5rem; flex-wrap: wrap; }
+  .feature-stat-num { font-size: 1.6rem; }
 }
 
 /* ===== DARK MODE SPECIFIC FIXES ===== */
@@ -3020,6 +3040,25 @@ body[style*="background-image"] .page-wrapper {
     padding: 4px 8px;
     min-height: 32px;
   }
+
+  /* ── Archive page: small phone refinements ── */
+  .archive-timeline { padding-left: var(--space-md); }
+  .archive-year::before { left: calc(-1 * var(--space-md) - 3px); }
+  .archive-year { font-size: var(--text-lg); }
+  .archive-item { gap: var(--space-sm); }
+  .archive-item-day { min-width: 1.2rem; }
+
+  /* ── Now page: list items more spacious ── */
+  .now-list li { padding: var(--space-sm) 0; }
+
+  /* ── Guestbook: full-width submit on phones ── */
+  .guestbook-form-wrap .btn-submit { width: 100%; }
+
+  /* ── Search results: tighter on small screens ── */
+  .search-result { padding: var(--space-md); }
+
+  /* ── Search recent tags: larger touch targets ── */
+  .search-recent-item { padding: 7px 16px; }
 }
 
 /* 全屏代码块关闭按钮（所有尺寸通用） */
