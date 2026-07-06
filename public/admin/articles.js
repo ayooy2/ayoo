@@ -218,7 +218,7 @@
         else if (res.status === 401) { alert('登录已过期'); logout(); }
     }
 
-    function editArticle(id) { openArticleEditor(id); }
+    function editArticle(id) { window.location.href = '/editor.html?id=' + id; }
 
     // ---- Markdown 快速插入 ----
     function _saveUndoState(ta) {
