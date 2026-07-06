@@ -14,7 +14,7 @@
         uploadImage: '/api/images'
     };
 
-    // Markdown 工具栏命令表（复用现有设计）
+    // Markdown 工具栏命令表
     var MD_CMDS = {
         bold:       { before: '**',     after: '**',        ph: '加粗文字',   inline: true },
         italic:     { before: '*',      after: '*',         ph: '斜体文字',   inline: true },
@@ -22,44 +22,44 @@
         code:       { before: '`',      after: '`',         ph: '代码',       inline: true },
         link:       { before: '[',      after: '](url)',    ph: '链接文字',   inline: true },
         image:      { before: '![',     after: '](url)',    ph: '图片描述',   inline: true },
-        h1:         { before: '# ',     after: '',          ph: '标题',       block: true },
         h2:         { before: '## ',    after: '',          ph: '二级标题',   block: true },
         h3:         { before: '### ',   after: '',          ph: '三级标题',   block: true },
+        heading:    { before: '## ',    after: '',          ph: '标题',       block: true },
         quote:      { before: '> ',     after: '',          ph: '引用内容',   block: true },
         ul:         { before: '- ',     after: '',          ph: '列表项',     block: true },
         ol:         { before: '1. ',    after: '',          ph: '列表项',     block: true },
         codeblock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true },
+        codeBlock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true },
         table:      { before: '| 列1 | 列2 |\n| ----- | ----- |\n| ', after: ' |\n', ph: '内容', block: true },
         hr:         { before: '\n---\n', after: '',         ph: '',           block: true }
     };
 
     // 斜杠命令列表
     var SLASH_COMMANDS = [
-        { key: 'h1',      icon: 'H<sub>1</sub>', name: '一级标题',   desc: '大标题',       cmd: 'h1' },
-        { key: 'h2',      icon: 'H<sub>2</sub>', name: '二级标题',   desc: '中标题',       cmd: 'h2' },
-        { key: 'h3',      icon: 'H<sub>3</sub>', name: '三级标题',   desc: '小标题',       cmd: 'h3' },
-        { key: 'quote',   icon: '&ldquo;',       name: '引用块',     desc: '引用内容',     cmd: 'quote' },
-        { key: 'ul',      icon: '&bull;',        name: '无序列表',   desc: '项目列表',     cmd: 'ul' },
-        { key: 'ol',      icon: '1.',            name: '有序列表',   desc: '编号列表',     cmd: 'ol' },
-        { key: 'code',    icon: '&lt;/&gt;',     name: '代码块',     desc: '插入代码',     cmd: 'codeblock' },
-        { key: 'image',   icon: '&#128247;',     name: '图片',       desc: '插入图片',     cmd: 'image' },
-        { key: 'link',    icon: '&#128279;',     name: '链接',       desc: '插入链接',     cmd: 'link' },
-        { key: 'table',   icon: '&#9638;',       name: '表格',       desc: '插入表格',     cmd: 'table' },
-        { key: 'hr',      icon: '&mdash;',       name: '分割线',     desc: '水平分割线',   cmd: 'hr' }
+        { key: 'h2',    icon: 'H2',     name: '二级标题',   cmd: 'h2' },
+        { key: 'h3',    icon: 'H3',     name: '三级标题',   cmd: 'h3' },
+        { key: 'quote', icon: '“',  name: '引用块',     cmd: 'quote' },
+        { key: 'code',  icon: '{ }',    name: '代码块',     cmd: 'codeblock' },
+        { key: 'ul',    icon: '•',  name: '无序列表',   cmd: 'ul' },
+        { key: 'ol',    icon: '1.',     name: '有序列表',   cmd: 'ol' },
+        { key: 'hr',    icon: '—',  name: '分割线',     cmd: 'hr' },
+        { key: 'table', icon: '■',  name: '表格',       cmd: 'table' },
+        { key: 'image', icon: '📷', name: '图片',  cmd: 'image' },
+        { key: 'link',  icon: '🔗', name: '链接',  cmd: 'link' }
     ];
 
     // ============================================================
     // 状态
     // ============================================================
     var state = {
-        editId: null,           // 编辑模式的文章 ID
-        isDirty: false,         // 有未保存的修改
-        isSaving: false,        // 正在保存中
-        lastSaved: null,        // 最后保存时间
+        editId: null,
+        isDirty: false,
+        isSaving: false,
+        lastSaved: null,
         slugManuallyEdited: false,
         sidebarOpen: false,
-        tags: [],               // 所有可用标签
-        selectedTags: [],       // 已选标签
+        tags: [],
+        selectedTags: [],
         autoSaveTimer: null,
         undoStack: [],
         redoStack: [],
@@ -67,11 +67,12 @@
         slashMenuOpen: false,
         slashMenuIndex: 0,
         slashQuery: '',
-        slashStartPos: 0
+        slashStartPos: 0,
+        articleStatus: 'draft'  // draft, published, scheduled
     };
 
     // ============================================================
-    // DOM 元素引用（init 后填充）
+    // DOM 元素引用
     // ============================================================
     var dom = {};
 
@@ -114,7 +115,6 @@
         return formatTime(d);
     }
 
-    // 中文字符计数
     function countWords(text) {
         if (!text) return 0;
         var chinese = (text.match(/[一-鿿㐀-䶿]/g) || []).length;
@@ -125,28 +125,22 @@
     function calcReadTime(text) {
         var words = countWords(text);
         var minutes = Math.max(1, Math.ceil(words / 300));
-        return minutes + ' 分钟';
+        return '约 ' + minutes + ' 分钟';
     }
 
-    // 简单 slug 生成（中文保留拼音首字母简化版，实际用英文数字横杠）
     function generateSlug(title) {
         if (!title) return '';
         var slug = title
             .toLowerCase()
-            .replace(/[一-鿿㐀-䶿]+/g, function(m) {
-                // 中文段落替换为拼音首字母占位（简化处理用 pinyin 需要外部库，这里用时间戳简代）
-                return m.split('').map(function() { return ''; }).join('');
-            })
+            .replace(/[一-鿿㐀-䶿]+/g, '')
             .replace(/[^a-z0-9\s-]/g, '')
             .replace(/[\s]+/g, '-')
             .replace(/-+/g, '-')
             .replace(/^-|-$/g, '');
-        // 如果纯中文导致 slug 为空，用时间戳
         if (!slug) slug = 'post-' + Date.now().toString(36);
         return slug.slice(0, 80);
     }
 
-    // API 请求封装
     async function apiFetch(url, opts) {
         opts = opts || {};
         if (!opts.headers) opts.headers = {};
@@ -172,7 +166,6 @@
             state.editId = id;
             loadArticle(id);
         } else {
-            // 新建模式：尝试恢复草稿
             var draft = loadDraftFromStorage();
             if (draft) {
                 restoreDraft(draft);
@@ -181,34 +174,42 @@
 
         updateStatusBar();
         setupBeforeUnload();
-        setupMobileViewport();
     }
 
     function cacheDom() {
         dom.titleInput      = $('#editor-title');
         dom.contentArea     = $('#editor-content');
-        dom.slugInput       = $('#editor-slug');
-        dom.summaryInput    = $('#editor-summary');
-        dom.coverInput      = $('#editor-cover');
+        dom.slugDisplay     = $('#editor-slug-display');
+        dom.slugText        = $('#slug-text');
+        dom.slugInput       = $('#editor-slug-input');
+        dom.sidebarSlug     = $('#sidebar-slug');
+        dom.summaryInput    = $('#sidebar-summary');
+        dom.coverInput      = $('#sidebar-cover');
         dom.coverPreview    = $('#cover-preview');
-        dom.headerTitle     = $('#header-title');
-        dom.saveStatus      = $('#save-status');
-        dom.publishBtn      = $('#publish-btn');
+        dom.coverUpload     = $('#sidebar-cover-upload');
+        dom.authorInput     = $('#sidebar-author');
+        dom.titlePreview    = $('#editor-title-preview');
+        dom.saveStatus      = $('#editor-save-status');
+        dom.publishBtn      = $('#editor-publish-btn');
         dom.publishDropdown = $('#publish-dropdown');
-        dom.tagContainer    = $('#tag-container');
-        dom.tagInput        = $('#tag-input');
+        dom.tagChips        = $('#sidebar-tag-chips');
+        dom.tagInput        = $('#sidebar-tags-input');
+        dom.tagPickBtn      = $('#sidebar-tag-pick');
+        dom.tagPanel        = $('#tag-selector-panel');
         dom.sidebar         = $('#editor-sidebar');
-        dom.sidebarToggle   = $('#sidebar-toggle');
-        dom.sidebarClose    = $('#sidebar-close');
+        dom.sidebarToggle   = $('#sb-sidebar-toggle');
+        dom.backBtn         = $('#editor-back');
         dom.floatingToolbar = $('#floating-toolbar');
         dom.slashMenu       = $('#slash-menu');
         dom.mobileToolbar   = $('#mobile-toolbar');
-        dom.wordCount       = $('#word-count');
-        dom.readTime        = $('#read-time');
-        dom.lastEditTime    = $('#last-edit-time');
-        dom.backBtn         = $('#back-btn');
+        dom.wordCount       = $('#sb-words');
+        dom.readTime        = $('#sb-reading-time');
+        dom.lastEditTime    = $('#sb-last-edit');
+        dom.statusDisplay   = $('#article-status-display');
         dom.scheduleSection = $('#schedule-section');
-        dom.scheduleInput   = $('#schedule-datetime');
+        dom.scheduleInput   = $('#sidebar-schedule');
+        dom.scheduleDialog  = $('#schedule-dialog-overlay');
+        dom.scheduleTime    = $('#schedule-dialog-time');
     }
 
     // ============================================================
@@ -226,13 +227,74 @@
             dom.contentArea.addEventListener('keydown', onContentKeydown);
             dom.contentArea.addEventListener('mouseup', onContentMouseUp);
             dom.contentArea.addEventListener('keyup', onContentKeyUp);
-            dom.contentArea.addEventListener('blur', hideFloatingToolbar);
+            dom.contentArea.addEventListener('blur', function() {
+                setTimeout(hideFloatingToolbar, 200);
+            });
+            // Tab 键插入缩进
+            dom.contentArea.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    saveUndoState(dom.contentArea);
+                    var s = dom.contentArea.selectionStart;
+                    var end = dom.contentArea.selectionEnd;
+                    if (e.shiftKey) {
+                        var lineStart = dom.contentArea.value.lastIndexOf('\n', s - 1) + 1;
+                        var lineText = dom.contentArea.value.substring(lineStart, s);
+                        if (lineText.startsWith('  ')) {
+                            dom.contentArea.value = dom.contentArea.value.substring(0, lineStart) + dom.contentArea.value.substring(lineStart + 2);
+                            dom.contentArea.selectionStart = dom.contentArea.selectionEnd = Math.max(lineStart, s - 2);
+                        }
+                    } else {
+                        dom.contentArea.value = dom.contentArea.value.substring(0, s) + '  ' + dom.contentArea.value.substring(end);
+                        dom.contentArea.selectionStart = dom.contentArea.selectionEnd = s + 2;
+                    }
+                    dom.contentArea.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
         }
 
-        // Slug 输入
+        // Slug 显示点击 -> 编辑
+        if (dom.slugDisplay) {
+            dom.slugDisplay.addEventListener('click', function() {
+                dom.slugDisplay.classList.add('hidden');
+                dom.slugInput.classList.remove('hidden');
+                dom.slugInput.value = dom.sidebarSlug.value || dom.slugText.textContent.replace(/^\//, '').trim();
+                dom.slugInput.focus();
+                dom.slugInput.select();
+            });
+        }
+
+        // Slug 输入框失焦 -> 回到显示
         if (dom.slugInput) {
-            dom.slugInput.addEventListener('input', function() {
+            dom.slugInput.addEventListener('blur', function() {
+                var val = dom.slugInput.value.trim();
+                dom.slugDisplay.classList.remove('hidden');
+                dom.slugInput.classList.add('hidden');
+                if (val) {
+                    dom.slugText.textContent = '/ ' + val;
+                    dom.sidebarSlug.value = val;
+                } else {
+                    dom.slugText.textContent = '/  slug 将自动生成';
+                }
+                state.slugManuallyEdited = !!val;
+                markDirty();
+            });
+            dom.slugInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    dom.slugInput.blur();
+                }
+                if (e.key === 'Escape') {
+                    dom.slugInput.blur();
+                }
+            });
+        }
+
+        // Sidebar slug 同步
+        if (dom.sidebarSlug) {
+            dom.sidebarSlug.addEventListener('input', function() {
                 state.slugManuallyEdited = true;
+                dom.slugText.textContent = '/ ' + (dom.sidebarSlug.value || 'slug 将自动生成');
                 markDirty();
             });
         }
@@ -245,32 +307,44 @@
                 markDirty();
             });
         }
+        if (dom.authorInput) dom.authorInput.addEventListener('input', markDirty);
 
         // Markdown 工具栏按钮
-        $$('.md-toolbar-btn').forEach(function(btn) {
+        $$('.eh-tool-btn[data-action]').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                var type = this.getAttribute('data-cmd');
-                if (type) insertMD(type);
+                var action = this.getAttribute('data-action');
+                if (action) insertMD(action);
             });
         });
 
-        // 发布按钮
-        if (dom.publishBtn) {
-            dom.publishBtn.addEventListener('click', togglePublishDropdown);
+        // 上传图片
+        var uploadInput = $('#editor-upload-image');
+        if (uploadInput) {
+            uploadInput.addEventListener('change', onImageUpload);
         }
-        $$('.publish-option').forEach(function(btn) {
+
+        // 发布按钮 + 下拉菜单
+        if (dom.publishBtn) {
+            dom.publishBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                togglePublishDropdown();
+            });
+        }
+        $$('.eh-dropdown-item[data-action]').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                var mode = this.getAttribute('data-mode');
-                doPublish(mode);
+                var mode = this.getAttribute('data-action');
+                closePublishDropdown();
+                if (mode === 'schedule') {
+                    showScheduleDialog();
+                } else {
+                    doPublish(mode);
+                }
             });
         });
 
-        // 侧边栏
+        // 侧边栏切换
         if (dom.sidebarToggle) {
             dom.sidebarToggle.addEventListener('click', toggleSidebar);
-        }
-        if (dom.sidebarClose) {
-            dom.sidebarClose.addEventListener('click', closeSidebar);
         }
 
         // 返回按钮
@@ -279,14 +353,78 @@
         }
 
         // 封面上传
-        var coverUpload = $('#cover-upload');
-        if (coverUpload) {
-            coverUpload.addEventListener('change', onCoverUpload);
+        if (dom.coverUpload) {
+            dom.coverUpload.addEventListener('change', onCoverUpload);
         }
 
         // 标签输入
         if (dom.tagInput) {
             dom.tagInput.addEventListener('keydown', onTagInputKeydown);
+        }
+
+        // 标签选择面板切换
+        if (dom.tagPickBtn) {
+            dom.tagPickBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleTagPanel();
+            });
+        }
+
+        // 浮动工具栏按钮
+        $$('.eh-float-btn[data-action]').forEach(function(btn) {
+            btn.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                var action = this.getAttribute('data-action');
+                if (action) insertMD(action);
+                hideFloatingToolbar();
+            });
+        });
+
+        // 斜杠命令菜单项点击
+        $$('.eh-slash-item[data-cmd]').forEach(function(item) {
+            item.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                var cmd = this.getAttribute('data-cmd');
+                if (cmd) executeSlashCommand(MD_CMDS[cmd] ? cmd : cmd);
+            });
+            item.addEventListener('mouseenter', function() {
+                $$('.eh-slash-item').forEach(function(el) { el.classList.remove('active'); });
+                this.classList.add('active');
+                var items = Array.prototype.slice.call($$('.eh-slash-item'));
+                state.slashMenuIndex = items.indexOf(this);
+            });
+        });
+
+        // 移动端底部工具栏
+        $$('.eh-mt-btn[data-action]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var action = this.getAttribute('data-action');
+                if (action === 'publish') {
+                    togglePublishDropdown();
+                } else if (action) {
+                    insertMD(action);
+                }
+            });
+        });
+
+        // 定时发布对话框
+        var scheduleCancel = $('#schedule-dialog-cancel');
+        var scheduleConfirm = $('#schedule-dialog-confirm');
+        if (scheduleCancel) {
+            scheduleCancel.addEventListener('click', hideScheduleDialog);
+        }
+        if (scheduleConfirm) {
+            scheduleConfirm.addEventListener('click', function() {
+                if (dom.scheduleTime && !dom.scheduleTime.value) {
+                    alert('请选择发布时间');
+                    return;
+                }
+                if (dom.scheduleInput && dom.scheduleTime) {
+                    dom.scheduleInput.value = dom.scheduleTime.value;
+                }
+                hideScheduleDialog();
+                doPublish('schedule');
+            });
         }
 
         // 全局点击关闭菜单
@@ -295,58 +433,31 @@
         // 全局快捷键
         document.addEventListener('keydown', onGlobalKeydown);
 
-        // 移动端底部工具栏
-        $$('.mobile-toolbar-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var type = this.getAttribute('data-cmd');
-                if (type) insertMD(type);
-            });
-        });
-
-        // 移动端侧边栏按钮
-        var mobileSidebarBtn = $('#mobile-sidebar-btn');
-        if (mobileSidebarBtn) {
-            mobileSidebarBtn.addEventListener('click', toggleSidebar);
-        }
-
-        // 浮动工具栏按钮
-        $$('.float-toolbar-btn').forEach(function(btn) {
-            btn.addEventListener('mousedown', function(e) {
-                e.preventDefault(); // 防止 textarea 失焦
-                var type = this.getAttribute('data-cmd');
-                if (type) insertMD(type);
-                hideFloatingToolbar();
-            });
-        });
-
-        // 定时发布复选框
-        var scheduleToggle = $('#schedule-toggle');
-        if (scheduleToggle) {
-            scheduleToggle.addEventListener('change', function() {
-                if (dom.scheduleSection) {
-                    dom.scheduleSection.style.display = this.checked ? 'block' : 'none';
-                }
-            });
+        // 移动端侧栏 backdrop（动态创建）
+        if (window.innerWidth <= 768) {
+            var backdrop = document.createElement('div');
+            backdrop.id = 'sidebar-backdrop';
+            document.body.appendChild(backdrop);
+            backdrop.addEventListener('click', closeSidebar);
         }
     }
 
     // ============================================================
     // 3. 标题输入
     // ============================================================
-    function onTitleInput(e) {
-        var ta = e.target;
-        // 自动调整高度
-        ta.style.height = 'auto';
-        ta.style.height = ta.scrollHeight + 'px';
+    function onTitleInput() {
+        var val = dom.titleInput.value;
 
         // 自动生成 slug
-        if (!state.slugManuallyEdited && dom.slugInput) {
-            dom.slugInput.value = generateSlug(ta.value);
+        if (!state.slugManuallyEdited) {
+            var slug = generateSlug(val);
+            if (dom.sidebarSlug) dom.sidebarSlug.value = slug;
+            if (dom.slugText) dom.slugText.textContent = slug ? '/ ' + slug : '/  slug 将自动生成';
         }
 
         // 更新顶栏标题预览
-        if (dom.headerTitle) {
-            dom.headerTitle.textContent = ta.value || '无标题';
+        if (dom.titlePreview) {
+            dom.titlePreview.textContent = val || '新文章';
         }
 
         markDirty();
@@ -401,7 +512,6 @@
                 }
 
                 ta.dispatchEvent(new Event('input', { bubbles: true }));
-
             } catch(err) {
                 console.error('insertMD error:', err);
             }
@@ -416,20 +526,16 @@
         scheduleAutoSave();
         updateStatusBar();
 
-        // 检测斜杠命令
         var ta = dom.contentArea;
         if (!ta) return;
         var pos = ta.selectionStart;
         var val = ta.value;
 
-        // 查找光标前最近的 /
         var slashIdx = val.lastIndexOf('/', pos);
         if (slashIdx !== -1 && slashIdx >= pos - 20) {
-            // 确保 / 在行首或前面是空白
             var charBefore = slashIdx > 0 ? val[slashIdx - 1] : '\n';
             if (charBefore === '\n' || charBefore === ' ' || slashIdx === 0) {
                 var query = val.substring(slashIdx + 1, pos);
-                // 查询中不能有空格（除非是刚输入 /）
                 if (query.indexOf(' ') === -1) {
                     state.slashStartPos = slashIdx;
                     showSlashMenu(query);
@@ -459,40 +565,24 @@
         state.slashQuery = query;
         state.slashMenuIndex = 0;
 
-        var html = filtered.map(function(c, i) {
-            return '<div class="slash-menu-item' + (i === 0 ? ' selected' : '') + '" data-cmd="' + c.cmd + '" data-index="' + i + '">'
-                + '<div class="slash-icon">' + c.icon + '</div>'
-                + '<div class="slash-info">'
-                + '<div class="slash-name">' + esc(c.name) + '</div>'
-                + '<div class="slash-desc">' + esc(c.desc) + '</div>'
-                + '</div></div>';
-        }).join('');
-
-        menu.innerHTML = html;
-        menu.style.display = 'block';
-
-        // 定位到光标附近
-        positionSlashMenu(menu);
-
-        // 绑定点击
-        menu.querySelectorAll('.slash-menu-item').forEach(function(item) {
-            item.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                executeSlashCommand(this.getAttribute('data-cmd'));
-            });
-            item.addEventListener('mouseenter', function() {
-                menu.querySelectorAll('.slash-menu-item').forEach(function(el) { el.classList.remove('selected'); });
-                this.classList.add('selected');
-                state.slashMenuIndex = parseInt(this.getAttribute('data-index'));
-            });
+        // 更新菜单项高亮
+        var items = menu.querySelectorAll('.eh-slash-item');
+        items.forEach(function(item, i) {
+            var cmd = item.getAttribute('data-cmd');
+            var match = filtered.some(function(f) { return f.cmd === cmd; });
+            item.style.display = match ? 'flex' : 'none';
+            item.classList.toggle('active', i === 0 && match);
         });
+
+        // 定位
+        positionSlashMenu(menu);
+        menu.classList.remove('hidden');
     }
 
     function hideSlashMenu() {
         state.slashMenuOpen = false;
         if (dom.slashMenu) {
-            dom.slashMenu.style.display = 'none';
-            dom.slashMenu.innerHTML = '';
+            dom.slashMenu.classList.add('hidden');
         }
     }
 
@@ -500,13 +590,13 @@
         var ta = dom.contentArea;
         if (!ta) return;
 
-        // 创建一个临时元素来计算光标位置
         var mirror = document.createElement('div');
+        var cs = getComputedStyle(ta);
         mirror.style.cssText = 'position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;'
-            + 'font:' + getComputedStyle(ta).font
-            + ';padding:' + getComputedStyle(ta).padding
-            + ';width:' + ta.clientWidth + 'px;'
-            + ';line-height:' + getComputedStyle(ta).lineHeight;
+            + 'font:' + cs.font
+            + ';padding:' + cs.padding
+            + ';width:' + ta.clientWidth + 'px'
+            + ';line-height:' + cs.lineHeight;
         document.body.appendChild(mirror);
 
         var textBefore = ta.value.substring(0, state.slashStartPos);
@@ -523,13 +613,12 @@
         var top = taRect.top + (spanRect.top - mirrorRect.top) - ta.scrollTop + 24;
         var left = taRect.left + (spanRect.left - mirrorRect.left);
 
-        // 确保不超出视口
         if (top + 320 > window.innerHeight) {
             top = taRect.top + (spanRect.top - mirrorRect.top) - ta.scrollTop - 320 - 8;
         }
 
-        menu.style.top = (top + window.scrollY) + 'px';
-        menu.style.left = Math.min(left, window.innerWidth - 300) + 'px';
+        menu.style.top = top + 'px';
+        menu.style.left = Math.min(left, window.innerWidth - 240) + 'px';
 
         document.body.removeChild(mirror);
     }
@@ -541,7 +630,6 @@
         var pos = ta.selectionStart;
         var val = ta.value;
 
-        // 删除 / 和查询文本
         var before = val.substring(0, state.slashStartPos);
         var after = val.substring(pos);
 
@@ -551,7 +639,6 @@
 
         hideSlashMenu();
 
-        // 插入对应的 Markdown
         insertMD(cmd);
     }
 
@@ -563,7 +650,6 @@
     }
 
     function onContentKeyUp(e) {
-        // 方向键 + Shift 也可以选中文本
         if (e.shiftKey && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].indexOf(e.key) !== -1) {
             checkSelection();
         }
@@ -585,13 +671,13 @@
         var ta = dom.contentArea;
         if (!toolbar || !ta) return;
 
-        // 计算选区位置
         var mirror = document.createElement('div');
+        var cs = getComputedStyle(ta);
         mirror.style.cssText = 'position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;'
-            + 'font:' + getComputedStyle(ta).font
-            + ';padding:' + getComputedStyle(ta).padding
-            + ';width:' + ta.clientWidth + 'px;'
-            + ';line-height:' + getComputedStyle(ta).lineHeight;
+            + 'font:' + cs.font
+            + ';padding:' + cs.padding
+            + ';width:' + ta.clientWidth + 'px'
+            + ';line-height:' + cs.lineHeight;
         document.body.appendChild(mirror);
 
         var textBefore = ta.value.substring(0, selStart);
@@ -613,21 +699,20 @@
         var top = taRect.top + (startRect.top - mirrorRect.top) - ta.scrollTop - 44;
         var left = taRect.left + (startRect.left - mirrorRect.left);
 
-        // 如果上方空间不够，放到下方
-        if (top < 0) {
+        if (top < 56) {
             top = taRect.top + (startRect.top - mirrorRect.top) - ta.scrollTop + 24;
         }
 
-        toolbar.style.top = (top + window.scrollY) + 'px';
-        toolbar.style.left = Math.max(8, Math.min(left, window.innerWidth - 300)) + 'px';
-        toolbar.style.display = 'flex';
+        toolbar.style.top = top + 'px';
+        toolbar.style.left = Math.max(8, Math.min(left, window.innerWidth - 200)) + 'px';
+        toolbar.classList.remove('hidden');
 
         document.body.removeChild(mirror);
     }
 
     function hideFloatingToolbar() {
         if (dom.floatingToolbar) {
-            dom.floatingToolbar.style.display = 'none';
+            dom.floatingToolbar.classList.add('hidden');
         }
     }
 
@@ -638,7 +723,6 @@
         var ta = dom.contentArea;
         if (!ta) return;
 
-        // 斜杠菜单打开时的键盘导航
         if (state.slashMenuOpen) {
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
@@ -652,8 +736,12 @@
             }
             if (e.key === 'Enter') {
                 e.preventDefault();
-                var selected = dom.slashMenu.querySelector('.slash-menu-item.selected');
-                if (selected) executeSlashCommand(selected.getAttribute('data-cmd'));
+                var visibleItems = Array.prototype.slice.call($$('.eh-slash-item')).filter(function(el) {
+                    return el.style.display !== 'none';
+                });
+                if (visibleItems[state.slashMenuIndex]) {
+                    executeSlashCommand(visibleItems[state.slashMenuIndex].getAttribute('data-cmd'));
+                }
                 return;
             }
             if (e.key === 'Escape') {
@@ -662,36 +750,18 @@
                 return;
             }
         }
-
-        // Tab 缩进
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            saveUndoState(ta);
-            var s = ta.selectionStart, end = ta.selectionEnd;
-            if (e.shiftKey) {
-                // 减少缩进：删除行首的空格/tab
-                var lineStart = ta.value.lastIndexOf('\n', s - 1) + 1;
-                var lineText = ta.value.substring(lineStart, s);
-                if (lineText.startsWith('  ')) {
-                    ta.value = ta.value.substring(0, lineStart) + ta.value.substring(lineStart + 2);
-                    ta.selectionStart = ta.selectionEnd = Math.max(lineStart, s - 2);
-                }
-            } else {
-                ta.value = ta.value.substring(0, s) + '  ' + ta.value.substring(end);
-                ta.selectionStart = ta.selectionEnd = s + 2;
-            }
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
-        }
     }
 
     function navigateSlashMenu(dir) {
-        var items = dom.slashMenu.querySelectorAll('.slash-menu-item');
-        if (!items.length) return;
+        var visibleItems = Array.prototype.slice.call($$('.eh-slash-item')).filter(function(el) {
+            return el.style.display !== 'none';
+        });
+        if (!visibleItems.length) return;
 
-        items[state.slashMenuIndex].classList.remove('selected');
-        state.slashMenuIndex = (state.slashMenuIndex + dir + items.length) % items.length;
-        items[state.slashMenuIndex].classList.add('selected');
-        items[state.slashMenuIndex].scrollIntoView({ block: 'nearest' });
+        visibleItems[state.slashMenuIndex].classList.remove('active');
+        state.slashMenuIndex = (state.slashMenuIndex + dir + visibleItems.length) % visibleItems.length;
+        visibleItems[state.slashMenuIndex].classList.add('active');
+        visibleItems[state.slashMenuIndex].scrollIntoView({ block: 'nearest' });
     }
 
     function onGlobalKeydown(e) {
@@ -711,7 +781,7 @@
         }
         if (isCtrl && e.key === 's') {
             e.preventDefault();
-            doSaveDraft();
+            doPublish('draft');
         }
         if (isCtrl && !e.shiftKey && e.key === 'z') {
             e.preventDefault();
@@ -720,10 +790,6 @@
         if (isCtrl && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
             e.preventDefault();
             redo();
-        }
-        if (isCtrl && e.key === 'Enter') {
-            e.preventDefault();
-            insertMD('hr');
         }
     }
 
@@ -773,7 +839,7 @@
 
     function autoSaveToStorage() {
         var data = collectFormData();
-        if (!data.title && !data.content) return; // 空内容不保存
+        if (!data.title && !data.content) return;
 
         try {
             localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
@@ -781,7 +847,6 @@
             updateSaveStatus('saved');
         } catch(e) {
             console.error('Auto-save failed:', e);
-            updateSaveStatus('error');
         }
     }
 
@@ -803,29 +868,32 @@
         if (!draft) return;
         if (dom.titleInput)    dom.titleInput.value = draft.title || '';
         if (dom.contentArea)   dom.contentArea.value = draft.content || '';
-        if (dom.slugInput)     dom.slugInput.value = draft.slug || '';
+        if (dom.sidebarSlug)   dom.sidebarSlug.value = draft.slug || '';
         if (dom.summaryInput)  dom.summaryInput.value = draft.summary || '';
         if (dom.coverInput)    dom.coverInput.value = draft.cover || '';
-        if (dom.headerTitle)   dom.headerTitle.textContent = draft.title || '无标题';
+        if (dom.titlePreview)  dom.titlePreview.textContent = draft.title || '新文章';
+
+        if (draft.slug) {
+            dom.slugText.textContent = '/ ' + draft.slug;
+            state.slugManuallyEdited = true;
+        }
+
         if (draft.tags) {
-            state.selectedTags = typeof draft.tags === 'string' ? draft.tags.split(',').map(function(t) { return t.trim(); }).filter(Boolean) : (draft.tags || []);
+            state.selectedTags = typeof draft.tags === 'string'
+                ? draft.tags.split(',').map(function(t) { return t.trim(); }).filter(Boolean)
+                : (draft.tags || []);
             renderSelectedTags();
         }
+
         updateCoverPreview();
         updateStatusBar();
-
-        // 调整标题高度
-        if (dom.titleInput) {
-            dom.titleInput.style.height = 'auto';
-            dom.titleInput.style.height = dom.titleInput.scrollHeight + 'px';
-        }
     }
 
     function collectFormData() {
         return {
             title: dom.titleInput ? dom.titleInput.value : '',
             content: dom.contentArea ? dom.contentArea.value : '',
-            slug: dom.slugInput ? dom.slugInput.value : '',
+            slug: dom.sidebarSlug ? dom.sidebarSlug.value : '',
             summary: dom.summaryInput ? dom.summaryInput.value : '',
             cover: dom.coverInput ? dom.coverInput.value : '',
             tags: state.selectedTags.join(', '),
@@ -835,18 +903,22 @@
 
     function updateSaveStatus(status) {
         if (!dom.saveStatus) return;
+        dom.saveStatus.classList.remove('saving', 'saved', 'error');
         switch (status) {
             case 'saving':
-                dom.saveStatus.innerHTML = '<span class="save-dot saving"></span> 保存中...';
+                dom.saveStatus.classList.add('saving');
+                dom.saveStatus.textContent = '保存中...';
                 break;
             case 'saved':
-                dom.saveStatus.innerHTML = '<span class="save-dot saved"></span> 草稿已保存';
+                dom.saveStatus.classList.add('saved');
+                dom.saveStatus.textContent = '已保存';
                 break;
             case 'error':
-                dom.saveStatus.innerHTML = '<span class="save-dot error"></span> 保存失败';
+                dom.saveStatus.classList.add('error');
+                dom.saveStatus.textContent = '保存失败';
                 break;
             case 'unsaved':
-                dom.saveStatus.innerHTML = '<span class="save-dot"></span> 未保存';
+                dom.saveStatus.textContent = '未保存';
                 break;
             default:
                 dom.saveStatus.textContent = '';
@@ -863,16 +935,36 @@
     // ============================================================
     // 10. 发布功能
     // ============================================================
-    function togglePublishDropdown(e) {
-        e.stopPropagation();
+    function togglePublishDropdown() {
         if (dom.publishDropdown) {
-            var isOpen = dom.publishDropdown.style.display === 'block';
-            dom.publishDropdown.style.display = isOpen ? 'none' : 'block';
+            dom.publishDropdown.classList.toggle('open');
+        }
+    }
+
+    function closePublishDropdown() {
+        if (dom.publishDropdown) {
+            dom.publishDropdown.classList.remove('open');
+        }
+    }
+
+    function showScheduleDialog() {
+        if (dom.scheduleDialog) {
+            dom.scheduleDialog.classList.add('active');
+            if (dom.scheduleTime) {
+                // 默认设置为明天同一时间
+                var tomorrow = new Date(Date.now() + 86400000);
+                dom.scheduleTime.value = tomorrow.getFullYear() + '-' + pad2(tomorrow.getMonth()+1) + '-' + pad2(tomorrow.getDate()) + 'T' + pad2(tomorrow.getHours()) + ':' + pad2(tomorrow.getMinutes());
+            }
+        }
+    }
+
+    function hideScheduleDialog() {
+        if (dom.scheduleDialog) {
+            dom.scheduleDialog.classList.remove('active');
         }
     }
 
     async function doPublish(mode) {
-        // mode: 'publish', 'draft', 'schedule'
         var title = dom.titleInput ? dom.titleInput.value.trim() : '';
         if (!title) {
             alert('请填写标题');
@@ -881,7 +973,7 @@
         }
 
         if (mode === 'schedule' && dom.scheduleInput && !dom.scheduleInput.value) {
-            alert('请选择定时发布时间');
+            showScheduleDialog();
             return;
         }
 
@@ -890,11 +982,11 @@
 
         var body = {
             title: title,
-            slug: dom.slugInput ? dom.slugInput.value.trim() : '',
+            slug: dom.sidebarSlug ? dom.sidebarSlug.value.trim() : '',
             summary: dom.summaryInput ? dom.summaryInput.value.trim() : '',
             cover_image: dom.coverInput ? dom.coverInput.value.trim() : '',
             content_md: dom.contentArea ? dom.contentArea.value : '',
-            author: 'Admin',
+            author: dom.authorInput ? dom.authorInput.value : 'Admin',
             tags: state.selectedTags.join(', '),
             is_published: mode === 'publish' ? 1 : 0,
             scheduled_at: mode === 'schedule' && dom.scheduleInput ? dom.scheduleInput.value : null
@@ -916,10 +1008,18 @@
                 state.lastSaved = new Date();
                 updateSaveStatus('saved');
 
-                // 清除本地草稿
+                // 更新文章状态
+                if (mode === 'publish') {
+                    state.articleStatus = 'published';
+                } else if (mode === 'schedule') {
+                    state.articleStatus = 'scheduled';
+                } else {
+                    state.articleStatus = 'draft';
+                }
+                updateStatusBadge();
+
                 clearDraftStorage();
 
-                // 如果是新建，更新 editId
                 if (!state.editId && data.id) {
                     state.editId = data.id;
                     var newUrl = new URL(window.location);
@@ -927,14 +1027,12 @@
                     window.history.replaceState(null, '', newUrl);
                 }
 
-                // 关闭发布菜单
-                if (dom.publishDropdown) dom.publishDropdown.style.display = 'none';
+                closePublishDropdown();
 
-                // 跳转回文章列表
                 if (mode === 'publish' || mode === 'draft') {
                     setTimeout(function() {
                         window.location.href = '/admin.html#articles';
-                    }, 500);
+                    }, 800);
                 }
             } else if (res.status === 401) {
                 alert('登录已过期，请重新登录');
@@ -953,8 +1051,22 @@
         }
     }
 
-    function doSaveDraft() {
-        doPublish('draft');
+    function updateStatusBadge() {
+        if (!dom.statusDisplay) return;
+        dom.statusDisplay.className = 'es-status-badge';
+        switch (state.articleStatus) {
+            case 'published':
+                dom.statusDisplay.classList.add('es-status-published');
+                dom.statusDisplay.textContent = '已发布';
+                break;
+            case 'scheduled':
+                dom.statusDisplay.classList.add('es-status-scheduled');
+                dom.statusDisplay.textContent = '定时发布';
+                break;
+            default:
+                dom.statusDisplay.classList.add('es-status-draft');
+                dom.statusDisplay.textContent = '草稿';
+        }
     }
 
     // ============================================================
@@ -965,6 +1077,10 @@
         if (dom.sidebar) {
             dom.sidebar.classList.toggle('open', state.sidebarOpen);
         }
+        var backdrop = $('#sidebar-backdrop');
+        if (backdrop) {
+            backdrop.classList.toggle('visible', state.sidebarOpen);
+        }
     }
 
     function closeSidebar() {
@@ -972,19 +1088,23 @@
         if (dom.sidebar) {
             dom.sidebar.classList.remove('open');
         }
+        var backdrop = $('#sidebar-backdrop');
+        if (backdrop) {
+            backdrop.classList.remove('visible');
+        }
     }
 
     function updateCoverPreview() {
         if (!dom.coverPreview || !dom.coverInput) return;
         var url = dom.coverInput.value.trim();
         if (url) {
-            dom.coverPreview.src = url;
-            dom.coverPreview.style.display = 'block';
-            dom.coverPreview.onerror = function() {
-                dom.coverPreview.style.display = 'none';
+            dom.coverPreview.innerHTML = '<img src="' + esc(url) + '" alt="封面">';
+            var img = dom.coverPreview.querySelector('img');
+            img.onerror = function() {
+                dom.coverPreview.innerHTML = '<span>图片加载失败</span>';
             };
         } else {
-            dom.coverPreview.style.display = 'none';
+            dom.coverPreview.innerHTML = '<span>无封面</span>';
         }
     }
 
@@ -1001,6 +1121,7 @@
         formData.append('image', file);
 
         try {
+            updateSaveStatus('saving');
             var res = await apiFetch(API.uploadImage, {
                 method: 'POST',
                 body: formData
@@ -1010,11 +1131,57 @@
                 if (dom.coverInput) dom.coverInput.value = data.url || data.src || '';
                 updateCoverPreview();
                 markDirty();
+                updateSaveStatus('unsaved');
             } else {
                 alert('上传失败');
+                updateSaveStatus('unsaved');
             }
         } catch(err) {
             alert('上传失败: 网络错误');
+            updateSaveStatus('error');
+        }
+        e.target.value = '';
+    }
+
+    async function onImageUpload(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            alert('图片不能超过 5MB');
+            e.target.value = '';
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            updateSaveStatus('saving');
+            var res = await apiFetch(API.uploadImage, {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                var data = await res.json();
+                var url = data.url || data.src || '';
+                insertMD('image');
+                // 替换 (url) 部分
+                var ta = dom.contentArea;
+                if (ta && url) {
+                    var pos = ta.value.indexOf('](url)', ta.selectionStart - 10);
+                    if (pos !== -1) {
+                        ta.value = ta.value.substring(0, pos + 2) + url + ta.value.substring(pos + 5);
+                        ta.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+                updateSaveStatus('unsaved');
+            } else {
+                alert('上传失败');
+                updateSaveStatus('unsaved');
+            }
+        } catch(err) {
+            alert('上传失败: 网络错误');
+            updateSaveStatus('error');
         }
         e.target.value = '';
     }
@@ -1028,35 +1195,45 @@
             if (res.ok) {
                 var data = await res.json();
                 state.tags = data.tags || data || [];
-                renderTagList();
+                renderTagPanel();
             }
         } catch(e) {
             console.error('Load tags failed:', e);
         }
     }
 
-    function renderTagList() {
-        var container = $('#tag-list');
-        if (!container) return;
+    function renderTagPanel() {
+        if (!dom.tagPanel) return;
 
         if (!state.tags.length) {
-            container.innerHTML = '<span class="tag-empty">暂无标签</span>';
+            dom.tagPanel.innerHTML = '<span style="font-size:0.8rem;color:var(--text-tertiary);">暂无标签</span>';
             return;
         }
 
-        container.innerHTML = state.tags.map(function(tag) {
+        dom.tagPanel.innerHTML = state.tags.map(function(tag) {
             var name = typeof tag === 'string' ? tag : (tag.name || tag.tag || '');
+            var color = typeof tag === 'object' ? (tag.color || '#6b7280') : '#6b7280';
             var isSelected = state.selectedTags.indexOf(name) !== -1;
-            return '<button type="button" class="tag-chip' + (isSelected ? ' selected' : '') + '" data-tag="' + esc(name) + '">'
-                + esc(name) + (isSelected ? ' &times;' : ' +') + '</button>';
+            return '<span class="es-tag-selector-item' + (isSelected ? ' selected' : '') + '" '
+                + 'data-tag="' + esc(name) + '" '
+                + 'style="background:' + esc(color) + '">'
+                + esc(name) + '</span>';
         }).join('');
 
-        container.querySelectorAll('.tag-chip').forEach(function(btn) {
-            btn.addEventListener('click', function() {
+        dom.tagPanel.querySelectorAll('.es-tag-selector-item').forEach(function(el) {
+            el.addEventListener('click', function() {
                 var tag = this.getAttribute('data-tag');
                 toggleTag(tag);
             });
         });
+    }
+
+    function toggleTagPanel() {
+        if (!dom.tagPanel) return;
+        dom.tagPanel.classList.toggle('hidden');
+        if (!dom.tagPanel.classList.contains('hidden')) {
+            renderTagPanel();
+        }
     }
 
     function toggleTag(tag) {
@@ -1067,23 +1244,34 @@
             state.selectedTags.push(tag);
         }
         renderSelectedTags();
-        renderTagList();
+        renderTagPanel();
         markDirty();
         scheduleAutoSave();
     }
 
     function renderSelectedTags() {
-        if (!dom.tagContainer) return;
+        if (!dom.tagChips) return;
         if (!state.selectedTags.length) {
-            dom.tagContainer.innerHTML = '<span class="tag-placeholder">未选择标签</span>';
+            dom.tagChips.innerHTML = '';
             return;
         }
-        dom.tagContainer.innerHTML = state.selectedTags.map(function(tag) {
-            return '<span class="selected-tag">' + esc(tag)
-                + ' <button type="button" class="tag-remove" data-tag="' + esc(tag) + '">&times;</button></span>';
+
+        // 找到标签颜色映射
+        var tagColorMap = {};
+        state.tags.forEach(function(tag) {
+            if (typeof tag === 'object') {
+                tagColorMap[tag.name || tag.tag] = tag.color || '#6b7280';
+            }
+        });
+
+        dom.tagChips.innerHTML = state.selectedTags.map(function(tag) {
+            var color = tagColorMap[tag] || '#6b7280';
+            return '<span class="es-tag-chip" style="background:' + esc(color) + '">'
+                + esc(tag)
+                + ' <span class="es-tag-chip-remove" data-tag="' + esc(tag) + '">&times;</span></span>';
         }).join('');
 
-        dom.tagContainer.querySelectorAll('.tag-remove').forEach(function(btn) {
+        dom.tagChips.querySelectorAll('.es-tag-chip-remove').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 toggleTag(this.getAttribute('data-tag'));
             });
@@ -1097,7 +1285,7 @@
             if (val && state.selectedTags.indexOf(val) === -1) {
                 state.selectedTags.push(val);
                 renderSelectedTags();
-                renderTagList();
+                renderTagPanel();
                 markDirty();
                 scheduleAutoSave();
             }
@@ -1125,39 +1313,44 @@
 
             if (dom.titleInput)    dom.titleInput.value = a.title || '';
             if (dom.contentArea)   dom.contentArea.value = a.content_md || '';
-            if (dom.slugInput)     dom.slugInput.value = a.slug || '';
+            if (dom.sidebarSlug)   dom.sidebarSlug.value = a.slug || '';
             if (dom.summaryInput)  dom.summaryInput.value = a.summary || '';
             if (dom.coverInput)    dom.coverInput.value = a.cover_image || '';
-            if (dom.headerTitle)   dom.headerTitle.textContent = a.title || '无标题';
+            if (dom.authorInput)   dom.authorInput.value = a.author || 'Admin';
+            if (dom.titlePreview)  dom.titlePreview.textContent = a.title || '新文章';
+
+            // Slug 显示
+            if (a.slug) {
+                dom.slugText.textContent = '/ ' + a.slug;
+                state.slugManuallyEdited = true;
+            }
 
             // 标签
             if (a.tags) {
                 state.selectedTags = a.tags.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
                 renderSelectedTags();
-                renderTagList();
+                renderTagPanel();
             }
 
-            // 定时发布
-            if (a.scheduled_at && dom.scheduleInput) {
-                var d = new Date(a.scheduled_at + (a.scheduled_at.includes('Z') ? '' : 'Z'));
-                dom.scheduleInput.value = d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
-                var scheduleToggle = $('#schedule-toggle');
-                if (scheduleToggle) scheduleToggle.checked = true;
-                if (dom.scheduleSection) dom.scheduleSection.style.display = 'block';
+            // 文章状态
+            if (a.is_published) {
+                state.articleStatus = 'published';
+            } else if (a.scheduled_at) {
+                state.articleStatus = 'scheduled';
+                if (dom.scheduleInput) {
+                    var d = new Date(a.scheduled_at + (a.scheduled_at.indexOf('Z') !== -1 ? '' : 'Z'));
+                    dom.scheduleInput.value = d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+                    if (dom.scheduleSection) dom.scheduleSection.classList.remove('hidden');
+                }
+            } else {
+                state.articleStatus = 'draft';
             }
+            updateStatusBadge();
 
-            state.slugManuallyEdited = true; // 编辑模式不自动覆盖 slug
             updateCoverPreview();
             updateSaveStatus('saved');
             state.lastSaved = new Date();
             state.isDirty = false;
-
-            // 调整标题高度
-            if (dom.titleInput) {
-                dom.titleInput.style.height = 'auto';
-                dom.titleInput.style.height = dom.titleInput.scrollHeight + 'px';
-            }
-
             updateStatusBar();
 
         } catch(e) {
@@ -1176,7 +1369,7 @@
 
         if (dom.wordCount) dom.wordCount.textContent = words.toLocaleString() + ' 字';
         if (dom.readTime) dom.readTime.textContent = readTime;
-        if (dom.lastEditTime) dom.lastEditTime.textContent = state.lastSaved ? '最后编辑: ' + relativeTime(state.lastSaved) : '';
+        if (dom.lastEditTime) dom.lastEditTime.textContent = state.lastSaved ? '最后编辑：' + relativeTime(state.lastSaved) : '最后编辑：--';
     }
 
     // ============================================================
@@ -1196,29 +1389,22 @@
         if (state.isDirty) {
             if (!confirm('有未保存的修改，确定要离开吗？')) return;
         }
-        // 保存草稿到 localStorage 再离开
         if (state.isDirty) autoSaveToStorage();
         window.location.href = '/admin.html#articles';
     }
 
     // ============================================================
-    // 16. 移动端适配
-    // ============================================================
-    function setupMobileViewport() {
-        if ('visualViewport' in window) {
-            window.visualViewport.addEventListener('resize', function() {
-                document.documentElement.style.setProperty('--viewport-height', window.visualViewport.height + 'px');
-            });
-        }
-    }
-
-    // ============================================================
-    // 17. 全局点击关闭菜单
+    // 16. 全局点击关闭菜单
     // ============================================================
     function onDocumentClick(e) {
         // 关闭发布下拉菜单
         if (dom.publishDropdown && !dom.publishBtn.contains(e.target) && !dom.publishDropdown.contains(e.target)) {
-            dom.publishDropdown.style.display = 'none';
+            closePublishDropdown();
+        }
+        // 关闭标签面板
+        if (dom.tagPanel && !dom.tagPanel.classList.contains('hidden') &&
+            !dom.tagPickBtn.contains(e.target) && !dom.tagPanel.contains(e.target)) {
+            dom.tagPanel.classList.add('hidden');
         }
         // 关闭斜杠菜单
         if (state.slashMenuOpen && dom.slashMenu && !dom.slashMenu.contains(e.target)) {
