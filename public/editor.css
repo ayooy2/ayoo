@@ -1,0 +1,914 @@
+/* ===== Ayoo Editor — Dedicated Styles ===== */
+/* Inherits CSS variables from style.css */
+
+/* ── 1. Editor Layout ── */
+.editor-app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.editor-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  margin-top: 56px;
+  margin-bottom: 36px;
+}
+
+.editor-main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.editor-main-inner {
+  width: 100%;
+  max-width: 720px;
+  padding: 24px 32px 4rem;
+}
+
+.editor-sidebar {
+  width: 320px;
+  min-width: 320px;
+  background: var(--bg-elevated);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  height: calc(100vh - 56px - 36px);
+  position: sticky;
+  top: 56px;
+}
+
+/* ── 2. Top Bar ── */
+.editor-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  z-index: 100;
+  transition: background var(--duration-slow) var(--ease),
+              border-color var(--duration-slow) var(--ease);
+}
+
+.editor-topbar-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease);
+}
+.editor-topbar-back:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.editor-topbar-back svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+.editor-topbar-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.editor-topbar-spacer { flex: 1; }
+
+.editor-save-status {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  user-select: none;
+}
+.editor-save-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+.editor-save-status .dot.saving {
+  background: var(--warning);
+  animation: editor-pulse 1s infinite;
+}
+.editor-save-status .dot.error {
+  background: var(--danger);
+}
+
+/* Publish button */
+.editor-publish-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.editor-publish-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease);
+}
+.editor-publish-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+.editor-publish-btn.secondary {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text-secondary);
+}
+.editor-publish-btn.secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: none;
+  transform: none;
+}
+.editor-publish-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  transition: transform var(--duration-fast) var(--ease);
+}
+.editor-publish-btn.open svg {
+  transform: rotate(180deg);
+}
+
+/* Publish dropdown */
+.editor-publish-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-width: 180px;
+  padding: 4px;
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+  display: none;
+  animation: editor-dropdown-in 0.15s var(--ease);
+}
+.editor-publish-dropdown.show { display: block; }
+
+.editor-publish-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-family: var(--font-sans);
+  text-align: left;
+  transition: background var(--duration-fast) var(--ease);
+}
+.editor-publish-option:hover {
+  background: var(--bg-hover);
+}
+.editor-publish-option svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--text-tertiary);
+  stroke-width: 2;
+  fill: none;
+  flex-shrink: 0;
+}
+.editor-publish-option.danger {
+  color: var(--danger);
+}
+.editor-publish-option.danger svg {
+  stroke: var(--danger);
+}
+
+/* ── 3. Title Input ── */
+.editor-title-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+  background: transparent;
+  padding: 2rem 0 0.5rem;
+  letter-spacing: -0.02em;
+  font-family: var(--font-sans);
+  resize: none;
+  overflow: hidden;
+  display: block;
+}
+.editor-title-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.editor-slug {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.editor-slug-prefix {
+  color: var(--text-placeholder);
+}
+.editor-slug-value {
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-bottom: 1px dashed var(--border);
+  transition: color var(--duration-fast) var(--ease);
+}
+.editor-slug-value:hover {
+  color: var(--accent);
+}
+
+/* ── 4. Content Editor Area ── */
+.editor-content-area {
+  position: relative;
+}
+
+.editor-textarea {
+  width: 100%;
+  min-height: calc(100vh - 280px);
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--text-primary);
+  resize: none;
+  tab-size: 2;
+}
+.editor-textarea::placeholder {
+  color: var(--text-placeholder);
+}
+
+/* ── 5. Markdown Toolbar ── */
+.editor-md-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px 8px;
+  margin-bottom: var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.editor-md-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  transition: all var(--duration-fast) var(--ease);
+  flex-shrink: 0;
+}
+.editor-md-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.editor-md-btn.active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+.editor-md-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+.editor-md-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── 6. Sidebar ── */
+.editor-sidebar-section {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.editor-sidebar-section:last-child {
+  border-bottom: none;
+}
+
+.editor-sidebar-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+}
+
+.editor-sidebar-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color var(--duration-fast) var(--ease),
+              box-shadow var(--duration-fast) var(--ease);
+}
+.editor-sidebar-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+.editor-sidebar-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.editor-sidebar-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.editor-sidebar-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.editor-sidebar-field {
+  margin-bottom: 14px;
+}
+.editor-sidebar-field:last-child {
+  margin-bottom: 0;
+}
+
+/* Tag chips in sidebar */
+.editor-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.editor-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  cursor: default;
+}
+.editor-tag-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 1;
+  transition: color var(--duration-fast) var(--ease);
+}
+.editor-tag-chip-remove:hover {
+  color: var(--danger);
+}
+
+/* Cover image upload area */
+.editor-cover-upload {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease),
+              background var(--duration-fast) var(--ease);
+}
+.editor-cover-upload:hover {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+.editor-cover-upload svg {
+  width: 32px;
+  height: 32px;
+  stroke: var(--text-tertiary);
+  stroke-width: 1.5;
+  fill: none;
+  margin-bottom: 8px;
+}
+.editor-cover-upload-text {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.editor-cover-preview {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.editor-cover-preview img {
+  width: 100%;
+  display: block;
+  border-radius: var(--radius-sm);
+}
+.editor-cover-preview-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background var(--duration-fast) var(--ease);
+}
+.editor-cover-preview-remove:hover {
+  background: rgba(0,0,0,0.8);
+}
+
+/* Sidebar overlay (for drawer mode) */
+.editor-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 90;
+}
+
+/* ── 7. Status Bar ── */
+.editor-statusbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 24px;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  z-index: 100;
+  transition: background var(--duration-slow) var(--ease),
+              border-color var(--duration-slow) var(--ease);
+}
+.editor-statusbar-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.editor-statusbar-spacer { flex: 1; }
+
+/* ── 8. Floating Toolbar ── */
+.editor-floating-toolbar {
+  position: absolute;
+  z-index: 1000;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  gap: 2px;
+  box-shadow: var(--shadow-lg);
+  animation: editor-toolbar-in 0.15s var(--ease);
+  pointer-events: auto;
+}
+.editor-floating-toolbar.hidden {
+  display: none;
+}
+
+.editor-float-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-family: var(--font-mono);
+  transition: all var(--duration-fast) var(--ease);
+}
+.editor-float-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.editor-float-btn.active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+.editor-float-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+.editor-float-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 4px 3px;
+}
+
+/* ── 9. Slash Command Menu ── */
+.editor-slash-menu {
+  position: absolute;
+  z-index: 1000;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  width: 280px;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: editor-slash-in 0.15s var(--ease);
+}
+.editor-slash-menu.hidden {
+  display: none;
+}
+
+.editor-slash-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease);
+}
+.editor-slash-item:hover,
+.editor-slash-item.selected {
+  background: var(--bg-hover);
+}
+.editor-slash-item-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  font-size: 18px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+.editor-slash-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.editor-slash-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.editor-slash-item-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editor-slash-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+/* ── 10. Mobile Bottom Toolbar ── */
+.editor-mobile-toolbar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  z-index: 50;
+  transition: background var(--duration-slow) var(--ease),
+              border-color var(--duration-slow) var(--ease);
+}
+.editor-mobile-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease);
+}
+.editor-mobile-btn:active {
+  background: var(--bg-hover);
+}
+.editor-mobile-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* ── 11. Responsive Breakpoints ── */
+
+/* Tablet: sidebar becomes drawer */
+@media (max-width: 1024px) {
+  .editor-sidebar {
+    position: fixed;
+    top: 56px;
+    right: -320px;
+    width: 320px;
+    min-width: 320px;
+    height: calc(100vh - 56px);
+    z-index: 95;
+    transition: right var(--duration-slow) var(--ease);
+    box-shadow: -4px 0 24px rgba(0,0,0,0.08);
+  }
+  .editor-sidebar.open {
+    right: 0;
+  }
+  .editor-sidebar-overlay.show {
+    display: block;
+  }
+}
+
+/* Mobile: compact top bar, show mobile toolbar */
+@media (max-width: 768px) {
+  .editor-topbar {
+    height: 48px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .editor-body {
+    margin-top: 48px;
+    margin-bottom: 0;
+  }
+  .editor-statusbar {
+    display: none;
+  }
+  .editor-main-inner {
+    padding: 16px 16px 80px;
+  }
+  .editor-title-input {
+    font-size: 28px;
+    padding: 1.25rem 0 0.5rem;
+  }
+  .editor-textarea {
+    font-size: 16px;    /* prevent iOS zoom */
+    line-height: 1.75;
+    min-height: calc(100vh - 48px - 48px - 80px);
+  }
+  .editor-topbar-title {
+    font-size: 15px;
+  }
+  .editor-save-status {
+    display: none;
+  }
+
+  /* Sidebar becomes bottom sheet */
+  .editor-sidebar {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 0;
+    height: 80vh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+    transition: transform var(--duration-slow) var(--ease);
+    z-index: 100;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+  }
+  .editor-sidebar.open {
+    transform: translateY(0);
+  }
+  .editor-sidebar-overlay.show {
+    display: block;
+    z-index: 95;
+  }
+
+  /* Show mobile toolbar */
+  .editor-mobile-toolbar {
+    display: flex;
+  }
+
+  /* Floating toolbar hidden on mobile (use mobile toolbar instead) */
+  .editor-floating-toolbar {
+    display: none;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 640px) {
+  .editor-topbar {
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .editor-publish-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+  .editor-title-input {
+    font-size: 24px;
+  }
+  .editor-main-inner {
+    padding: 12px 12px 80px;
+  }
+  .editor-slug {
+    font-size: 11px;
+  }
+}
+
+/* ── 12. Animations ── */
+@keyframes editor-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes editor-toolbar-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes editor-slash-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes editor-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes editor-save-flash {
+  0% { opacity: 0; transform: translateY(-2px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-2px); }
+}
+
+/* Sidebar slide transitions */
+.editor-sidebar {
+  transition: right var(--duration-slow) var(--ease);
+}
+@media (max-width: 768px) {
+  .editor-sidebar {
+    transition: transform var(--duration-slow) var(--ease);
+  }
+}
+
+/* ── Utility: reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .editor-floating-toolbar,
+  .editor-slash-menu,
+  .editor-publish-dropdown,
+  .editor-sidebar,
+  .editor-save-status .dot {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ── Scrollbar styling (matches style.css) ── */
+.editor-main::-webkit-scrollbar,
+.editor-sidebar::-webkit-scrollbar,
+.editor-slash-menu::-webkit-scrollbar {
+  width: 6px;
+}
+.editor-main::-webkit-scrollbar-track,
+.editor-sidebar::-webkit-scrollbar-track,
+.editor-slash-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.editor-main::-webkit-scrollbar-thumb,
+.editor-sidebar::-webkit-scrollbar-thumb,
+.editor-slash-menu::-webkit-scrollbar-thumb {
+  background: var(--text-placeholder);
+  border-radius: 3px;
+}
+.editor-main::-webkit-scrollbar-thumb:hover,
+.editor-sidebar::-webkit-scrollbar-thumb:hover,
+.editor-slash-menu::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Firefox scrollbar */
+.editor-main,
+.editor-sidebar,
+.editor-slash-menu {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-placeholder) transparent;
+}
