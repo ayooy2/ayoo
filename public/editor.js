@@ -28,8 +28,8 @@
         quote:      { before: '> ',     after: '',          ph: '引用内容',   block: true },
         ul:         { before: '- ',     after: '',          ph: '列表项',     block: true },
         ol:         { before: '1. ',    after: '',          ph: '列表项',     block: true },
-        codeblock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true },
-        codeBlock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true },
+        codeblock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true, lang: true },
+        codeBlock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true, lang: true },
         table:      { before: '| 列1 | 列2 |\n| ----- | ----- |\n| ', after: ' |\n', ph: '内容', block: true },
         hr:         { before: '\n---\n', after: '',         ph: '',           block: true }
     };
@@ -39,7 +39,18 @@
         { key: 'h2',    icon: 'H2',     name: '二级标题',   cmd: 'h2' },
         { key: 'h3',    icon: 'H3',     name: '三级标题',   cmd: 'h3' },
         { key: 'quote', icon: '“',  name: '引用块',     cmd: 'quote' },
-        { key: 'code',  icon: '{ }',    name: '代码块',     cmd: 'codeblock' },
+        { key: 'code',  icon: '{ }',    name: '代码块',     cmd: 'codeblock', lang: true },
+        { key: 'js',    icon: 'JS',     name: 'JavaScript', cmd: 'codeblock', lang: 'javascript' },
+        { key: 'py',    icon: 'PY',     name: 'Python',     cmd: 'codeblock', lang: 'python' },
+        { key: 'html',  icon: '<>',     name: 'HTML',       cmd: 'codeblock', lang: 'html' },
+        { key: 'css',   icon: '#',      name: 'CSS',        cmd: 'codeblock', lang: 'css' },
+        { key: 'bash',  icon: '$_',     name: 'Bash',       cmd: 'codeblock', lang: 'bash' },
+        { key: 'json',  icon: '{}',     name: 'JSON',       cmd: 'codeblock', lang: 'json' },
+        { key: 'sql',   icon: 'DB',     name: 'SQL',        cmd: 'codeblock', lang: 'sql' },
+        { key: 'ts',    icon: 'TS',     name: 'TypeScript', cmd: 'codeblock', lang: 'typescript' },
+        { key: 'java',  icon: 'JV',     name: 'Java',       cmd: 'codeblock', lang: 'java' },
+        { key: 'go',    icon: 'GO',     name: 'Go',         cmd: 'codeblock', lang: 'go' },
+        { key: 'rust',  icon: 'RS',     name: 'Rust',       cmd: 'codeblock', lang: 'rust' },
         { key: 'ul',    icon: '•',  name: '无序列表',   cmd: 'ul' },
         { key: 'ol',    icon: '1.',     name: '有序列表',   cmd: 'ol' },
         { key: 'hr',    icon: '—',  name: '分割线',     cmd: 'hr' },
@@ -385,7 +396,8 @@
             item.addEventListener('mousedown', function(e) {
                 e.preventDefault();
                 var cmd = this.getAttribute('data-cmd');
-                if (cmd) executeSlashCommand(MD_CMDS[cmd] ? cmd : cmd);
+                var lang = this.getAttribute('data-lang');
+                if (cmd) executeSlashCommand(MD_CMDS[cmd] ? cmd : cmd, lang);
             });
             item.addEventListener('mouseenter', function() {
                 $$('.eh-slash-item').forEach(function(el) { el.classList.remove('active'); });
@@ -467,7 +479,7 @@
     // ============================================================
     // 4. Markdown 工具栏 - insertMD
     // ============================================================
-    function insertMD(type) {
+    function insertMD(type, lang) {
         var cmd = MD_CMDS[type];
         if (!cmd) { console.warn('Unknown MD command:', type); return; }
         var ta = dom.contentArea;
@@ -484,19 +496,26 @@
                 var text = sel || cmd.ph;
                 var result;
 
+                // 代码块语言支持
+                var before = cmd.before;
+                var after = cmd.after;
+                if (cmd.lang && lang) {
+                    before = '```' + lang + '\n';
+                }
+
                 if (cmd.block) {
                     var ls = val.lastIndexOf('\n', s - 1) + 1;
                     var lineBefore = val.substring(ls, s);
 
                     if (hasSel && sel.indexOf('\n') !== -1) {
-                        result = sel.split('\n').map(function(l) { return cmd.before + l; }).join('\n') + cmd.after;
+                        result = sel.split('\n').map(function(l) { return before + l; }).join('\n') + after;
                     } else if (lineBefore.trim() === '') {
-                        result = cmd.before + text + cmd.after;
+                        result = before + text + after;
                     } else {
-                        result = '\n' + cmd.before + text + cmd.after;
+                        result = '\n' + before + text + after;
                     }
                 } else {
-                    result = cmd.before + text + cmd.after;
+                    result = before + text + after;
                 }
 
                 saveUndoState(ta);
@@ -505,8 +524,8 @@
                 ta.value = newVal;
 
                 if (cmd.inline && !hasSel) {
-                    ta.selectionStart = s + cmd.before.length;
-                    ta.selectionEnd = s + cmd.before.length + text.length;
+                    ta.selectionStart = s + before.length;
+                    ta.selectionEnd = s + before.length + text.length;
                 } else {
                     ta.selectionStart = ta.selectionEnd = s + result.length;
                 }
@@ -623,7 +642,7 @@
         document.body.removeChild(mirror);
     }
 
-    function executeSlashCommand(cmd) {
+    function executeSlashCommand(cmd, lang) {
         var ta = dom.contentArea;
         if (!ta) return;
 
@@ -639,7 +658,7 @@
 
         hideSlashMenu();
 
-        insertMD(cmd);
+        insertMD(cmd, lang);
     }
 
     // ============================================================
@@ -740,7 +759,8 @@
                     return el.style.display !== 'none';
                 });
                 if (visibleItems[state.slashMenuIndex]) {
-                    executeSlashCommand(visibleItems[state.slashMenuIndex].getAttribute('data-cmd'));
+                    var selectedItem = visibleItems[state.slashMenuIndex];
+                    executeSlashCommand(selectedItem.getAttribute('data-cmd'), selectedItem.getAttribute('data-lang'));
                 }
                 return;
             }
