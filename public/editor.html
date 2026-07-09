@@ -64,6 +64,10 @@
                     &#128247;
                     <input type="file" accept="image/*" id="editor-upload-image" style="display:none;">
                 </label>
+                <label class="eh-tool-btn eh-upload-btn" title="导入 Markdown 文件">
+                    &#128196;
+                    <input type="file" accept=".md,.txt,.markdown,.html,.htm" id="editor-import-file" style="display:none;">
+                </label>
             </div>
 
             <!-- 编辑区 -->
@@ -155,27 +159,55 @@
     <!-- ========== 斜杠命令菜单 ========== -->
     <div id="slash-menu" class="eh-slash-menu hidden">
         <div class="eh-slash-header">快捷命令</div>
-        <button class="eh-slash-item" data-cmd="h2"><span class="eh-slash-icon">H2</span><span class="eh-slash-label">二级标题</span></button>
-        <button class="eh-slash-item" data-cmd="h3"><span class="eh-slash-icon">H3</span><span class="eh-slash-label">三级标题</span></button>
-        <button class="eh-slash-item" data-cmd="quote"><span class="eh-slash-icon">&ldquo;</span><span class="eh-slash-label">引用</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock"><span class="eh-slash-icon">{ }</span><span class="eh-slash-label">代码块</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="javascript"><span class="eh-slash-icon">JS</span><span class="eh-slash-label">JavaScript</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="python"><span class="eh-slash-icon">PY</span><span class="eh-slash-label">Python</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="html"><span class="eh-slash-icon">&lt;&gt;</span><span class="eh-slash-label">HTML</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="css"><span class="eh-slash-icon">#</span><span class="eh-slash-label">CSS</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="bash"><span class="eh-slash-icon">$_</span><span class="eh-slash-label">Bash</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="json"><span class="eh-slash-icon">{}</span><span class="eh-slash-label">JSON</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="sql"><span class="eh-slash-icon">DB</span><span class="eh-slash-label">SQL</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="typescript"><span class="eh-slash-icon">TS</span><span class="eh-slash-label">TypeScript</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="java"><span class="eh-slash-icon">JV</span><span class="eh-slash-label">Java</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="go"><span class="eh-slash-icon">GO</span><span class="eh-slash-label">Go</span></button>
-        <button class="eh-slash-item" data-cmd="codeblock" data-lang="rust"><span class="eh-slash-icon">RS</span><span class="eh-slash-label">Rust</span></button>
-        <button class="eh-slash-item" data-cmd="ul"><span class="eh-slash-icon">&bull;</span><span class="eh-slash-label">无序列表</span></button>
-        <button class="eh-slash-item" data-cmd="ol"><span class="eh-slash-icon">1.</span><span class="eh-slash-label">有序列表</span></button>
-        <button class="eh-slash-item" data-cmd="hr"><span class="eh-slash-icon">&mdash;</span><span class="eh-slash-label">分割线</span></button>
-        <button class="eh-slash-item" data-cmd="table"><span class="eh-slash-icon">&#9638;</span><span class="eh-slash-label">表格</span></button>
-        <button class="eh-slash-item" data-cmd="image"><span class="eh-slash-icon">&#128247;</span><span class="eh-slash-label">图片</span></button>
-        <button class="eh-slash-item" data-cmd="link"><span class="eh-slash-icon">&#128279;</span><span class="eh-slash-label">链接</span></button>
+        <div class="eh-slash-group">
+            <div class="eh-slash-group-title">文本格式</div>
+            <button class="eh-slash-item" data-cmd="h2"><span class="eh-slash-icon">H2</span><span class="eh-slash-label">二级标题</span></button>
+            <button class="eh-slash-item" data-cmd="h3"><span class="eh-slash-icon">H3</span><span class="eh-slash-label">三级标题</span></button>
+            <button class="eh-slash-item" data-cmd="quote"><span class="eh-slash-icon">&ldquo;</span><span class="eh-slash-label">引用</span></button>
+            <button class="eh-slash-item" data-cmd="ul"><span class="eh-slash-icon">&bull;</span><span class="eh-slash-label">无序列表</span></button>
+            <button class="eh-slash-item" data-cmd="ol"><span class="eh-slash-icon">1.</span><span class="eh-slash-label">有序列表</span></button>
+            <button class="eh-slash-item" data-cmd="hr"><span class="eh-slash-icon">&mdash;</span><span class="eh-slash-label">分割线</span></button>
+            <button class="eh-slash-item" data-cmd="table"><span class="eh-slash-icon">&#9638;</span><span class="eh-slash-label">表格</span></button>
+        </div>
+        <div class="eh-slash-group">
+            <div class="eh-slash-group-title">媒体</div>
+            <button class="eh-slash-item" data-cmd="image"><span class="eh-slash-icon">&#128247;</span><span class="eh-slash-label">图片</span></button>
+            <button class="eh-slash-item" data-cmd="link"><span class="eh-slash-icon">&#128279;</span><span class="eh-slash-label">链接</span></button>
+        </div>
+        <div class="eh-slash-group">
+            <div class="eh-slash-group-title">代码块</div>
+            <button class="eh-slash-item" data-cmd="codeblock"><span class="eh-slash-icon">{ }</span><span class="eh-slash-label">代码块</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="javascript"><span class="eh-slash-icon">JS</span><span class="eh-slash-label">JavaScript</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="typescript"><span class="eh-slash-icon">TS</span><span class="eh-slash-label">TypeScript</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="python"><span class="eh-slash-icon">PY</span><span class="eh-slash-label">Python</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="java"><span class="eh-slash-icon">JV</span><span class="eh-slash-label">Java</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="c"><span class="eh-slash-icon">C</span><span class="eh-slash-label">C</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="cpp"><span class="eh-slash-icon">C++</span><span class="eh-slash-label">C++</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="csharp"><span class="eh-slash-icon">C#</span><span class="eh-slash-label">C#</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="go"><span class="eh-slash-icon">GO</span><span class="eh-slash-label">Go</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="rust"><span class="eh-slash-icon">RS</span><span class="eh-slash-label">Rust</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="php"><span class="eh-slash-icon">PHP</span><span class="eh-slash-label">PHP</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="ruby"><span class="eh-slash-icon">RB</span><span class="eh-slash-label">Ruby</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="swift"><span class="eh-slash-icon">SW</span><span class="eh-slash-label">Swift</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="kotlin"><span class="eh-slash-icon">KT</span><span class="eh-slash-label">Kotlin</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="html"><span class="eh-slash-icon">&lt;&gt;</span><span class="eh-slash-label">HTML</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="css"><span class="eh-slash-icon">#</span><span class="eh-slash-label">CSS</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="scss"><span class="eh-slash-icon">SC</span><span class="eh-slash-label">SCSS</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="sql"><span class="eh-slash-icon">DB</span><span class="eh-slash-label">SQL</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="bash"><span class="eh-slash-icon">$_</span><span class="eh-slash-label">Bash</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="powershell"><span class="eh-slash-icon">PS</span><span class="eh-slash-label">PowerShell</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="json"><span class="eh-slash-icon">{}</span><span class="eh-slash-label">JSON</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="yaml"><span class="eh-slash-icon">YML</span><span class="eh-slash-label">YAML</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="xml"><span class="eh-slash-icon">&lt;&gt;</span><span class="eh-slash-label">XML</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="markdown"><span class="eh-slash-icon">MD</span><span class="eh-slash-label">Markdown</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="dockerfile"><span class="eh-slash-icon">DK</span><span class="eh-slash-label">Dockerfile</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="lua"><span class="eh-slash-icon">Lua</span><span class="eh-slash-label">Lua</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="r"><span class="eh-slash-icon">R</span><span class="eh-slash-label">R</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="scala"><span class="eh-slash-icon">SC</span><span class="eh-slash-label">Scala</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="perl"><span class="eh-slash-icon">PL</span><span class="eh-slash-label">Perl</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="dart"><span class="eh-slash-icon">DT</span><span class="eh-slash-label">Dart</span></button>
+            <button class="eh-slash-item" data-cmd="codeblock" data-lang="text"><span class="eh-slash-icon">TXT</span><span class="eh-slash-label">纯文本</span></button>
+        </div>
     </div>
 
     <!-- ========== 移动端底部工具栏 ========== -->
@@ -188,6 +220,12 @@
         <button class="eh-mt-btn" data-action="link" title="链接">&#128279;</button>
         <button class="eh-mt-btn" data-action="image" title="图片">&#128247;</button>
         <button class="eh-mt-btn eh-mt-publish" data-action="publish" title="发布">&#10003;</button>
+    </div>
+
+    <!-- ========== 代码块语言选择器（Typora 风格） ========== -->
+    <div id="code-lang-menu" class="eh-code-lang-menu hidden">
+        <input type="text" id="code-lang-input" class="eh-code-lang-input" placeholder="搜索语言...">
+        <div class="eh-code-lang-list" id="code-lang-list"></div>
     </div>
 
     <!-- ========== 定时发布对话框 ========== -->
