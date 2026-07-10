@@ -64,6 +64,14 @@
                     &#128247;
                     <input type="file" accept="image/*" id="editor-upload-image" style="display:none;">
                 </label>
+                <label class="eh-tool-btn eh-upload-btn" title="上传视频">
+                    &#127916;
+                    <input type="file" accept="video/mp4,video/webm,video/ogg" id="editor-video-upload" style="display:none;">
+                </label>
+                <label class="eh-tool-btn eh-upload-btn" title="上传音频">
+                    &#127925;
+                    <input type="file" accept="audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac" id="editor-audio-upload" style="display:none;">
+                </label>
                 <label class="eh-tool-btn eh-upload-btn" title="导入 Markdown 文件">
                     &#128196;
                     <input type="file" accept=".md,.txt,.markdown,.html,.htm" id="editor-import-file" style="display:none;">
@@ -173,6 +181,9 @@
             <div class="eh-slash-group-title">媒体</div>
             <button class="eh-slash-item" data-cmd="image"><span class="eh-slash-icon">&#128247;</span><span class="eh-slash-label">图片</span></button>
             <button class="eh-slash-item" data-cmd="link"><span class="eh-slash-icon">&#128279;</span><span class="eh-slash-label">链接</span></button>
+            <button class="eh-slash-item" data-cmd="video"><span class="eh-slash-icon">&#127916;</span><span class="eh-slash-label">视频</span></button>
+            <button class="eh-slash-item" data-cmd="audio"><span class="eh-slash-icon">&#127925;</span><span class="eh-slash-label">音频</span></button>
+            <button class="eh-slash-item" data-cmd="map"><span class="eh-slash-icon">&#128506;&#65039;</span><span class="eh-slash-label">Google 地图</span></button>
         </div>
         <div class="eh-slash-group">
             <div class="eh-slash-group-title">代码块</div>

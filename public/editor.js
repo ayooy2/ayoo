@@ -83,7 +83,10 @@
         { key: 'hr',    icon: '—',  name: '分割线',     cmd: 'hr' },
         { key: 'table', icon: '■',  name: '表格',       cmd: 'table' },
         { key: 'image', icon: '📷', name: '图片',  cmd: 'image' },
-        { key: 'link',  icon: '🔗', name: '链接',  cmd: 'link' }
+        { key: 'link',  icon: '🔗', name: '链接',  cmd: 'link' },
+        { key: 'video', icon: '🎬', name: '视频',  cmd: 'video' },
+        { key: 'audio', icon: '🎵', name: '音频',  cmd: 'audio' },
+        { key: 'map',   icon: '🗺️', name: 'Google 地图', cmd: 'map' }
     ];
 
     // ============================================================
@@ -361,6 +364,18 @@
             uploadInput.addEventListener('change', onImageUpload);
         }
 
+        // 上传视频
+        var videoUpload = $('#editor-video-upload');
+        if (videoUpload) {
+            videoUpload.addEventListener('change', onVideoUpload);
+        }
+
+        // 上传音频
+        var audioUpload = $('#editor-audio-upload');
+        if (audioUpload) {
+            audioUpload.addEventListener('change', onAudioUpload);
+        }
+
         // 导入文件
         var importInput = $('#editor-import-file');
         if (importInput) {
@@ -513,6 +528,7 @@
     // 4. Markdown 工具栏 - insertMD
     // ============================================================
     function insertMD(type, lang) {
+        if (type === 'map') { insertMap(); return; }
         var cmd = MD_CMDS[type];
         if (!cmd) { console.warn('Unknown MD command:', type); return; }
         var ta = dom.contentArea;
@@ -1410,14 +1426,15 @@
     async function onCoverUpload(e) {
         var file = e.target.files[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-            alert('图片不能超过 5MB');
+        if (file.size > 10 * 1024 * 1024) {
+            alert('图片不能超过 10MB');
             e.target.value = '';
             return;
         }
 
         var formData = new FormData();
-        formData.append('image', file);
+        formData.append('file', file);
+        formData.append('type', 'image');
 
         try {
             updateSaveStatus('saving');
@@ -1445,14 +1462,15 @@
     async function onImageUpload(e) {
         var file = e.target.files[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-            alert('图片不能超过 5MB');
+        if (file.size > 10 * 1024 * 1024) {
+            alert('图片不能超过 10MB');
             e.target.value = '';
             return;
         }
 
         var formData = new FormData();
-        formData.append('image', file);
+        formData.append('file', file);
+        formData.append('type', 'image');
 
         try {
             updateSaveStatus('saving');
@@ -1483,6 +1501,117 @@
             updateSaveStatus('error');
         }
         e.target.value = '';
+    }
+
+    async function onVideoUpload(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 50 * 1024 * 1024) {
+            alert('视频不能超过 50MB');
+            e.target.value = '';
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'video');
+
+        try {
+            updateSaveStatus('saving');
+            var res = await apiFetch(API.uploadMedia, {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                var data = await res.json();
+                var url = data.url || '';
+                var ta = dom.contentArea;
+                if (ta && url) {
+                    var videoTag = '\n<video src="' + url + '" controls></video>\n';
+                    var pos = ta.selectionStart;
+                    ta.value = ta.value.substring(0, pos) + videoTag + ta.value.substring(pos);
+                    ta.selectionStart = ta.selectionEnd = pos + videoTag.length;
+                    ta.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                updateSaveStatus('unsaved');
+            } else {
+                alert('上传失败');
+                updateSaveStatus('unsaved');
+            }
+        } catch(err) {
+            alert('上传失败: 网络错误');
+            updateSaveStatus('error');
+        }
+        e.target.value = '';
+    }
+
+    async function onAudioUpload(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) {
+            alert('音频不能超过 10MB');
+            e.target.value = '';
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'audio');
+
+        try {
+            updateSaveStatus('saving');
+            var res = await apiFetch(API.uploadMedia, {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                var data = await res.json();
+                var url = data.url || '';
+                var ta = dom.contentArea;
+                if (ta && url) {
+                    var audioTag = '\n<audio src="' + url + '" controls></audio>\n';
+                    var pos = ta.selectionStart;
+                    ta.value = ta.value.substring(0, pos) + audioTag + ta.value.substring(pos);
+                    ta.selectionStart = ta.selectionEnd = pos + audioTag.length;
+                    ta.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                updateSaveStatus('unsaved');
+            } else {
+                alert('上传失败');
+                updateSaveStatus('unsaved');
+            }
+        } catch(err) {
+            alert('上传失败: 网络错误');
+            updateSaveStatus('error');
+        }
+        e.target.value = '';
+    }
+
+    function insertMap() {
+        var mapUrl = prompt('请输入 Google 地图链接:');
+        if (!mapUrl) return;
+
+        // 转换为嵌入 URL
+        var embedUrl = mapUrl;
+        if (mapUrl.includes('google.com/maps')) {
+            if (mapUrl.includes('/maps/place/')) {
+                embedUrl = mapUrl.replace('/maps/place/', '/maps/embed?pb=');
+            } else if (mapUrl.includes('/maps/@')) {
+                var coords = mapUrl.match(/@([-\d.]+),([-\d.]+)/);
+                if (coords) {
+                    embedUrl = 'https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d10000!2d' + coords[2] + '!3d' + coords[1];
+                }
+            }
+        }
+
+        var ta = dom.contentArea;
+        if (ta) {
+            var mapTag = '\n<iframe src="' + embedUrl + '" width="600" height="450" style="border:0" allowfullscreen loading="lazy"></iframe>\n';
+            var pos = ta.selectionStart;
+            ta.value = ta.value.substring(0, pos) + mapTag + ta.value.substring(pos);
+            ta.selectionStart = ta.selectionEnd = pos + mapTag.length;
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
     }
 
     // ============================================================

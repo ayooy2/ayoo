@@ -1065,6 +1065,32 @@ body {
     display: none !important;
 }
 
+/* ── 视频预览 ── */
+.eh-video-preview {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 8px 0;
+}
+
+/* ── 音频预览 ── */
+.eh-audio-preview {
+    width: 100%;
+    margin: 8px 0;
+}
+
+/* ── 地图对话框 ── */
+.eh-map-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--surface, var(--bg-elevated));
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
     .eh-floating-toolbar,
