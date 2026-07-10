@@ -127,8 +127,9 @@ async function uploadToR2(env, request) {
       'INSERT INTO media (filename, mime_type, r2_key, file_size, type) VALUES (?, ?, ?, ?, ?) RETURNING id'
     ).bind(filename, mimeType, r2Key, file.size, 'image').first();
     return json({ id: result.id, url: '/api/media?id=' + result.id, filename, mime_type: mimeType, size: file.size, type: 'image' }, 201);
-  } catch {
-    // media 表可能不存在，回退到 images 表
-    return json({ url: '/api/media/' + r2Key, filename, mime_type: mimeType, size: file.size }, 201);
+  } catch (e) {
+    // media 表可能不存在，清理已上传的 R2 对象
+    try { await env.MEDIA.delete(r2Key); } catch {}
+    return error('上传失败: 数据库错误', 500);
   }
 }

@@ -1588,20 +1588,36 @@
     }
 
     function insertMap() {
-        var mapUrl = prompt('请输入 Google 地图链接:');
+        var mapUrl = prompt('请输入 Google 地图链接 (https://www.google.com/maps/...):');
         if (!mapUrl) return;
+
+        // 验证 URL 协议
+        if (!mapUrl.startsWith('https://') && !mapUrl.startsWith('http://')) {
+            alert('请输入有效的 URL（以 http:// 或 https:// 开头）');
+            return;
+        }
+
+        // 验证必须是 Google Maps
+        if (mapUrl.indexOf('google.com/maps') === -1 && mapUrl.indexOf('maps.app.goo.gl') === -1) {
+            alert('请输入 Google 地图链接');
+            return;
+        }
 
         // 转换为嵌入 URL
         var embedUrl = mapUrl;
-        if (mapUrl.includes('google.com/maps')) {
-            if (mapUrl.includes('/maps/place/')) {
+        if (mapUrl.indexOf('google.com/maps') !== -1) {
+            if (mapUrl.indexOf('/maps/place/') !== -1) {
                 embedUrl = mapUrl.replace('/maps/place/', '/maps/embed?pb=');
-            } else if (mapUrl.includes('/maps/@')) {
+            } else if (mapUrl.indexOf('/maps/@') !== -1) {
                 var coords = mapUrl.match(/@([-\d.]+),([-\d.]+)/);
                 if (coords) {
                     embedUrl = 'https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d10000!2d' + coords[2] + '!3d' + coords[1];
                 }
             }
+        } else {
+            // maps.app.goo.gl 短链接，提示用户展开
+            alert('请先在浏览器中打开短链接，然后复制展开后的完整链接');
+            return;
         }
 
         var ta = dom.contentArea;
@@ -1668,7 +1684,7 @@
             }
             if (parsed.tags && parsed.tags.length > 0) {
                 state.selectedTags = parsed.tags;
-                updateTagChips();
+                renderSelectedTags();
             }
 
             markDirty();

@@ -166,18 +166,24 @@ async function uploadFile(env, request) {
   });
 
   // 写入 D1 记录
-  const result = await env.DB.prepare(
-    'INSERT INTO media (filename, mime_type, r2_key, file_size, type) VALUES (?, ?, ?, ?, ?) RETURNING id, filename, mime_type, r2_key, file_size, type, created_at'
-  ).bind(filename, mimeType, r2Key, file.size, type).first();
+  try {
+    const result = await env.DB.prepare(
+      'INSERT INTO media (filename, mime_type, r2_key, file_size, type) VALUES (?, ?, ?, ?, ?) RETURNING id, filename, mime_type, r2_key, file_size, type, created_at'
+    ).bind(filename, mimeType, r2Key, file.size, type).first();
 
-  return json({
-    id: result.id,
-    url: '/api/media?id=' + result.id,
-    filename: result.filename,
-    mime_type: result.mime_type,
-    size: result.file_size,
-    type: result.type,
-  }, 201);
+    return json({
+      id: result.id,
+      url: '/api/media?id=' + result.id,
+      filename: result.filename,
+      mime_type: result.mime_type,
+      size: result.file_size,
+      type: result.type,
+    }, 201);
+  } catch (e) {
+    // D1 插入失败，清理已上传的 R2 对象
+    try { await env.MEDIA.delete(r2Key); } catch {}
+    throw e;
+  }
 }
 
 // 删除文件（R2 + D1）
