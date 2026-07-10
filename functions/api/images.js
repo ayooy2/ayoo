@@ -41,6 +41,12 @@ export async function onRequest(context) {
   if (request.method === 'POST') {
     const authErr = await requireAuth(request, env);
     if (authErr) return authErr;
+    const contentType = request.headers.get('Content-Type') || '';
+    // FormData 上传走 R2 存储
+    if (contentType.includes('multipart/form-data')) {
+      return uploadToR2(env, request);
+    }
+    // JSON 上传走旧的 base64/D1 存储（向后兼容）
     let data;
     try { data = await request.json(); } catch { return error('请求格式错误', 400); }
     return uploadImage(env, data);
@@ -88,5 +94,41 @@ async function deleteImage(env, id) {
   } catch (e) {
     console.error('Delete image error:', e);
     return error('删除失败', 500);
+  }
+}
+
+// R2 上传路径（FormData 格式，向后兼容）
+const MIME_TO_EXT = {
+  'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif',
+  'image/webp': 'webp', 'image/bmp': 'bmp',
+};
+
+async function uploadToR2(env, request) {
+  if (!env.MEDIA) return error('R2 存储未配置', 500);
+  let formData;
+  try { formData = await request.formData(); } catch { return error('请求格式错误', 400); }
+  const file = formData.get('file');
+  if (!file || typeof file === 'string') return error('缺少文件字段 file', 400);
+  const mimeType = file.type || '';
+  if (!ALLOWED_MIME_TYPES.includes(mimeType)) return error('不支持的图片格式', 400);
+  if (file.size > 10 * 1024 * 1024) return error('文件过大，限制 10MB', 400);
+  const filename = (file.name || 'image').replace(/<[^>]*>/g, '').slice(0, 200);
+  const ext = MIME_TO_EXT[mimeType] || 'bin';
+  const timestamp = Date.now();
+  const random = crypto.randomUUID().replace(/-/g, '').slice(0, 8);
+  const r2Key = `media/image/${timestamp}-${random}.${ext}`;
+  const arrayBuffer = await file.arrayBuffer();
+  await env.MEDIA.put(r2Key, new Uint8Array(arrayBuffer), {
+    httpMetadata: { contentType: mimeType, contentDisposition: `inline; filename="${encodeURIComponent(filename)}"` },
+  });
+  // 写入 media 表（如果有）和 images 表保持兼容
+  try {
+    const result = await env.DB.prepare(
+      'INSERT INTO media (filename, mime_type, r2_key, file_size, type) VALUES (?, ?, ?, ?, ?) RETURNING id'
+    ).bind(filename, mimeType, r2Key, file.size, 'image').first();
+    return json({ id: result.id, url: '/api/media?id=' + result.id, filename, mime_type: mimeType, size: file.size, type: 'image' }, 201);
+  } catch {
+    // media 表可能不存在，回退到 images 表
+    return json({ url: '/api/media/' + r2Key, filename, mime_type: mimeType, size: file.size }, 201);
   }
 }

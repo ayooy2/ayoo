@@ -299,6 +299,24 @@ function wrapCB(){
     var body=document.createElement("div");body.className="cb-body";
     pre.parentNode.insertBefore(w,pre);w.appendChild(bar);body.appendChild(pre);w.appendChild(body);
   }
+  // 包裹裸露的 video 标签
+  var vids=document.querySelectorAll("#content video:not(.video-wrapper video)");
+  for(var i=0;i<vids.length;i++){
+    var v=vids[i];
+    if(!v.closest(".video-wrapper")){
+      var w=document.createElement("div");w.className="video-wrapper";
+      v.parentNode.insertBefore(w,v);w.appendChild(v);
+    }
+  }
+  // 包裹裸露的 audio 标签
+  var auds=document.querySelectorAll("#content audio:not(.audio-wrapper audio)");
+  for(var i=0;i<auds.length;i++){
+    var a=auds[i];
+    if(!a.closest(".audio-wrapper")){
+      var w=document.createElement("div");w.className="audio-wrapper";
+      a.parentNode.insertBefore(w,a);w.appendChild(a);
+    }
+  }
 }
 
 document.addEventListener("DOMContentLoaded",function(){document.getElementById("content").addEventListener("click",onCBBtn)});
@@ -501,6 +519,16 @@ ${cmdOverlay()}
 }
 
 
+function sanitizeIframe(html) {
+  var m = html.match(/src="([^"]+)"/);
+  if (!m) return '';
+  var src = m[1];
+  if (!/google\.com\/maps/i.test(src)) return '';
+  return '<div class="iframe-wrapper"><iframe src="' + src +
+    '" width="600" height="450" style="border:0" allowfullscreen loading="lazy" ' +
+    'sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="no-referrer"></iframe></div>';
+}
+
 function simpleMD(md) {
   var t = String(md || '');
   t = t.replace(/\\n/g, '\n');
@@ -516,6 +544,36 @@ function simpleMD(md) {
     cbs.push({l: lang, c: code});
     t = t.slice(0, i) + '__CB' + (cbs.length - 1) + '__' + t.slice(end + 4);
   }
+
+  // 提取原始 HTML 标签（video/audio/iframe），防止被 esc() 转义
+  var mFrames = [], match;
+  var mediaRe = /<(video|audio|iframe)([\s\S]*?)<\/\1>/gi;
+  while ((match = mediaRe.exec(t)) !== null) {
+    var tag = match[1].toLowerCase();
+    var raw = match[0];
+    var safe = '';
+    if (tag === 'video') {
+      var src = (raw.match(/src="([^"]+)"/i) || [])[1] || '';
+      if (src && !/^javascript:|^data:|^vbscript:/i.test(src)) {
+        var poster = (raw.match(/poster="([^"]+)"/i) || [])[1] || '';
+        safe = '<div class="video-wrapper"><video src="' + src + '" controls' +
+          (poster ? ' poster="' + poster + '"' : '') + '></video></div>';
+      }
+    } else if (tag === 'audio') {
+      var src = (raw.match(/src="([^"]+)"/i) || [])[1] || '';
+      if (src && !/^javascript:|^data:|^vbscript:/i.test(src)) {
+        safe = '<div class="audio-wrapper"><audio src="' + src + '" controls></audio></div>';
+      }
+    } else if (tag === 'iframe') {
+      safe = sanitizeIframe(raw);
+    }
+    if (safe) {
+      mFrames.push(safe);
+      t = t.replace(raw, '__MF' + (mFrames.length - 1) + '__');
+      mediaRe.lastIndex = 0; // 重置索引，因为文本已被修改
+    }
+  }
+
   t = esc(t);
   for (var n = 0; n < cbs.length; n++) {
     var cb = cbs[n], l = esc(cb.l || 'text'), c = esc(cb.c);
@@ -527,9 +585,23 @@ function simpleMD(md) {
       '</div><div class="cb-body"><pre><code>' + c + '</code></pre></div></div>';
     t = t.replace('__CB' + n + '__', html);
   }
+
+  // 还原媒体标签占位符（未被 esc 转义的原始 HTML）
+  for (var mi = 0; mi < mFrames.length; mi++) {
+    t = t.replace('__MF' + mi + '__', mFrames[mi]);
+  }
+
   t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
   t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   t = t.replace(/\*(?!\*)(.+?)\*/g, '<em>$1</em>');
+  t = t.replace(/!\[video\]\(([^)]+)\)/gi, function(m, src) {
+    if (/^javascript:|^data:|^vbscript:/i.test(src)) return m;
+    return '<div class="video-wrapper"><video src="' + src + '" controls></video></div>';
+  });
+  t = t.replace(/!\[audio\]\(([^)]+)\)/gi, function(m, src) {
+    if (/^javascript:|^data:|^vbscript:/i.test(src)) return m;
+    return '<div class="audio-wrapper"><audio src="' + src + '" controls></audio></div>';
+  });
   t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(m, alt, src) {
     if (/^javascript:|^data:|^vbscript:/i.test(src)) return m;
     // src 已经被 esc(t) 转义过，不需要再次转义
@@ -548,7 +620,7 @@ function simpleMD(md) {
   var parts = t.split('\n\n'), out = '';
   for (var k = 0; k < parts.length; k++) {
     var p = parts[k].trim(); if (!p) continue;
-    if (/^<(h[123]|div|blockquote|hr|li|img)/.test(p)) out += p;
+    if (/^<(h[123]|div|blockquote|hr|li|img|video|audio)/.test(p)) out += p;
     else out += '<p>' + p.replace(/\n/g, '<br>') + '</p>';
   }
   return out;
