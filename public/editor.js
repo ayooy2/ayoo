@@ -11,7 +11,8 @@
         createArticle: '/api/articles',
         updateArticle: function(id) { return '/api/articles/' + id; },
         tags: '/api/tags',
-        uploadImage: '/api/images'
+        uploadImage: '/api/media',
+        uploadMedia: '/api/media'
     };
 
     // Markdown 工具栏命令表
@@ -31,7 +32,10 @@
         codeblock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true, lang: true },
         codeBlock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true, lang: true },
         table:      { before: '| 列1 | 列2 |\n| ----- | ----- |\n| ', after: ' |\n', ph: '内容', block: true },
-        hr:         { before: '\n---\n', after: '',         ph: '',           block: true }
+        hr:         { before: '\n---\n', after: '',         ph: '',           block: true },
+        video:      { before: '<video src="', after: '" controls></video>', ph: '视频链接', inline: true },
+        audio:      { before: '<audio src="', after: '" controls></audio>', ph: '音频链接', inline: true },
+        map:        { before: '', after: '', ph: '', block: true }
     };
 
     // 斜杠命令列表
