@@ -1046,29 +1046,45 @@
     function onGlobalKeydown(e) {
         var isCtrl = e.ctrlKey || e.metaKey;
 
-        if (isCtrl && e.key === 'b') {
-            e.preventDefault();
-            insertMD('bold');
-        }
-        if (isCtrl && e.key === 'i') {
-            e.preventDefault();
-            insertMD('italic');
-        }
-        if (isCtrl && e.key === 'k') {
-            e.preventDefault();
-            insertMD('link');
-        }
+        // Ctrl+S 保存草稿
         if (isCtrl && e.key === 's') {
             e.preventDefault();
             doPublish('draft');
+            return;
         }
-        if (isCtrl && !e.shiftKey && e.key === 'z') {
-            e.preventDefault();
-            undo();
-        }
+        // Ctrl+Shift+Z 重做（必须在 Ctrl+Z 之前判断）
         if (isCtrl && e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
             e.preventDefault();
             redo();
+            return;
+        }
+        // Ctrl+Z 撤销（仅在 textarea 获焦且有自定义撤销栈时拦截）
+        if (isCtrl && !e.shiftKey && e.key === 'z') {
+            var ta = dom.contentArea;
+            if (ta && document.activeElement === ta && state.undoStack.length > 0) {
+                e.preventDefault();
+                undo();
+                return;
+            }
+            // 否则让浏览器原生撤销生效
+        }
+        // Ctrl+B 加粗（仅在 textarea 获焦时）
+        if (isCtrl && e.key === 'b' && document.activeElement === dom.contentArea) {
+            e.preventDefault();
+            insertMD('bold');
+            return;
+        }
+        // Ctrl+I 斜体
+        if (isCtrl && e.key === 'i' && document.activeElement === dom.contentArea) {
+            e.preventDefault();
+            insertMD('italic');
+            return;
+        }
+        // Ctrl+K 链接
+        if (isCtrl && e.key === 'k' && document.activeElement === dom.contentArea) {
+            e.preventDefault();
+            insertMD('link');
+            return;
         }
     }
 
