@@ -10,4 +10,4 @@ database_id = "454c3cfd-a560-425e-b0c8-82642959e6a0"
 
 [[r2_buckets]]
 binding = "MEDIA"
-bucket_name = "ayoo-media"
+bucket_name = "ayoo"
