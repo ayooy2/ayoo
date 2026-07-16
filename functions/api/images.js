@@ -104,7 +104,7 @@ const MIME_TO_EXT = {
 };
 
 async function uploadToR2(env, request) {
-  if (!env.MEDIA) return error('R2 存储未配置', 500);
+  if (!env.media) return error('R2 存储未配置', 500);
   let formData;
   try { formData = await request.formData(); } catch { return error('请求格式错误', 400); }
   const file = formData.get('file');
@@ -118,7 +118,7 @@ async function uploadToR2(env, request) {
   const random = crypto.randomUUID().replace(/-/g, '').slice(0, 8);
   const r2Key = `media/image/${timestamp}-${random}.${ext}`;
   const arrayBuffer = await file.arrayBuffer();
-  await env.MEDIA.put(r2Key, new Uint8Array(arrayBuffer), {
+  await env.media.put(r2Key, new Uint8Array(arrayBuffer), {
     httpMetadata: { contentType: mimeType, contentDisposition: `inline; filename="${encodeURIComponent(filename)}"` },
   });
   // 写入 media 表（如果有）和 images 表保持兼容
@@ -129,7 +129,7 @@ async function uploadToR2(env, request) {
     return json({ id: result.id, url: '/api/media?id=' + result.id, filename, mime_type: mimeType, size: file.size, type: 'image' }, 201);
   } catch (e) {
     // media 表可能不存在，清理已上传的 R2 对象
-    try { await env.MEDIA.delete(r2Key); } catch {}
+    try { await env.media.delete(r2Key); } catch {}
     return error('上传失败: 数据库错误', 500);
   }
 }

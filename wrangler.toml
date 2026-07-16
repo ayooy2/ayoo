@@ -9,5 +9,5 @@ database_name = "a-site-db"
 database_id = "454c3cfd-a560-425e-b0c8-82642959e6a0"
 
 [[r2_buckets]]
-binding = "MEDIA"
+binding = "media"
 bucket_name = "ayoo"

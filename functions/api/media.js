@@ -89,7 +89,7 @@ async function getFile(env, id) {
   ).bind(id).first();
   if (!record) return error('Not found', 404);
 
-  const object = await env.MEDIA.get(record.r2_key);
+  const object = await env.media.get(record.r2_key);
   if (!object) return error('File not found in storage', 404);
 
   const headers = {
@@ -158,7 +158,7 @@ async function uploadFile(env, request) {
   const body = new Uint8Array(arrayBuffer);
 
   // 上传到 R2
-  await env.MEDIA.put(r2Key, body, {
+  await env.media.put(r2Key, body, {
     httpMetadata: {
       contentType: mimeType,
       contentDisposition: `inline; filename="${encodeURIComponent(filename)}"`,
@@ -181,7 +181,7 @@ async function uploadFile(env, request) {
     }, 201);
   } catch (e) {
     // D1 插入失败，清理已上传的 R2 对象
-    try { await env.MEDIA.delete(r2Key); } catch {}
+    try { await env.media.delete(r2Key); } catch {}
     throw e;
   }
 }
@@ -194,7 +194,7 @@ async function deleteFile(env, id) {
 
     // 删除 R2 对象
     if (record.r2_key) {
-      await env.MEDIA.delete(record.r2_key);
+      await env.media.delete(record.r2_key);
     }
 
     // 删除 D1 记录
