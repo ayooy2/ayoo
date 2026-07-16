@@ -29,6 +29,7 @@
             <button class="tab-btn" data-tab="articles" onclick="switchTab('articles')">文章管理</button>
             <button class="tab-btn" data-tab="tags" onclick="switchTab('tags')">标签管理</button>
             <button class="tab-btn" data-tab="images" onclick="switchTab('images');loadImages()">图片管理</button>
+            <button class="tab-btn" data-tab="guestbook" onclick="switchTab('guestbook');loadGuestbook()">留言管理</button>
             <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')">错误日志</button>
         </nav>
 
@@ -200,6 +201,25 @@
         <div id="images-grid" class="images-grid">
             <div class="empty-state"><p>加载中...</p></div>
         </div>
+    </div>
+
+    <!-- ========== 留言管理 ========== -->
+    <div id="tab-guestbook" class="tab-content hidden">
+        <div class="toolbar">
+            <span id="guestbook-count" class="count-badge">0</span>
+            <button class="btn btn-danger btn-sm" onclick="clearGuestbook()" title="清空所有留言">🗑️ 清空</button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>昵称</th>
+                    <th>留言内容</th>
+                    <th>时间</th>
+                    <th style="width:80px;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="guestbook-table-body"></tbody>
+        </table>
     </div>
 
     <!-- ========== 错误日志 ========== -->
@@ -412,6 +432,7 @@
     <script src="admin/articles.js"></script>
     <script src="admin/comments.js"></script>
     <script src="admin/images.js"></script>
+    <script src="admin/guestbook.js"></script>
     <script src="admin/logs.js"></script>
     <script src="admin/app.js"></script>
 </body>

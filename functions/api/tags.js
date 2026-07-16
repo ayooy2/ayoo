@@ -10,7 +10,7 @@ export async function onRequest(context) {
     const { results } = await env.DB.prepare(
       'SELECT * FROM tags ORDER BY name ASC'
     ).all();
-    return json(results || []);
+    return json({ tags: results || [] });
   }
 
   if (request.method === 'POST') {

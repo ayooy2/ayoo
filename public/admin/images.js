@@ -50,16 +50,20 @@
         }
     }
 
-    // ---- 图片管理 ----
+    // ---- 图片管理（R2 media） ----
     async function loadImages() {
         try {
-            var res = await apiFetch('/api/images?list=1');
+            var res = await apiFetch('/api/media?list=1');
+            if (!res.ok) {
+                // 回退到旧 API
+                res = await apiFetch('/api/images?list=1');
+            }
             if (!res.ok) return;
             var data = await res.json();
             var container = document.getElementById('images-grid');
             var countEl = document.getElementById('images-count');
             if (!container) return;
-            var images = data.images || [];
+            var images = data.media || data.images || [];
             if (countEl) countEl.textContent = images.length;
             if (!images.length) {
                 container.innerHTML = '<div class="empty-state"><p>暂无图片</p></div>';
@@ -69,11 +73,15 @@
             for (var i = 0; i < images.length; i++) {
                 var img = images[i];
                 var date = (img.created_at || '').slice(0, 16).replace('T', ' ');
-                html += '<div class="image-card" data-id="' + img.id + '">'
-                    + '<img src="/api/images?id=' + img.id + '" alt="' + escapeHtml(img.filename) + '" loading="lazy">'
+                var imgUrl = img.r2_key ? '/api/media?id=' + img.id : '/api/images?id=' + img.id';
+                var size = img.file_size ? (img.file_size / 1024).toFixed(1) + 'KB' : '';
+                var type = img.type || 'image';
+                var typeIcon = type === 'video' ? '🎬' : type === 'audio' ? '🎵' : '🖼️';
+                html += '<div class="image-card" data-id="' + img.id + '" data-type="' + type + '">'
+                    + '<img src="' + imgUrl + '" alt="' + escapeHtml(img.filename) + '" loading="lazy">'
                     + '<div class="image-info">'
-                    + '<span class="image-name">' + escapeHtml(img.filename) + '</span>'
-                    + '<span class="image-date">' + date + '</span>'
+                    + '<span class="image-name">' + typeIcon + ' ' + escapeHtml(img.filename) + '</span>'
+                    + '<span class="image-date">' + date + (size ? ' · ' + size : '') + '</span>'
                     + '</div>'
                     + '<button class="image-delete-btn" onclick="deleteImage(' + img.id + ')" title="删除">🗑️</button>'
                     + '</div>';
@@ -83,9 +91,12 @@
     }
 
     async function deleteImage(id) {
-        if (!confirm('确定删除这张图片？')) return;
+        if (!confirm('确定删除这个文件？')) return;
         try {
-            var res = await apiFetch('/api/images?id=' + id, { method: 'DELETE' });
+            var res = await apiFetch('/api/media?id=' + id, { method: 'DELETE' });
+            if (!res.ok) {
+                res = await apiFetch('/api/images?id=' + id, { method: 'DELETE' });
+            }
             if (res.ok) {
                 var card = document.querySelector('.image-card[data-id="' + id + '"]');
                 if (card) card.remove();
