@@ -583,12 +583,20 @@ function simpleMD(md) {
       '<button class="code-block-btn btn-copy" data-a="copy" title="复制" onclick="event.stopPropagation();onCBBtn(event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>' +
       '<button class="code-block-btn btn-fs" data-a="fullscreen" title="全屏" onclick="event.stopPropagation();onCBBtn(event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>' +
       '</div><div class="cb-body"><pre><code>' + c + '</code></pre></div></div>';
-    t = t.replace('__CB' + n + '__', html);
+    var cbPlaceholder = '__CB' + n + '__';
+    var cbIdx = t.indexOf(cbPlaceholder);
+    if (cbIdx !== -1) {
+      t = t.substring(0, cbIdx) + html + t.substring(cbIdx + cbPlaceholder.length);
+    }
   }
 
-  // 还原媒体标签占位符（未被 esc 转义的原始 HTML）
+  // 还原媒体标签占位符（用 substring 避免 $ 模式问题）
   for (var mi = 0; mi < mFrames.length; mi++) {
-    t = t.replace('__MF' + mi + '__', mFrames[mi]);
+    var mfPlaceholder = '__MF' + mi + '__';
+    var mfIdx = t.indexOf(mfPlaceholder);
+    if (mfIdx !== -1) {
+      t = t.substring(0, mfIdx) + mFrames[mi] + t.substring(mfIdx + mfPlaceholder.length);
+    }
   }
 
   t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
