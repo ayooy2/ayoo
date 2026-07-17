@@ -1,40 +1,25 @@
 (function() {
-    // ---- 图片上传 ----
+    // ---- 图片上传（R2 media） ----
     function uploadMDImage(input) {
         var file = input.files[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { alert('图片不能超过 5MB'); input.value = ''; return; }
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var img = new Image();
-            img.onload = function() {
-                var canvas = document.createElement('canvas');
-                var maxW = 1200, maxH = 800;
-                var w = img.width, h = img.height;
-                if (w > maxW) { h = h * maxW / w; w = maxW; }
-                if (h > maxH) { w = w * maxH / h; h = maxH; }
-                canvas.width = Math.round(w); canvas.height = Math.round(h);
-                var ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                var base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-                uploadToServer(file.name, 'image/jpeg', base64);
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+        if (file.size > 10 * 1024 * 1024) { alert('图片不能超过 10MB'); input.value = ''; return; }
+        uploadToServer(file);
         input.value = '';
     }
 
-    async function uploadToServer(filename, mime, data) {
+    async function uploadToServer(file) {
         try {
-            var res = await apiFetch('/api/images', {
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', 'image');
+            var res = await apiFetch('/api/media', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filename: filename, mime_type: mime, data: data })
+                body: formData
             });
             if (res.ok) {
                 var result = await res.json();
-                var mdImg = '\n![' + filename + '](' + result.url + ')\n';
+                var mdImg = '\n![' + (file.name || 'image') + '](' + result.url + ')\n';
                 var ta = document.getElementById('article-content-md');
                 ta.focus();
                 if (window._saveUndoState) window._saveUndoState(ta);
@@ -43,7 +28,8 @@
                 ta.selectionStart = ta.selectionEnd = pos + mdImg.length;
                 ta.dispatchEvent(new Event('input', { bubbles: true }));
             } else {
-                alert('图片上传失败');
+                var err = await res.json().catch(function() { return {}; });
+                alert('图片上传失败: ' + (err.error || '未知错误'));
             }
         } catch(e) {
             alert('图片上传失败: ' + e.message);

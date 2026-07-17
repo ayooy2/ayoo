@@ -52,14 +52,21 @@
     async function clearGuestbook() {
         if (!confirm('确定清空所有留言？此操作不可恢复！')) return;
         try {
-            // 逐个删除
-            var res = await apiFetch('/api/guestbook');
-            if (!res.ok) return;
-            var data = await res.json();
-            var items = Array.isArray(data) ? data : [];
-            for (var i = 0; i < items.length; i++) {
-                await apiFetch('/api/guestbook/' + items[i].id, { method: 'DELETE' });
+            var totalDeleted = 0;
+            var hasMore = true;
+            while (hasMore) {
+                var res = await apiFetch('/api/guestbook');
+                if (!res.ok) { alert('获取留言列表失败'); return; }
+                var data = await res.json();
+                var items = Array.isArray(data) ? data : [];
+                if (items.length === 0) { hasMore = false; break; }
+                for (var i = 0; i < items.length; i++) {
+                    var delRes = await apiFetch('/api/guestbook/' + items[i].id, { method: 'DELETE' });
+                    if (!delRes.ok) { alert('删除留言 #' + items[i].id + ' 失败'); return; }
+                    totalDeleted++;
+                }
             }
+            alert('已清空 ' + totalDeleted + ' 条留言');
             loadGuestbook();
         } catch(e) {
             alert('清空失败: 网络错误');

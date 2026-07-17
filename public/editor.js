@@ -1591,21 +1591,27 @@
         var mapUrl = prompt('请输入 Google 地图链接 (https://www.google.com/maps/...):');
         if (!mapUrl) return;
 
-        // 验证 URL 协议
-        if (!mapUrl.startsWith('https://') && !mapUrl.startsWith('http://')) {
+        // 验证 URL 格式和域名
+        var parsed;
+        try { parsed = new URL(mapUrl); } catch(e) {
+            alert('请输入有效的 URL');
+            return;
+        }
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
             alert('请输入有效的 URL（以 http:// 或 https:// 开头）');
             return;
         }
-
-        // 验证必须是 Google Maps
-        if (mapUrl.indexOf('google.com/maps') === -1 && mapUrl.indexOf('maps.app.goo.gl') === -1) {
+        var host = parsed.hostname.toLowerCase();
+        var isGoogleMaps = host === 'google.com' || host.endsWith('.google.com');
+        var isShortLink = host === 'maps.app.goo.gl' || host === 'goo.gl';
+        if (!isGoogleMaps && !isShortLink) {
             alert('请输入 Google 地图链接');
             return;
         }
 
         // 转换为嵌入 URL
         var embedUrl = mapUrl;
-        if (mapUrl.indexOf('google.com/maps') !== -1) {
+        if (isGoogleMaps) {
             if (mapUrl.indexOf('/maps/place/') !== -1) {
                 embedUrl = mapUrl.replace('/maps/place/', '/maps/embed?pb=');
             } else if (mapUrl.indexOf('/maps/@') !== -1) {
@@ -1615,7 +1621,6 @@
                 }
             }
         } else {
-            // maps.app.goo.gl 短链接，提示用户展开
             alert('请先在浏览器中打开短链接，然后复制展开后的完整链接');
             return;
         }

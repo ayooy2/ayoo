@@ -182,7 +182,7 @@ async function uploadFile(env, request) {
   } catch (e) {
     // D1 插入失败，清理已上传的 R2 对象
     try { await env.media.delete(r2Key); } catch {}
-    throw e;
+    return error('上传失败: 数据库错误', 500);
   }
 }
 

@@ -16,18 +16,34 @@ export function safeUrl(u) {
 
 /**
  * 清理 marked 生成的 HTML 中的危险标签和属性
- * - 移除 script/style/iframe/object/embed/form
+ * - 移除 script/style/object/embed/form
+ * - iframe: 只允许 google.com/maps，重建安全版本（仅保留 src/width/height 等安全属性）
  * - 移除所有 on* 事件属性
  * - 移除 javascript:/vbscript: 协议
  * - 阻止危险的 data: URI（text/html, application/javascript 等），允许安全的（image/*）
- * 保留常用 Markdown HTML 标签：h1-h6, p, a, img, ul/ol/li, table/thead/tbody/tr/th/td,
- * blockquote, pre, code, strong, em, del, br, hr, span, div, sup, sub, details, summary
  */
 export function sanitizeMD(html) {
-  return html
+  // 先提取 Google Maps iframe 并重建安全版本
+  var iframes = [];
+  html = html.replace(/<iframe([^>]*)>([\s\S]*?<\/iframe>|\/?>)/gi, function(match, attrs) {
+    var srcMatch = attrs.match(/src=["']([^"']+)["']/i);
+    if (srcMatch && srcMatch[1].indexOf('google.com/maps') !== -1) {
+      var src = srcMatch[1];
+      var safeAttrs = 'src="' + src + '"';
+      var width = attrs.match(/\bwidth=["'](\d+)["']/i);
+      var height = attrs.match(/\bheight=["'](\d+)["']/i);
+      if (width) safeAttrs += ' width="' + width[1] + '"';
+      if (height) safeAttrs += ' height="' + height[1] + '"';
+      safeAttrs += ' style="border:0" allowfullscreen loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="no-referrer"';
+      var idx = iframes.length;
+      iframes.push('<iframe ' + safeAttrs + '></iframe>');
+      return '__IFRAME_' + idx + '__';
+    }
+    return '';
+  });
+  var result = html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
     .replace(/<object[^>]*>[\s\S]*?<\/object>/gi, '')
     .replace(/<embed[^>]*>/gi, '')
     .replace(/<form[^>]*>[\s\S]*?<\/form>/gi, '')
@@ -38,4 +54,13 @@ export function sanitizeMD(html) {
     .replace(/javascript:/gi, '')
     .replace(/data:(?!image\/)/gi, '')
     .replace(/vbscript:/gi, '');
+  // 还原 Google Maps iframe（用 substring 避免 $ 模式问题）
+  for (var i = 0; i < iframes.length; i++) {
+    var placeholder = '__IFRAME_' + i + '__';
+    var idx = result.indexOf(placeholder);
+    if (idx !== -1) {
+      result = result.substring(0, idx) + iframes[i] + result.substring(idx + placeholder.length);
+    }
+  }
+  return result;
 }
