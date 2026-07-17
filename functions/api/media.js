@@ -192,13 +192,15 @@ async function deleteFile(env, id) {
     const record = await env.DB.prepare('SELECT id, r2_key FROM media WHERE id = ?').bind(id).first();
     if (!record) return error('Not found', 404);
 
-    // 删除 R2 对象
-    if (record.r2_key) {
-      await env.media.delete(record.r2_key);
-    }
-
-    // 删除 D1 记录
+    // 先删 D1 记录，再删 R2 对象（避免 D1 失败时 R2 已被删除）
     await env.DB.prepare('DELETE FROM media WHERE id = ?').bind(id).run();
+
+    // 删除 R2 对象（失败不影响 D1 已删除的事实）
+    if (record.r2_key) {
+      try { await env.media.delete(record.r2_key); } catch (e) {
+        console.warn('R2 delete failed for', record.r2_key, e);
+      }
+    }
     return json({ success: true });
   } catch (e) {
     console.error('Delete media error:', e);

@@ -9,10 +9,19 @@ function sanitizeMD(html){
   var iframes=[];
   html=html.replace(/<iframe([^>]*)>([\s\S]*?<\/iframe>|\/?>)/gi,function(match,attrs){
     var srcMatch=attrs.match(/src=["']([^"']+)["']/i);
-    if(srcMatch&&srcMatch[1].indexOf('google.com/maps')!==-1){
+    if(srcMatch){
       var src=srcMatch[1];
-      // 仅保留安全属性
-      var safeAttrs='src="'+src+'"';
+      // 严格校验域名：只允许 google.com 及其子域名
+      var isGoogleMaps=false;
+      try{
+        var u=new URL(src);
+        var h=u.hostname;
+        isGoogleMaps=(h==='google.com'||h==='www.google.com'||h.endsWith('.google.com')||h==='maps.app.goo.gl');
+      }catch(e){}
+      if(!isGoogleMaps) return '';
+      // 转义 src 中的引号，转义 & 为 &amp;（因为这段 HTML 会被直接拼入 SSR 输出）
+      var safeSrc=src.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      var safeAttrs='src="'+safeSrc+'"';
       var width=attrs.match(/\bwidth=["'](\d+)["']/i);
       var height=attrs.match(/\bheight=["'](\d+)["']/i);
       if(width) safeAttrs+=' width="'+width[1]+'"';

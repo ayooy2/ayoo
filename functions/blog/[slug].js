@@ -523,8 +523,16 @@ function sanitizeIframe(html) {
   var m = html.match(/src="([^"]+)"/);
   if (!m) return '';
   var src = m[1];
-  if (!/google\.com\/maps/i.test(src)) return '';
-  return '<div class="iframe-wrapper"><iframe src="' + src +
+  // 严格校验域名：只允许 google.com 及其子域名
+  var isGoogleMaps = false;
+  try {
+    var u = new URL(src);
+    var h = u.hostname;
+    isGoogleMaps = (h === 'google.com' || h === 'www.google.com' || h.endsWith('.google.com') || h === 'maps.app.goo.gl');
+  } catch(e) {}
+  if (!isGoogleMaps) return '';
+  var safeSrc = src.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  return '<div class="iframe-wrapper"><iframe src="' + safeSrc +
     '" width="600" height="450" style="border:0" allowfullscreen loading="lazy" ' +
     'sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="no-referrer"></iframe></div>';
 }
@@ -556,13 +564,13 @@ function simpleMD(md) {
       var src = (raw.match(/src="([^"]+)"/i) || [])[1] || '';
       if (src && !/^javascript:|^data:|^vbscript:/i.test(src)) {
         var poster = (raw.match(/poster="([^"]+)"/i) || [])[1] || '';
-        safe = '<div class="video-wrapper"><video src="' + src + '" controls' +
-          (poster ? ' poster="' + poster + '"' : '') + '></video></div>';
+        safe = '<div class="video-wrapper"><video src="' + esc(src) + '" controls' +
+          (poster ? ' poster="' + esc(poster) + '"' : '') + '></video></div>';
       }
     } else if (tag === 'audio') {
       var src = (raw.match(/src="([^"]+)"/i) || [])[1] || '';
       if (src && !/^javascript:|^data:|^vbscript:/i.test(src)) {
-        safe = '<div class="audio-wrapper"><audio src="' + src + '" controls></audio></div>';
+        safe = '<div class="audio-wrapper"><audio src="' + esc(src) + '" controls></audio></div>';
       }
     } else if (tag === 'iframe') {
       safe = sanitizeIframe(raw);
@@ -604,11 +612,11 @@ function simpleMD(md) {
   t = t.replace(/\*(?!\*)(.+?)\*/g, '<em>$1</em>');
   t = t.replace(/!\[video\]\(([^)]+)\)/gi, function(m, src) {
     if (/^javascript:|^data:|^vbscript:/i.test(src)) return m;
-    return '<div class="video-wrapper"><video src="' + src + '" controls></video></div>';
+    return '<div class="video-wrapper"><video src="' + esc(src) + '" controls></video></div>';
   });
   t = t.replace(/!\[audio\]\(([^)]+)\)/gi, function(m, src) {
     if (/^javascript:|^data:|^vbscript:/i.test(src)) return m;
-    return '<div class="audio-wrapper"><audio src="' + src + '" controls></audio></div>';
+    return '<div class="audio-wrapper"><audio src="' + esc(src) + '" controls></audio></div>';
   });
   t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(m, alt, src) {
     if (/^javascript:|^data:|^vbscript:/i.test(src)) return m;
