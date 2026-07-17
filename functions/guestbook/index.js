@@ -1,5 +1,5 @@
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
-import { esc } from '../lib/sanitize.js';
+import { esc, safeUrl } from '../lib/sanitize.js';
 // 留言簿 Edge SSR
 export async function onRequestGet(context) {
   const { env } = context;
@@ -107,8 +107,9 @@ function retroAv(seed){var h=0,s=String(seed);for(var i=0;i<s.length;i++){h=((h<
 function guestbookCard(entry, index) {
   var date = (entry.created_at || '').slice(0, 16).replace('T', ' ');
   var avatar = retroAv(entry.name || 'default');
-  var nameHtml = entry.url
-    ? '<a href="' + esc(entry.url) + '" target="_blank" rel="noopener" class="comment-author">' + esc(entry.name) + '</a>'
+  var safeLink = entry.url ? safeUrl(entry.url) : '';
+  var nameHtml = safeLink
+    ? '<a href="' + safeLink + '" target="_blank" rel="noopener" class="comment-author">' + esc(entry.name) + '</a>'
     : '<span class="comment-author">' + esc(entry.name) + '</span>';
   return '<div class="comment-box" style="animation-delay:' + (index * 60) + 'ms">'
     + '<div class="comment-header">'

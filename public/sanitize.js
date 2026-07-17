@@ -44,7 +44,7 @@ function sanitizeMD(html){
     .replace(/\/\s*on\w+\s*=\s*(['"])[\s\S]*?\1/gi,'')
     .replace(/\/\s*on\w+\s*=\s*[^\s>]*/gi,'')
     .replace(/javascript:/gi,'')
-    .replace(/data:(?!image\/)/gi,'')
+    .replace(/data:(?!image\/(?!svg\+xml))/gi,'')
     .replace(/vbscript:/gi,'');
   // 还原 Google Maps iframe（用函数避免 $ 模式问题）
   for(var i=0;i<iframes.length;i++){
