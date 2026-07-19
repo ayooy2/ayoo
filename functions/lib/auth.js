@@ -44,6 +44,14 @@ async function hashSessionToken(token) {
   return hashSHA256(token);
 }
 
+// 常量时间字符串比较，防止时序侧信道攻击
+function constantTimeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return result === 0;
+}
+
 // 验证密码：自动识别新格式（含冒号）和旧格式（纯 64 字符 hex）
 // 返回 { valid: boolean, needsRehash: boolean }
 export async function verifyPassword(password, stored) {
@@ -59,11 +67,11 @@ export async function verifyPassword(password, stored) {
       keyMaterial, HASH_BYTES * 8
     );
     const computed = bytesToHex(new Uint8Array(hashBuffer));
-    return { valid: computed === hashHex, needsRehash: false };
+    return { valid: constantTimeEqual(computed, hashHex), needsRehash: false };
   }
   // 旧格式：纯 SHA-256 hex（64 字符）
   const oldHash = await hashSHA256(password);
-  return { valid: oldHash === stored, needsRehash: true };
+  return { valid: constantTimeEqual(oldHash, stored || ''), needsRehash: true };
 }
 
 // 密码复杂度校验：至少 8 字符

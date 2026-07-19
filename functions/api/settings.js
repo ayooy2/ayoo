@@ -61,16 +61,27 @@ async function updateSettings(env, data) {
   }
   await env.DB.batch(stmts);
 
-  // CDN purge via Cloudflare API
+  // CDN purge via Cloudflare API（清除首页 + 博客列表 + 最近文章）
   const zoneId = env.CLOUDFLARE_ZONE_ID;
   const apiToken = env.CLOUDFLARE_API_TOKEN;
   const pageUrl = env.CF_PAGES_URL;
   if (zoneId && apiToken && pageUrl) {
     try {
+      const base = `https://${pageUrl}`;
+      const urls = [`${base}/`, `${base}/blog`];
+      // 清除最近 20 篇已发布文章的缓存
+      try {
+        const recent = await env.DB.prepare(
+          "SELECT slug FROM articles WHERE status='published' ORDER BY created_at DESC LIMIT 20"
+        ).all();
+        for (const a of (recent.results || [])) {
+          if (a.slug) urls.push(`${base}/blog/${a.slug}`);
+        }
+      } catch { /* DB may not have articles table */ }
       await fetch(`https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: [`https://${pageUrl}/`] })
+        body: JSON.stringify({ files: urls })
       });
     } catch { /* non-critical */ }
   }

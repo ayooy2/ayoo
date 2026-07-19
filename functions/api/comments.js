@@ -99,17 +99,37 @@ export async function onRequest(context) {
       if (parent.article_id !== articleId) return error('父评论不属于该文章', 400);
     }
 
-    // 防重复：30 秒内同一邮箱禁止连续发布
+    // 防重复：30 秒内同一邮箱或同一 IP 禁止连续发布
     const recent = await env.DB.prepare(
       "SELECT id FROM comments WHERE email = ? AND article_id = ? AND created_at > datetime('now', '-30 seconds') LIMIT 1"
     ).bind(email, articleId).first();
     if (recent) return error('请勿频繁提交，30 秒后再试', 429);
 
+    const ip = request.headers.get('CF-Connecting-IP') || '';
+    if (ip) {
+      try {
+        const recentIp = await env.DB.prepare(
+          "SELECT id FROM comments WHERE ip = ? AND article_id = ? AND created_at > datetime('now', '-30 seconds') LIMIT 1"
+        ).bind(ip, articleId).first();
+        if (recentIp) return error('请勿频繁提交，30 秒后再试', 429);
+      } catch { /* ip column may not exist yet */ }
+    }
+
     if (hasSpam(content) || hasSpam(authorName)) return error('评论内容包含不允许的词汇', 400);
 
-    const result = await env.DB.prepare(
-      'INSERT INTO comments (article_id, parent_id, author_name, email, url, content) VALUES (?, ?, ?, ?, ?, ?) RETURNING id, article_id, parent_id, author_name, url, content, created_at'
-    ).bind(articleId, parentId, authorName, email, finalUrl, content).first();
+    let result;
+    if (ip) {
+      try {
+        result = await env.DB.prepare(
+          'INSERT INTO comments (article_id, parent_id, author_name, email, url, content, ip) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, article_id, parent_id, author_name, url, content, created_at'
+        ).bind(articleId, parentId, authorName, email, finalUrl, content, ip).first();
+      } catch { /* ip column may not exist yet */ }
+    }
+    if (!result) {
+      result = await env.DB.prepare(
+        'INSERT INTO comments (article_id, parent_id, author_name, email, url, content) VALUES (?, ?, ?, ?, ?, ?) RETURNING id, article_id, parent_id, author_name, url, content, created_at'
+      ).bind(articleId, parentId, authorName, email, finalUrl, content).first();
+    }
 
     // 返回时附带 avatar_url 和 avatar_hash
     const av = gravatarUrl(email);

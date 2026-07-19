@@ -1,0 +1,1 @@
+ALTER TABLE comments ADD COLUMN ip TEXT DEFAULT '';
