@@ -11,11 +11,12 @@
         if (name === 'logs') loadLogs();
     }
 
-    // ---- 会话检查 ----
+    // ---- 会话检查（认证通过后才显示 UI）----
     (function() {
         apiFetch(API_AUTH, { credentials: 'same-origin' }).then(function(r) {
-            if (!r.ok) window.location.href = '/login.html';
-            else loadTable();
+            if (!r.ok) { window.location.href = '/login.html'; return; }
+            document.getElementById('admin-section').style.display = '';
+            loadTable();
         }).catch(function() {
             window.location.href = '/login.html';
         });
