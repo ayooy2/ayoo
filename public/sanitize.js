@@ -43,6 +43,7 @@ function sanitizeMD(html){
     .replace(/\son\w+\s*=\s*[^\s>\/]*/gi,'')
     .replace(/\/\s*on\w+\s*=\s*(['"])[\s\S]*?\1/gi,'')
     .replace(/\/\s*on\w+\s*=\s*[^\s>]*/gi,'')
+    .replace(/\son\w+(?=[\s>\/]|$)/gi,'')
     .replace(/javascript:/gi,'')
     .replace(/data:(?!image\/(?!svg\+xml))/gi,'')
     .replace(/vbscript:/gi,'');

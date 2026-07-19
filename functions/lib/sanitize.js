@@ -10,7 +10,8 @@ export function esc(s) {
  */
 export function safeUrl(u) {
   if (!u) return '';
-  if (/^javascript:|^data:|^vbscript:/i.test(u)) return '#';
+  var trimmed = u.replace(/^[\s\x00]+/, '');
+  if (/^javascript:|^data:|^vbscript:/i.test(trimmed)) return '#';
   return u;
 }
 
@@ -61,6 +62,7 @@ export function sanitizeMD(html) {
     .replace(/\son\w+\s*=\s*[^\s>\/]*/gi, '')
     .replace(/\/\s*on\w+\s*=\s*(['"])[\s\S]*?\1/gi, '')
     .replace(/\/\s*on\w+\s*=\s*[^\s>]*/gi, '')
+    .replace(/\son\w+(?=[\s>\/]|$)/gi, '')
     .replace(/javascript:/gi, '')
     .replace(/data:(?!image\/(?!svg\+xml))/gi, '')
     .replace(/vbscript:/gi, '');
