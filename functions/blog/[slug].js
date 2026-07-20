@@ -480,16 +480,14 @@ function md5c(s){function L(k,d){return(k<<d)|(k>>>(32-d))}function K(G,k){var I
 var _isAdmin=null;
 function checkAdmin(){
   if(_isAdmin===false) return;
-  var token=localStorage.getItem("admin_token");
-  if(!token){_isAdmin=false;return;}
   if(_isAdmin===true){
     document.querySelectorAll(".comment-delete-btn").forEach(function(b){b.style.display="inline-flex"});
     return;
   }
-  fetch("/api/auth",{headers:{"Authorization":"Bearer "+token}}).then(function(r){return r.json()}).then(function(d){
+  fetch("/api/auth",{credentials:"same-origin"}).then(function(r){return r.json()}).then(function(d){
     if(d.ok){_isAdmin=true;document.querySelectorAll(".comment-delete-btn").forEach(function(b){b.style.display="inline-flex"})}
     else{_isAdmin=false;}
-  }).catch(function(){});
+  }).catch(function(){_isAdmin=false;});
 }
 
 function deleteComment(id){

@@ -1351,7 +1351,7 @@
                 }
             } else if (res.status === 401) {
                 alert('登录已过期，请重新登录');
-                window.location.href = '/admin.html';
+                window.location.href = '/login.html';
             } else {
                 var err = await res.json().catch(function() { return {}; });
                 alert('操作失败: ' + (err.error || '未知错误'));
@@ -2019,7 +2019,7 @@
             if (!res.ok) {
                 if (res.status === 401) {
                     alert('登录已过期');
-                    window.location.href = '/admin.html';
+                    window.location.href = '/login.html';
                     return;
                 }
                 alert('加载文章失败');

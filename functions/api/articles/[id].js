@@ -1,5 +1,6 @@
 import { json, error } from '../../lib/response.js';
 import { requireAuth } from '../../lib/auth.js';
+import { purgeCDN } from '../../lib/cache.js';
 
 // GET/PUT/DELETE 单篇文章（GET 公开，PUT/DELETE 需认证）
 // GET 支持 id 或 ?slug=xxx
@@ -76,13 +77,21 @@ async function updateArticle(env, id, data) {
     `UPDATE articles SET title=?, slug=?, content_md=?, summary=?, cover_image=?, author=?, tags=?, is_published=?, scheduled_at=?, updated_at=CURRENT_TIMESTAMP WHERE id=? RETURNING *`
   ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at, id).first();
 
+  // 清除 CDN 缓存（旧 slug 和新 slug 都清除）
+  purgeCDN(env, existing.slug);
+  if (slug !== existing.slug) purgeCDN(env, slug);
+
   return json(result);
 }
 
 async function deleteArticle(env, id) {
+  // 先查 slug 用于清除缓存
+  const article = await env.DB.prepare('SELECT slug FROM articles WHERE id = ?').bind(id).first();
   await env.DB.prepare('DELETE FROM comments WHERE article_id = ?').bind(id).run();
   await env.DB.prepare('DELETE FROM likes WHERE article_id = ?').bind(id).run();
   const { meta } = await env.DB.prepare('DELETE FROM articles WHERE id = ?').bind(id).run();
   if (meta.changes === 0) return error('Not found', 404);
+  // 清除 CDN 缓存
+  if (article) purgeCDN(env, article.slug);
   return json({ success: true });
 }

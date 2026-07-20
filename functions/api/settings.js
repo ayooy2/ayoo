@@ -72,7 +72,7 @@ async function updateSettings(env, data) {
       // 清除最近 20 篇已发布文章的缓存
       try {
         const recent = await env.DB.prepare(
-          "SELECT slug FROM articles WHERE status='published' ORDER BY created_at DESC LIMIT 20"
+          "SELECT slug FROM articles WHERE is_published=1 ORDER BY created_at DESC LIMIT 20"
         ).all();
         for (const a of (recent.results || [])) {
           if (a.slug) urls.push(`${base}/blog/${a.slug}`);

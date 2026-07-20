@@ -1,5 +1,6 @@
 import { json, error } from '../lib/response.js';
 import { requireAuth } from '../lib/auth.js';
+import { purgeCDN } from '../lib/cache.js';
 
 // GET: 文章列表（公开，支持分页和排序）
 // POST: 创建文章（需认证）
@@ -70,6 +71,8 @@ async function createArticle(env, data) {
     const result = await env.DB.prepare(
       'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
     ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at).first();
+    // 发布文章时清除 CDN 缓存
+    if (is_published) purgeCDN(env, slug);
     return json(result, 201);
   } catch (e) {
     if (e.message && e.message.includes('UNIQUE')) return error('Slug already exists', 409);
