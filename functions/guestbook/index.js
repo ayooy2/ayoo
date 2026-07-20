@@ -61,6 +61,7 @@ ${mobileMenu()}
 <script>
 (function(){
   function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function safeUrl(u){if(!u)return'';var t=u.replace(/^[\s\x00]+/,'');if(/^javascript:|^data:|^vbscript:/i.test(t))return'#';return u}
   /* Guestbook form */
   var form=document.getElementById('guestbook-form');
   var btn=document.getElementById('gb-submit');
@@ -84,7 +85,8 @@ ${mobileMenu()}
         var empty=list.querySelector('.empty-state');if(empty)empty.remove();
         var div=document.createElement('div');div.className='comment-box';div.style.animationDelay='0ms';
         var avatar='https://q1.qlogo.cn/g?b=qq&nk=0&s=100&fid='+Math.abs(name.split('').reduce(function(h,c){return((h<<5)-h)+c.charCodeAt(0)|0},0))%14+1;
-        var nameHtml=url?'<a href="'+esc(url)+'" target="_blank" rel="noopener" class="comment-author">'+esc(name)+'</a>':'<span class="comment-author">'+esc(name)+'</span>';
+        var safeL=url?safeUrl(url):'';
+        var nameHtml=safeL?'<a href="'+esc(safeL)+'" target="_blank" rel="noopener" class="comment-author">'+esc(name)+'</a>':'<span class="comment-author">'+esc(name)+'</span>';
         div.innerHTML='<div class="comment-header"><img class="comment-avatar" src="'+avatar+'" alt="" loading="lazy"><div class="comment-meta">'+nameHtml+'</div></div><div class="comment-body"><p>'+esc(message)+'</p></div>';
         list.insertBefore(div,list.firstChild);
       }
@@ -109,7 +111,7 @@ function guestbookCard(entry, index) {
   var avatar = retroAv(entry.name || 'default');
   var safeLink = entry.url ? safeUrl(entry.url) : '';
   var nameHtml = safeLink
-    ? '<a href="' + safeLink + '" target="_blank" rel="noopener" class="comment-author">' + esc(entry.name) + '</a>'
+    ? '<a href="' + esc(safeLink) + '" target="_blank" rel="noopener" class="comment-author">' + esc(entry.name) + '</a>'
     : '<span class="comment-author">' + esc(entry.name) + '</span>';
   return '<div class="comment-box" style="animation-delay:' + (index * 60) + 'ms">'
     + '<div class="comment-header">'
