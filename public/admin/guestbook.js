@@ -9,7 +9,7 @@
             var countEl = document.getElementById('guestbook-count');
             if (!tbody) return;
 
-            var items = Array.isArray(data) ? data : [];
+            var items = data.items || (Array.isArray(data) ? data : []);
             if (countEl) countEl.textContent = items.length;
 
             if (!items.length) {
@@ -58,7 +58,7 @@
                 var res = await apiFetch('/api/guestbook');
                 if (!res.ok) { alert('获取留言列表失败'); return; }
                 var data = await res.json();
-                var items = Array.isArray(data) ? data : [];
+                var items = data.items || (Array.isArray(data) ? data : []);
                 if (items.length === 0) { hasMore = false; break; }
                 for (var i = 0; i < items.length; i++) {
                     var delRes = await apiFetch('/api/guestbook/' + items[i].id, { method: 'DELETE' });

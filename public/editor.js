@@ -1288,6 +1288,7 @@
             return;
         }
 
+        if (state.isSaving) return;
         updateSaveStatus('saving');
         state.isSaving = true;
 

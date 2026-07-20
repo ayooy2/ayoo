@@ -28,7 +28,7 @@
         });
     })();
 
-    // ---- 模态框点击外部关闭 ----
+    // ---- 模态框点击外部关闭 + ESC 键关闭 ----
     document.getElementById('article-modal').addEventListener('click', function(e) {
         if (e.target.id === 'article-modal') closeArticleEditor();
     });
@@ -40,6 +40,13 @@
     });
     document.getElementById('pw-modal').addEventListener('click', function(e) {
         if (e.target.id === 'pw-modal') closePwModal();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Escape') return;
+        if (document.getElementById('pw-modal').classList.contains('active')) { closePwModal(); return; }
+        if (document.getElementById('tag-modal').classList.contains('active')) { closeTagEditor(); return; }
+        if (document.getElementById('modal').classList.contains('active')) { closeModal(); return; }
+        if (document.getElementById('article-modal').classList.contains('active')) { closeArticleEditor(); return; }
     });
 
     // ---- 键盘快捷键（只在编辑器打开时生效）----

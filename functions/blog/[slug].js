@@ -453,25 +453,30 @@ function rc(list,d){
   return h;
 }
 
+var _likePending=false;
 function toggleLike(){
-  fetch("/api/likes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,fingerprint:fp})})
+  if(_likePending) return;
+  _likePending=true;
+  var b=document.getElementById("like-btn");
+  if(b) b.disabled=true;
+  fetch("/api/likes",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({article_id:aid,fingerprint:fp})})
   .then(function(r){return r.json()}).then(function(d){
     updateLikeState();
     var lc=document.getElementById("like-count");
     if(lc&&d.likes!==undefined) lc.textContent=d.likes;
-  });
+  }).catch(function(){}).finally(function(){_likePending=false;if(b)b.disabled=false;});
 }
 
 function updateLikeState(){
   var b=document.getElementById("like-btn");
-  fetch("/api/likes?article_id="+encodeURIComponent(aid)+"&fingerprint="+encodeURIComponent(fp))
+  fetch("/api/likes?article_id="+encodeURIComponent(aid)+"&fingerprint="+encodeURIComponent(fp),{credentials:"same-origin"})
   .then(function(r){return r.json()})
   .then(function(d){
     b.innerHTML=d.liked
       ?'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> 已喜欢'
       :'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> 喜欢';
     if(d.liked) b.classList.add("liked"); else b.classList.remove("liked");
-  });
+  }).catch(function(){});
 }
 
 function escR(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
