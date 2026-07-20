@@ -184,11 +184,7 @@
 
     async function apiFetch(url, opts) {
         opts = opts || {};
-        if (!opts.headers) opts.headers = {};
-        var token = localStorage.getItem('ayoo_token') || '';
-        if (token && !opts.headers['Authorization']) {
-            opts.headers['Authorization'] = 'Bearer ' + token;
-        }
+        if (!opts.credentials) opts.credentials = 'same-origin';
         return fetch(url, opts);
     }
 
