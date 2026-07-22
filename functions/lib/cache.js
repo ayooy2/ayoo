@@ -1,5 +1,10 @@
-// CDN 缓存清除工具
-// 清除首页、博客列表和指定文章页面的 Cloudflare CDN 缓存
+/**
+ * cache.js — CDN 缓存管理
+ * 功能：清除 Cloudflare CDN 缓存（首页、博客列表、指定文章）
+ * 导出：purgeCDN(env, slug)
+ * 依赖：Cloudflare API（需要 CLOUDFLARE_ZONE_ID、CLOUDFLARE_API_TOKEN、CF_PAGES_URL）
+ * 调用方：articles.js、articles/[id].js、settings.js
+ */
 export async function purgeCDN(env, slug) {
   const zoneId = env.CLOUDFLARE_ZONE_ID;
   const apiToken = env.CLOUDFLARE_API_TOKEN;

@@ -1,3 +1,10 @@
+/**
+ * auth.js — 认证核心模块
+ * 功能：密码哈希（PBKDF2）、会话管理、请求认证
+ * 导出：hashPassword(), verifyPassword(), requireAuth(), createSession(), clearAllSessions()
+ * 依赖：./response.js
+ * 安全：常量时间比较、频率限制、HttpOnly Cookie
+ */
 import { error } from './response.js';
 
 // --- 密码哈希（PBKDF2，向后兼容旧 SHA-256） ---
