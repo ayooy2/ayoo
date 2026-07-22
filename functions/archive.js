@@ -42,7 +42,7 @@ export async function onRequestGet(context) {
       timeline += '</ul>';
     }
   }
-  if (!timeline) timeline = '<div class="empty-state"><p class="empty-state-text">暂无文章</p></div>';
+  if (!timeline) timeline = '<div class="empty-state"><p class="empty-state-text" data-zh="暂无文章" data-en="No articles">暂无文章</p></div>';
 
   return new Response(`<!DOCTYPE html>
 <html lang="zh-CN">
@@ -52,6 +52,7 @@ export async function onRequestGet(context) {
 <title>归档</title>
 <meta name="description" content="所有文章归档">
 <link rel="stylesheet" href="/style.css?v=4">
+<link rel="stylesheet" href="/toolbar.css">
 </head>
 <body>
 ${navbar('归档', '/', '/archive')}
@@ -59,7 +60,7 @@ ${mobileMenu()}
 <div class="page-wrapper">
   <div class="page-header animate-in">
     <h1 class="page-title">归档</h1>
-    <p class="page-subtitle">${(results || []).length} 篇文章</p>
+    <p class="page-subtitle">${(results || []).length} <span data-zh="篇文章" data-en="posts">篇文章</span></p>
   </div>
   <div class="content">
     <div class="archive-timeline">
@@ -67,10 +68,11 @@ ${mobileMenu()}
     </div>
   </div>
   <footer class="page-footer">
-    <span class="footer-text"><a href="/">← 返回首页</a></span>
+    <span class="footer-text"><a href="/" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a></span>
   </footer>
 </div>
 <script src="/app.js"></script>
+<script src="/toolbar.js" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=3600' } });

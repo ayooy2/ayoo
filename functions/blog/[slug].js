@@ -56,6 +56,7 @@ function render(a, likes, prev, next) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${esc(a.title)}</title>${seo}
 <link rel="stylesheet" href="/style.css?v=4">
+<link rel="stylesheet" href="/toolbar.css">
 </head>
 <body>
 <div class="reading-progress" id="reading-progress"></div>
@@ -92,15 +93,15 @@ ${mobileMenu()}
 
         <div class="article-actions">
           <button class="btn-like" id="like-btn" onclick="toggleLike()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> 喜欢 <span id="like-count">${likes}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> <span data-zh="喜欢" data-en="Like">喜欢</span> <span id="like-count">${likes}</span>
           </button>
         </div>
 
         <section class="comment-section">
-          <h3>评论 (<span id="cc">0</span>)</h3>
+          <h3><span data-zh="评论" data-en="Comments">评论</span> (<span id="cc">0</span>)</h3>
           <div id="reply-hint" class="comment-reply-hint" style="display:none">
             <span id="reply-hint-text"></span>
-            <button onclick="cancelReply()" class="reply-cancel-btn">取消回复</button>
+            <button onclick="cancelReply()" class="reply-cancel-btn" data-zh="取消回复" data-en="Cancel reply">取消回复</button>
           </div>
           <form id="comment-form" class="comment-form">
             <div class="comment-form-row">
@@ -120,8 +121,8 @@ ${mobileMenu()}
 
       <!-- Mobile prev/next navigation -->
       <nav class="mobile-post-nav">
-        ${prev ? '<a class="mobile-post-nav-item prev" href="/blog/' + esc(prev.slug) + '"><span class="mobile-post-nav-label">← 上一篇</span><span class="mobile-post-nav-title">' + esc(prev.title) + '</span></a>' : '<div class="mobile-post-nav-item prev disabled"></div>'}
-        ${next ? '<a class="mobile-post-nav-item next" href="/blog/' + esc(next.slug) + '"><span class="mobile-post-nav-label">下一篇 →</span><span class="mobile-post-nav-title">' + esc(next.title) + '</span></a>' : '<div class="mobile-post-nav-item next disabled"></div>'}
+        ${prev ? '<a class="mobile-post-nav-item prev" href="/blog/' + esc(prev.slug) + '"><span class="mobile-post-nav-label" data-zh="← 上一篇" data-en="← Previous">← 上一篇</span><span class="mobile-post-nav-title">' + esc(prev.title) + '</span></a>' : '<div class="mobile-post-nav-item prev disabled"></div>'}
+        ${next ? '<a class="mobile-post-nav-item next" href="/blog/' + esc(next.slug) + '"><span class="mobile-post-nav-label" data-zh="下一篇 →" data-en="Next →">下一篇 →</span><span class="mobile-post-nav-title">' + esc(next.title) + '</span></a>' : '<div class="mobile-post-nav-item next disabled"></div>'}
       </nav>
 
       <!-- Sidebar TOC (desktop) -->
@@ -142,7 +143,7 @@ ${mobileMenu()}
   </div>
 
   <footer class="page-footer">
-    <span class="footer-text"><a href="/blog">← 返回笔记</a></span>
+    <span class="footer-text"><a href="/blog" data-zh="← 返回笔记" data-en="← Back to Blog">← 返回笔记</a></span>
   </footer>
 </div>
 
@@ -516,6 +517,7 @@ function deleteComment(id){
 
 </script>
 <script src="/app.js"></script>
+<script src="/toolbar.js" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`;

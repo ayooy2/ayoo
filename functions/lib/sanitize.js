@@ -1,5 +1,13 @@
 /**
- * HTML 转义
+ * sanitize.js — 服务端 HTML 清理工具
+ * 功能：HTML 转义、URL 安全检查、Markdown HTML 清理
+ * 导出：esc(), safeUrl(), sanitizeMD()
+ * 依赖：无
+ * 注意：客户端版本在 public/sanitize.js，逻辑保持一致
+ */
+
+/**
+ * HTML 转义：将特殊字符转为 HTML 实体
  */
 export function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');

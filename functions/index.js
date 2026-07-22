@@ -41,8 +41,8 @@ function render(s, sites, articles, stats) {
 
   // Navigation cards — static pages first, then dynamic sites
   var navCards = '';
-  navCards += `<div class="nav-card" data-url="/now" title="Now" style="animation-delay:0ms"><div class="nav-card-icon"><span class="nav-card-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div><div class="nav-card-text"><div class="nav-card-title">Now</div><div class="nav-card-desc">近况</div></div></div>`;
-  navCards += `<div class="nav-card" data-url="/guestbook" title="留言簿" style="animation-delay:60ms"><div class="nav-card-icon"><span class="nav-card-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span></div><div class="nav-card-text"><div class="nav-card-title">留言簿</div><div class="nav-card-desc">来留个言吧</div></div></div>`;
+  navCards += `<div class="nav-card" data-url="/now" title="Now" style="animation-delay:0ms"><div class="nav-card-icon"><span class="nav-card-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div><div class="nav-card-text"><div class="nav-card-title" data-zh="近况" data-en="Now">近况</div><div class="nav-card-desc" data-zh="当前状态" data-en="Current status">当前状态</div></div></div>`;
+  navCards += `<div class="nav-card" data-url="/guestbook" title="留言簿" style="animation-delay:60ms"><div class="nav-card-icon"><span class="nav-card-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span></div><div class="nav-card-text"><div class="nav-card-title" data-zh="留言簿" data-en="Guestbook">留言簿</div><div class="nav-card-desc" data-zh="来留个言吧" data-en="Leave a message">来留个言吧</div></div></div>`;
   for (var i = 0; i < sites.length; i++) {
     navCards += navCard(sites[i], i + 2);
   }
@@ -52,7 +52,7 @@ function render(s, sites, articles, stats) {
   for (var i = 0; i < articles.length; i++) {
     articleCards += articleCard(articles[i], i);
   }
-  if (!articleCards) articleCards = '<p class="empty-state"><span class="empty-state-text">暂无文章</span></p>';
+  if (!articleCards) articleCards = '<p class="empty-state"><span class="empty-state-text" data-zh="暂无文章" data-en="No articles yet">暂无文章</span></p>';
 
   var desc = esc(s.subtitle || 'Personal Operating System');
   var seo = '\n<meta name="description" content="' + desc + '">'
@@ -69,6 +69,7 @@ function render(s, sites, articles, stats) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${t}</title>${seo}
 <link rel="stylesheet" href="/style.css?v=4">
+<link rel="stylesheet" href="/toolbar.css">
 </head>
 <body${bgStyle}>
 ${navbar(t, '/', '')}
@@ -88,10 +89,10 @@ ${navbar(t, '/', '')}
         <div class="home-profile-name">${t}</div>
         <div class="home-profile-bio">${subRaw ? sub : 'Personal Operating System'}</div>
         <div class="home-profile-stats">
-          <span class="home-profile-stat"><strong>${stats.count}</strong> 文章</span>
-          <span class="home-profile-stat"><strong>${stats.tag_count}</strong> 标签</span>
-          <span class="home-profile-stat"><strong>${stats.total_views}</strong> 阅读</span>
-          <span class="home-profile-stat"><strong>${sites.length}</strong> 导航</span>
+          <span class="home-profile-stat"><strong>${stats.count}</strong> <span data-zh="文章" data-en="Posts">文章</span></span>
+          <span class="home-profile-stat"><strong>${stats.tag_count}</strong> <span data-zh="标签" data-en="Tags">标签</span></span>
+          <span class="home-profile-stat"><strong>${stats.total_views}</strong> <span data-zh="阅读" data-en="Views">阅读</span></span>
+          <span class="home-profile-stat"><strong>${sites.length}</strong> <span data-zh="导航" data-en="Links">导航</span></span>
         </div>
       </div>
     </div>
@@ -198,6 +199,7 @@ ${mobileMenu()}
 })()
 </script>
 ${cmdOverlay()}
+<script src="/toolbar.js" defer></script>
 </body>
 </html>`;
 }
@@ -209,7 +211,7 @@ function articleCard(article, index) {
     <p class="article-card-summary">${esc(article.summary || '')}</p>
     <div class="article-card-meta">
       <span>${date}</span>
-      <span>${article.views || 0} 阅读</span>
+      <span>${article.views || 0} <span data-zh="阅读" data-en="views">阅读</span></span>
     </div>
   </a>`;
 }

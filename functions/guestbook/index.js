@@ -13,7 +13,7 @@ export async function onRequestGet(context) {
   for (var i = 0; i < entries.length; i++) {
     cards += guestbookCard(entries[i], i);
   }
-  if (!cards) cards = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p class="empty-state-text">还没有留言，来抢沙发吧</p></div>';
+  if (!cards) cards = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p class="empty-state-text" data-zh="还没有留言，来抢沙发吧" data-en="No messages yet, be the first!">还没有留言，来抢沙发吧</p></div>';
 
   var seo = '<meta name="description" content="留言簿 — 欢迎留下你的足迹">'
     + '\n<meta property="og:type" content="website">'
@@ -28,6 +28,7 @@ export async function onRequestGet(context) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>留言簿</title>${seo}
 <link rel="stylesheet" href="/style.css?v=4">
+<link rel="stylesheet" href="/toolbar.css">
 </head>
 <body>
 ${navbar('留言簿', '/', '/guestbook')}
@@ -46,7 +47,7 @@ ${mobileMenu()}
         </div>
         <textarea name="message" class="comment-input" placeholder="说点什么吧..." required maxlength="1000" rows="3"></textarea>
         <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
-        <div><button type="submit" class="btn-submit" id="gb-submit">提交留言</button></div>
+        <div><button type="submit" class="btn-submit" id="gb-submit" data-zh="提交留言" data-en="Submit">提交留言</button></div>
       </form>
     </div>
     <div class="guestbook-list stagger">
@@ -54,7 +55,7 @@ ${mobileMenu()}
     </div>
   </div>
   <footer class="page-footer">
-    <span class="footer-text"><a href="/">← 返回首页</a></span>
+    <span class="footer-text"><a href="/" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a></span>
   </footer>
 </div>
 <script src="/app.js"></script>
@@ -95,6 +96,7 @@ ${mobileMenu()}
   });
 })()
 </script>
+<script src="/toolbar.js" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=300' } });

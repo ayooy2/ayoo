@@ -1,4 +1,9 @@
-// Ayoo — Shared client-side JS (theme, clock, mobile menu, command palette)
+/**
+ * app.js — 前端公共脚本
+ * 功能：主题切换、实时时钟、移动端菜单、代码块操作、命令面板
+ * 依赖：无（独立运行）
+ * 入口：IIFE 自执行，页面加载时自动初始化
+ */
 (function(){
   /* Theme toggle */
   var b=document.getElementById('theme-toggle'),st=localStorage.getItem('theme')||'light';

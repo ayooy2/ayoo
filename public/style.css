@@ -130,6 +130,13 @@
   --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.3);
 }
 
+/* ── Font Variants (toolbar.js) ── */
+[data-font="inter"]  { --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif; }
+[data-font="noto"]   { --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+[data-font="system"] { --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; }
+[data-font="serif"]  { --font-sans: 'Noto Serif SC', 'Georgia', 'Times New Roman', serif; }
+[data-font="mono"]   { --font-sans: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace; }
+
 /* ── Reset ── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 

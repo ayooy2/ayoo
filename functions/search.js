@@ -33,8 +33,8 @@ export async function onRequestGet(context) {
   }
 
   var emptyHtml = '';
-  if (q && !items) emptyHtml = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p class="empty-state-text">未找到相关文章</p></div>';
-  if (!q) emptyHtml = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p class="empty-state-text">输入关键词搜索</p></div>';
+  if (q && !items) emptyHtml = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p class="empty-state-text" data-zh="未找到相关文章" data-en="No matching articles found">未找到相关文章</p></div>';
+  if (!q) emptyHtml = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p class="empty-state-text" data-zh="输入关键词搜索" data-en="Enter keywords to search">输入关键词搜索</p></div>';
 
   // Highlight keywords in results
   if (q) {
@@ -50,13 +50,13 @@ export async function onRequestGet(context) {
   var recentHtml = '';
   if (!q) {
     recentHtml = `<div class="search-recent" id="search-recent" style="display:none">
-      <div class="search-recent-title">最近搜索</div>
+      <div class="search-recent-title" data-zh="最近搜索" data-en="Recent searches">最近搜索</div>
       <div class="search-recent-list" id="search-recent-list"></div>
     </div>`;
   }
 
   var header = `<div class="page-header animate-in">
-    <h1 class="page-title">搜索</h1>
+    <h1 class="page-title" data-zh="搜索" data-en="Search">搜索</h1>
     ${q ? '<p class="page-subtitle">关键词: ' + esc(q) + '</p>' : ''}
   </div>`;
 
@@ -88,7 +88,7 @@ export async function onRequestGet(context) {
   var body = `<div class="search-container">
       <form action="/search" method="get" class="search-form animate-in">
         <div class="search-input-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" name="q" value="${esc(q)}" placeholder="搜索文章..." class="search-input" autofocus></div>
-        <button type="submit" class="search-btn">搜索</button>
+        <button type="submit" class="search-btn" data-zh="搜索" data-en="Search">搜索</button>
       </form>
       <div class="search-results">
         ${items || emptyHtml}
@@ -99,7 +99,7 @@ export async function onRequestGet(context) {
   var html = htmlHead(title, '<meta name="robots" content="noindex">')
     + pageStart(navbar('搜索', '/', '/search'), mobileMenu(), header)
     + body
-    + pageEnd('<a href="/">← 返回首页</a>', scripts, cmdOverlay());
+    + pageEnd('<a href="/" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a>', scripts, cmdOverlay());
 
   return htmlResponse(html, { cacheAge: 60 });
   } catch (e) {

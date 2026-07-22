@@ -1,8 +1,12 @@
 /**
- * 清理 marked 生成的 HTML 中的危险标签和事件属性
- * 移除: script/style/object/embed/form + on*事件 + javascript:/vbscript:协议
- * iframe: 只允许 google.com/maps 来源，仅保留 src/width/height/style/allowfullscreen/loading/sandbox 属性
- * 阻止危险的 data: URI（text/html, application/javascript 等），允许安全的（image/*）
+ * sanitize.js — 客户端 HTML 清理函数
+ * 功能：清理 marked 生成的 HTML，防止 XSS 攻击
+ * 移除：script/style/object/embed/form + on*事件 + javascript:/vbscript:协议
+ * iframe：只允许 Google Maps，仅保留安全属性
+ * 阻止：data:image/svg+xml，允许安全的 data:image/*
+ * 依赖：无（独立运行）
+ * 导出：sanitizeMD(html) 函数
+ * 注意：服务端版本在 functions/lib/sanitize.js，逻辑保持一致
  */
 function sanitizeMD(html){
   // 先提取 Google Maps iframe 并重建安全版本

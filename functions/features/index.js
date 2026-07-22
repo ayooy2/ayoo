@@ -48,9 +48,9 @@ function render(stats, tags) {
   }
 
   var statsHtml = '<div class="feature-stats animate-in" style="animation-delay:0ms">'
-    + '<div class="feature-stat"><span class="feature-stat-num">' + stats.count + '</span><span class="feature-stat-label">篇文章</span></div>'
-    + '<div class="feature-stat"><span class="feature-stat-num">' + stats.total_views + '</span><span class="feature-stat-label">次阅读</span></div>'
-    + '<div class="feature-stat"><span class="feature-stat-num">' + tags.count + '</span><span class="feature-stat-label">个标签</span></div>'
+    + '<div class="feature-stat"><span class="feature-stat-num">' + stats.count + '</span><span class="feature-stat-label" data-zh="篇文章" data-en="posts">篇文章</span></div>'
+    + '<div class="feature-stat"><span class="feature-stat-num">' + stats.total_views + '</span><span class="feature-stat-label" data-zh="次阅读" data-en="views">次阅读</span></div>'
+    + '<div class="feature-stat"><span class="feature-stat-num">' + tags.count + '</span><span class="feature-stat-label" data-zh="个标签" data-en="tags">个标签</span></div>'
     + '</div>';
 
   var seo = '<meta name="description" content="网站功能一览 — 博客、评论、搜索、RSS、暗色模式等">'
@@ -66,6 +66,7 @@ function render(stats, tags) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>功能</title>${seo}
 <link rel="stylesheet" href="/style.css?v=4">
+<link rel="stylesheet" href="/toolbar.css">
 </head>
 <body>
 ${navbar('功能', '/', '/features')}
@@ -82,10 +83,11 @@ ${mobileMenu()}
     </div>
   </div>
   <footer class="page-footer">
-    <span class="footer-text"><a href="/">← 返回首页</a></span>
+    <span class="footer-text"><a href="/" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a></span>
   </footer>
 </div>
 <script src="/app.js"></script>
+<script src="/toolbar.js" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`;

@@ -53,7 +53,7 @@ function render(groups, categoryOrder, lastUpdated) {
   }
 
   if (!sections) {
-    sections = '<div class="empty-state"><p class="empty-state-text">暂无内容</p></div>';
+    sections = '<div class="empty-state"><p class="empty-state-text" data-zh="暂无内容" data-en="No content yet">暂无内容</p></div>';
   }
 
   var updatedLine = lastUpdated ? '<p class="now-updated">最后更新：' + esc(lastUpdated) + '</p>' : '';
@@ -72,6 +72,7 @@ function render(groups, categoryOrder, lastUpdated) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Now</title>${seo}
 <link rel="stylesheet" href="/style.css?v=4">
+<link rel="stylesheet" href="/toolbar.css">
 </head>
 <body>
 ${navbar('Now', '/', '/now')}
@@ -87,10 +88,11 @@ ${mobileMenu()}
     </div>
   </div>
   <footer class="page-footer">
-    <span class="footer-text"><a href="/">← 返回首页</a></span>
+    <span class="footer-text"><a href="/" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a></span>
   </footer>
 </div>
 <script src="/app.js"></script>
+<script src="/toolbar.js" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`;

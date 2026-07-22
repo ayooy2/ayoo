@@ -44,7 +44,7 @@ export async function onRequestGet(context) {
   for (var i = 0; i < articles.length; i++) {
     cards += blogCard(articles[i], i);
   }
-  if (!cards) cards = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p class="empty-state-text">还没有文章</p></div>';
+  if (!cards) cards = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p class="empty-state-text" data-zh="还没有文章" data-en="No articles yet">还没有文章</p></div>';
 
   var seo = '<meta name="description" content="所有已发布的文章笔记">'
     + '\n<meta property="og:type" content="website">'
@@ -60,6 +60,7 @@ export async function onRequestGet(context) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Blog</title>${seo}
 <link rel="stylesheet" href="/style.css?v=4">
+<link rel="stylesheet" href="/toolbar.css">
 </head>
 <body>
 ${navbar('Blog', '/blog', '/blog')}
@@ -67,7 +68,7 @@ ${mobileMenu()}
 <div class="page-wrapper">
   <div class="page-header animate-in">
     <h1 class="page-title">Blog</h1>
-    <p class="page-subtitle">${tagFilter ? '标签: ' + esc(tagFilter) + ' · ' : ''}${articles.length} 篇文章</p>
+    <p class="page-subtitle">${tagFilter ? '<span data-zh="标签" data-en="Tag">标签</span>: ' + esc(tagFilter) + ' · ' : ''}${articles.length} <span data-zh="篇文章" data-en="posts">篇文章</span></p>
   </div>
   <div class="content">
     ${tagFilterBar(tags, tagFilter)}
@@ -76,7 +77,7 @@ ${mobileMenu()}
     </div>
   </div>
   <footer class="page-footer">
-    <span class="footer-text"><a href="/">← 返回首页</a></span>
+    <span class="footer-text"><a href="/" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a></span>
   </footer>
 </div>
 <script src="/app.js"></script>
@@ -108,6 +109,7 @@ ${mobileMenu()}
   window.addEventListener('popstate',function(){window.location.reload()});
 })();
 </script>
+<script src="/toolbar.js" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=3600' } });
@@ -166,7 +168,7 @@ function blogCard(a, index) {
 function tagFilterBar(allTags, active) {
   if (!allTags.length) return '';
   var html = '<div class="tag-filter-bar">';
-  html += '<a class="tag-filter-item' + (!active ? ' active' : '') + '" href="/blog">全部</a>';
+  html += '<a class="tag-filter-item' + (!active ? ' active' : '') + '" href="/blog" data-zh="全部" data-en="All">全部</a>';
   for (var i = 0; i < allTags.length; i++) {
     var t = allTags[i];
     var isActive = active === t.name;
