@@ -1,6 +1,11 @@
+/**
+ * 留言簿 SSR
+ * 功能：渲染留言列表（头像、链接、留言内容、回复）
+ * 依赖：navbar.js、sanitize.js、response.js
+ * 核心入口：onRequestGet()
+ */
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 import { esc, safeUrl } from '../lib/sanitize.js';
-// 留言簿 Edge SSR
 export async function onRequestGet(context) {
   const { env } = context;
   try {

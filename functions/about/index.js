@@ -1,6 +1,11 @@
+/**
+ * 关于我 页面 SSR
+ * 功能：渲染个人介绍页面（头像、标题、内容）
+ * 依赖：navbar.js、sanitize.js、response.js
+ * 核心入口：onRequestGet()
+ */
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 import { esc } from '../lib/sanitize.js';
-// 关于我 页面 Edge SSR
 export async function onRequestGet(context) {
   try {
     const { env } = context;

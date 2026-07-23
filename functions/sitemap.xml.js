@@ -1,4 +1,9 @@
-// GET /sitemap.xml — 动态生成站点地图
+/**
+ * 站点地图
+ * 功能：生成 sitemap.xml（首页、博客列表、所有已发布文章）
+ * 依赖：无（直接操作 D1）
+ * 核心入口：onRequestGet()
+ */
 export async function onRequestGet(context) {
   const { env } = context;
   try {

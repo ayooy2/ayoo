@@ -1,8 +1,12 @@
+/**
+ * 搜索页 SSR
+ * 功能：文章搜索（关键词高亮、最近搜索历史）
+ * 依赖：navbar.js、sanitize.js、template.js
+ * 核心入口：onRequestGet()
+ */
 import { navbar, mobileMenu, cmdOverlay } from './lib/navbar.js';
 import { esc } from './lib/sanitize.js';
 import { htmlHead, pageStart, pageEnd, htmlResponse, errorResponse } from './lib/template.js';
-
-// GET /search?q=xxx — 搜索结果页 SSR
 export async function onRequestGet(context) {
   const { env } = context;
   try {

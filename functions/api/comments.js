@@ -1,5 +1,6 @@
 import { json, error } from '../lib/response.js';
 import { requireAuth } from '../lib/auth.js';
+import { stripHtml, hasSpam } from '../lib/shared.js';
 
 // GET ?article_id=:id&page=1&limit=20 获取评论列表（分页，最新置顶）
 // GET ?all=1 管理员获取所有评论（需认证）
@@ -65,10 +66,10 @@ export async function onRequest(context) {
 
     const articleId = parseInt(data.article_id);
     const parentId = data.parent_id ? parseInt(data.parent_id) : null;
-    const authorName = strip((data.author_name || '').trim());
+    const authorName = stripHtml((data.author_name || '').trim());
     const email = (data.email || '').trim().toLowerCase();
     const urlStr = (data.url || '').trim();
-    const content = strip((data.content || '').trim());
+    const content = stripHtml((data.content || '').trim());
 
     // 校验
     if (!authorName) return error('昵称不能为空', 400);
@@ -188,12 +189,4 @@ function buildTree(comments) {
   return roots;
 }
 
-function strip(s) {
-  return String(s || '').replace(/<[^>]*>/g, '');
-}
-
-function hasSpam(s) {
-  const lower = String(s || '').toLowerCase();
-  const words = ['buy now', 'click here', 'free money', 'casino', 'viagra', '彩票', '赌博', '代开发票'];
-  return words.some(w => lower.indexOf(w) >= 0);
-}
+// stripHtml 和 hasSpam 已移至 ../lib/shared.js

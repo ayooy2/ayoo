@@ -1,6 +1,11 @@
+/**
+ * 首页 SSR
+ * 功能：渲染主页（导航卡片、统计、状态栏）
+ * 依赖：navbar.js、sanitize.js、response.js
+ * 核心入口：onRequestGet()
+ */
 import { navbar, mobileMenu, cmdOverlay } from './lib/navbar.js';
 import { esc } from './lib/sanitize.js';
-// 首页 Edge SSR — Personal Operating System
 export async function onRequestGet(context) {
   const { env } = context;
   try {
@@ -127,10 +132,10 @@ ${navbar(t, '/', '')}
     <div class="home-status animate-in" style="animation-delay:500ms">
       <div class="status-item">
         <span class="status-dot"></span>
-        <span>在线</span>
+        <span data-zh="在线" data-en="Online">在线</span>
       </div>
-      <div class="status-item">${stats.count} 篇文章</div>
-      <div class="status-item">${stats.total_views} 次阅读</div>
+      <div class="status-item">${stats.count} <span data-zh="篇文章" data-en="posts">篇文章</span></div>
+      <div class="status-item">${stats.total_views} <span data-zh="次阅读" data-en="views">次阅读</span></div>
       <div class="status-item" id="last-updated"></div>
     </div>
 

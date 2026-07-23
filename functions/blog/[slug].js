@@ -1,6 +1,12 @@
+/**
+ * 文章详情 SSR
+ * 功能：渲染博客文章（Markdown→HTML、评论、点赞、TOC、面包屑导航）
+ * 依赖：navbar.js、sanitize.js、response.js
+ * 核心入口：onRequestGet()
+ * 客户端：评论提交/加载、点赞、管理员功能、代码块折叠/复制/全屏
+ */
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 import { esc, safeUrl } from '../lib/sanitize.js';
-// 文章详情 Edge SSR — Breadcrumb + Sidebar TOC + Modern Layout
 export async function onRequestGet(context) {
   try {
     const { env, params } = context;

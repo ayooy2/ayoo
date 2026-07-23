@@ -1,6 +1,11 @@
+/**
+ * 博客列表 SSR
+ * 功能：渲染文章列表（卡片布局、标签筛选、分页）
+ * 依赖：navbar.js、sanitize.js、response.js
+ * 核心入口：onRequestGet()
+ */
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 import { esc } from '../lib/sanitize.js';
-// 博客列表 Edge SSR — Card Grid Layout with Tag Filtering
 export async function onRequestGet(context) {
   const { env } = context;
   try {
@@ -156,9 +161,9 @@ function blogCard(a, index) {
       ${a.summary ? '<p class="blog-card-summary">' + esc(a.summary) + '</p>' : ''}
       <div class="blog-card-meta">
         <span>${esc(date)}</span>
-        <span>${a.views || 0} 阅读</span>
-        <span>${a.likes} 喜欢</span>
-        <span>${a.comments} 评论</span>
+        <span>${a.views || 0} <span data-zh="阅读" data-en="views">阅读</span></span>
+        <span>${a.likes} <span data-zh="喜欢" data-en="likes">喜欢</span></span>
+        <span>${a.comments} <span data-zh="评论" data-en="comments">评论</span></span>
       </div>
       ${tags ? '<div class="blog-card-tags">' + tags + '</div>' : ''}
     </div>

@@ -1,16 +1,17 @@
 // 共享导航栏模块 — 统一所有页面的导航结构
 // 用法: import { navbar, mobileMenu, cmdOverlay } from './lib/navbar.js';
 // 页面调用 navbar('品牌名') 返回桌面导航 HTML，mobileMenu() 返回移动端菜单 HTML
+import { esc } from './sanitize.js';
 
 const ALL_LINKS = [
-  { href: '/', label: '首页', icon: '<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
-  { href: '/blog', label: '笔记', icon: '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' },
-  { href: '/search', label: '搜索', icon: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>' },
-  { href: '/archive', label: '归档', icon: '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>' },
-  { href: '/now', label: 'Now', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
-  { href: '/guestbook', label: '留言簿', icon: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' },
-  { href: '/about', label: '关于', icon: '' },
-  { href: '/features', label: '功能', icon: '' }
+  { href: '/', label: '首页', en: 'Home', icon: '<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
+  { href: '/blog', label: '笔记', en: 'Blog', icon: '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' },
+  { href: '/search', label: '搜索', en: 'Search', icon: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>' },
+  { href: '/archive', label: '归档', en: 'Archive', icon: '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>' },
+  { href: '/now', label: 'Now', en: 'Now', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
+  { href: '/guestbook', label: '留言簿', en: 'Guestbook', icon: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' },
+  { href: '/about', label: '关于', en: 'About', icon: '' },
+  { href: '/features', label: '功能', en: 'Features', icon: '' }
 ];
 
 // brandHref: 品牌链接地址，默认 '/'
@@ -24,11 +25,11 @@ export function navbar(brandText, brandHref, currentPath) {
   for (var i = 0; i < ALL_LINKS.length; i++) {
     var link = ALL_LINKS[i];
     if (link.href === currentPath) continue;
-    desktopLinks += '<a href="' + link.href + '" class="nav-link">' + link.icon + link.label + '</a>';
+    desktopLinks += '<a href="' + link.href + '" class="nav-link">' + link.icon + '<span data-zh="' + esc(link.label) + '" data-en="' + esc(link.en) + '">' + esc(link.label) + '</span></a>';
   }
 
   return '<nav class="navbar"><div class="nav-inner">' +
-    '<a href="' + brandHref + '" class="nav-brand">' + escHtml(brandText) + '</a>' +
+    '<a href="' + brandHref + '" class="nav-brand">' + esc(brandText) + '</a>' +
     '<div class="nav-links">' + desktopLinks + '</div>' +
     '<div class="nav-spacer"></div>' +
     '<span class="nav-clock" id="clock">--:--:--</span>' +
@@ -43,7 +44,7 @@ export function mobileMenu() {
   for (var i = 0; i < ALL_LINKS.length; i++) {
     var link = ALL_LINKS[i];
     var iconHtml = link.icon ? '<span class="mobile-menu-icon">' + link.icon + '</span>' : '';
-    links += '<a href="' + link.href + '" class="mobile-menu-link">' + iconHtml + link.label + '</a>';
+    links += '<a href="' + link.href + '" class="mobile-menu-link">' + iconHtml + '<span data-zh="' + esc(link.label) + '" data-en="' + esc(link.en) + '">' + esc(link.label) + '</span></a>';
   }
   return '<div class="mobile-menu" id="mobile-menu">' +
     '<button class="mobile-menu-close" id="mobile-menu-close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>' +
@@ -55,6 +56,4 @@ export function cmdOverlay() {
   return '<div class="cmd-overlay" id="cmd-overlay"><div class="cmd-box"><input class="cmd-input" id="cmd-input" placeholder="搜索页面、文章…" autocomplete="off"><div class="cmd-list" id="cmd-list"></div></div></div>';
 }
 
-function escHtml(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+// esc() 已从 ./sanitize.js 导入

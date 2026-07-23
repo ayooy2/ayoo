@@ -1,3 +1,8 @@
+/**
+ * admin/guestbook.js — 后台留言管理
+ * 功能：加载留言列表、删除留言、清空留言
+ * 依赖：admin/core.js（apiFetch）
+ */
 (function() {
     // ---- 留言管理 ----
     async function loadGuestbook() {

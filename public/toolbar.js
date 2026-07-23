@@ -1,5 +1,9 @@
-// Ayoo — Floating Toolbar (theme, font, language)
-// 依赖：toolbar.css
+/**
+ * toolbar.js — 悬浮设置工具栏
+ * 功能：主题切换（亮/暗）、字体选择（5种）、语言切换（中/英）
+ * 依赖：toolbar.css
+ * 存储：localStorage（ayoo_theme、ayoo_font、ayoo_lang）
+ */
 (function(){
   /* ── 配置 ── */
   var FONTS = [

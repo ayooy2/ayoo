@@ -1,3 +1,8 @@
+/**
+ * admin/core.js — 后台管理核心逻辑
+ * 功能：网站 CRUD、设置管理、图片管理、认证、导出/保存
+ * 依赖：无（独立 IIFE，通过全局 apiFetch 暴露接口）
+ */
 (function() {
     // ---- 常量 ----
     var API_BASE = '/api/sites';

@@ -19,7 +19,7 @@ export function htmlHead(title, extra = '') {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${title}</title>
 <link rel="stylesheet" href="/style.css?v=${CSS_VERSION}">
-<link rel="stylesheet" href="/toolbar.css">
+<link rel="stylesheet" href="/toolbar.css?v=${CSS_VERSION}">
 ${extra}
 </head>`;
 }
@@ -51,7 +51,7 @@ export function pageEnd(footerText = '<a href="/">← 返回首页</a>', extraSc
     <span class="footer-text">${footerText}</span>
   </footer>
 </div>
-<script src="/app.js"></script>
+<script src="/app.js" defer></script>
 <script src="/toolbar.js" defer></script>
 ${extraScripts}
 ${cmdOverlayHtml}

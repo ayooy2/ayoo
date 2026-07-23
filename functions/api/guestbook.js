@@ -1,4 +1,5 @@
 import { json, error } from '../lib/response.js';
+import { stripHtml, hasSpam } from '../lib/shared.js';
 
 // GET: 获取留言列表
 // POST: 创建留言
@@ -25,7 +26,8 @@ export async function onRequest(context) {
     let data;
     try { data = await request.json(); } catch (e) { return error('请求格式错误', 400); }
     const name = stripHtml((data.name || '').trim()).slice(0, 50);
-    const url = (data.url || '').trim().slice(0, 200);
+    const urlRaw = (data.url || '').trim().slice(0, 200);
+    const url = urlRaw && !/^https?:\/\/.+/i.test(urlRaw) ? '' : urlRaw;
     const message = stripHtml((data.message || '').trim()).slice(0, 1000);
 
     if (!name) return error('名字不能为空', 400);
@@ -54,12 +56,4 @@ export async function onRequest(context) {
   return error('Method not allowed', 405);
 }
 
-function stripHtml(s) {
-  return String(s).replace(/<[^>]*>/g, '');
-}
-
-function hasSpam(s) {
-  const lower = String(s || '').toLowerCase();
-  const words = ['buy now', 'click here', 'free money', 'casino', 'viagra', '彩票', '赌博', '代开发票'];
-  return words.some(w => lower.indexOf(w) >= 0);
-}
+// stripHtml 和 hasSpam 已移至 ../lib/shared.js

@@ -1,6 +1,11 @@
+/**
+ * Now 页面 SSR
+ * 功能：渲染当前近况（分类卡片、最后更新时间）
+ * 依赖：navbar.js、sanitize.js、response.js
+ * 核心入口：onRequestGet()
+ */
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 import { esc } from '../lib/sanitize.js';
-// Now 页面 Edge SSR — What I'm Doing Now
 export async function onRequestGet(context) {
   try {
     const { env } = context;
@@ -56,7 +61,7 @@ function render(groups, categoryOrder, lastUpdated) {
     sections = '<div class="empty-state"><p class="empty-state-text" data-zh="暂无内容" data-en="No content yet">暂无内容</p></div>';
   }
 
-  var updatedLine = lastUpdated ? '<p class="now-updated">最后更新：' + esc(lastUpdated) + '</p>' : '';
+  var updatedLine = lastUpdated ? '<p class="now-updated"><span data-zh="最后更新：" data-en="Last updated: ">最后更新：</span>' + esc(lastUpdated) + '</p>' : '';
 
   var seo = '<meta name="description" content="What I\'m doing now — 当前在做、在读、在学的事情">'
     + '\n<meta property="og:type" content="website">'

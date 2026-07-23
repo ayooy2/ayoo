@@ -1,4 +1,9 @@
-// GET /feed.xml — RSS 2.0 订阅源
+/**
+ * RSS 订阅源
+ * 功能：生成 RSS 2.0 XML（最近 20 篇已发布文章）
+ * 依赖：无（直接操作 D1）
+ * 核心入口：onRequestGet()
+ */
 export async function onRequestGet(context) {
   const { env } = context;
   try {

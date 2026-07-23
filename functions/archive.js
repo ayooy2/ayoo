@@ -1,6 +1,11 @@
+/**
+ * 归档页 SSR
+ * 功能：渲染文章时间线（按年月分组）
+ * 依赖：navbar.js、sanitize.js、response.js
+ * 核心入口：onRequestGet()
+ */
 import { navbar, mobileMenu, cmdOverlay } from './lib/navbar.js';
 import { esc } from './lib/sanitize.js';
-// GET /archive — 归档页，时间线布局
 export async function onRequestGet(context) {
   const { env } = context;
   try {

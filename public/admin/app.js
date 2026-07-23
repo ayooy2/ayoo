@@ -1,3 +1,8 @@
+/**
+ * admin/app.js — 后台管理主入口
+ * 功能：Tab 切换、认证检查、ESC 关闭模态框、URL hash 自动切换
+ * 依赖：admin/core.js（apiFetch）
+ */
 (function() {
     // ---- Tab 切换 ----
     function switchTab(name) {

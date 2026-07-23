@@ -1,6 +1,11 @@
+/**
+ * 功能页面 SSR
+ * 功能：渲染网站功能特性介绍
+ * 依赖：navbar.js、sanitize.js、response.js
+ * 核心入口：onRequestGet()
+ */
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
 import { esc } from '../lib/sanitize.js';
-// 功能 页面 Edge SSR — Site Features
 export async function onRequestGet(context) {
   try {
     const { env } = context;

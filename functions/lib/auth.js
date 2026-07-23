@@ -127,7 +127,7 @@ export async function requireAuth(request, env, password) {
       return null;
     }
     // 数据库中没有密码哈希，使用 env.ADMIN_PASSWORD 作为初始密码（仅首次）
-    if (env.ADMIN_PASSWORD && token === env.ADMIN_PASSWORD) {
+    if (env.ADMIN_PASSWORD && constantTimeEqual(token, env.ADMIN_PASSWORD)) {
       // 首次登录，自动保存密码哈希到数据库
       const newHash = await hashPassword(token);
       await env.DB.prepare(

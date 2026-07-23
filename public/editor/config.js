@@ -32,7 +32,6 @@ export var MD_CMDS = {
     ul:         { before: '- ',     after: '',          ph: '列表项',     block: true },
     ol:         { before: '1. ',    after: '',          ph: '列表项',     block: true },
     codeblock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true, lang: true },
-    codeBlock:  { before: '```\n',  after: '\n```',     ph: '代码',       block: true, lang: true },
     table:      { before: '| 列1 | 列2 |\n| ----- | ----- |\n| ', after: ' |\n', ph: '内容', block: true },
     hr:         { before: '\n---\n', after: '',         ph: '',           block: true },
     video:      { before: '<video src="', after: '" controls></video>', ph: '视频链接', inline: true },
