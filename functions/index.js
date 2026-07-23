@@ -68,8 +68,8 @@ function render(s, sites, articles, stats) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${t}</title>${seo}
-<link rel="stylesheet" href="/style.css?v=4">
-<link rel="stylesheet" href="/toolbar.css">
+<link rel="stylesheet" href="/style.css?v=6">
+<link rel="stylesheet" href="/toolbar.css?v=6">
 </head>
 <body${bgStyle}>
 ${navbar(t, '/', '')}
@@ -142,7 +142,7 @@ ${navbar(t, '/', '')}
 </div>
 
 ${mobileMenu()}
-<script src="/app.js"></script>
+<script src="/app.js" defer></script>
 <script>
 (function(){
   /* Clock — hero (HH:MM) */

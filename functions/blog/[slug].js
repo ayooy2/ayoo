@@ -55,8 +55,8 @@ function render(a, likes, prev, next) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${esc(a.title)}</title>${seo}
-<link rel="stylesheet" href="/style.css?v=4">
-<link rel="stylesheet" href="/toolbar.css">
+<link rel="stylesheet" href="/style.css?v=6">
+<link rel="stylesheet" href="/toolbar.css?v=6">
 </head>
 <body>
 <div class="reading-progress" id="reading-progress"></div>
@@ -150,7 +150,7 @@ ${mobileMenu()}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css" id="hljs-theme">
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js" async></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" async></script>
-<script src="/sanitize.js"></script>
+<script src="/sanitize.js" defer></script>
 <script>
 var aid=${Number(a.id)||0},fp=localStorage.getItem("fp_"+aid)||(function(){var f="fp"+Date.now()+Math.random();localStorage.setItem("fp_"+aid,f);return f;})(),replyTo=null;
 
@@ -516,7 +516,7 @@ function deleteComment(id){
 })();
 
 </script>
-<script src="/app.js"></script>
+<script src="/app.js" defer></script>
 <script src="/toolbar.js" defer></script>
 ${cmdOverlay()}
 </body>

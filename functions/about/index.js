@@ -51,8 +51,8 @@ function render(s) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${title}</title>${seo}
-<link rel="stylesheet" href="/style.css?v=4">
-<link rel="stylesheet" href="/toolbar.css">
+<link rel="stylesheet" href="/style.css?v=6">
+<link rel="stylesheet" href="/toolbar.css?v=6">
 </head>
 <body>
 ${navbar('关于', '/', '/about')}
@@ -73,7 +73,7 @@ ${mobileMenu()}
     <span class="footer-text"><a href="/" data-zh="← 返回首页" data-en="← Back to Home">← 返回首页</a></span>
   </footer>
 </div>
-<script src="/app.js"></script>
+<script src="/app.js" defer></script>
 <script src="/sanitize.js"></script>
 <script>
 (function(){
