@@ -20,7 +20,7 @@
     (function() {
         apiFetch(API_AUTH, { credentials: 'same-origin' }).then(function(r) {
             if (!r.ok) { window.location.href = '/login.html'; return; }
-            document.getElementById('admin-section').style.display = '';
+            document.getElementById('admin-section').classList.remove('admin-hidden');
             // 支持 URL hash 自动切换 tab（如 /admin.html#articles）
             var hash = location.hash.replace('#', '');
             if (hash && document.getElementById('tab-' + hash)) {

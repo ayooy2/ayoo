@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="style.css?v=6">
     <link rel="stylesheet" href="admin.css">
     <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
-    <style>#admin-section{display:none}</style>
+    <style>.admin-hidden{display:none!important}</style>
 </head>
 <body>
     <!-- 管理界面 -->
-    <div id="admin-section" class="admin-wrapper">
+    <div id="admin-section" class="admin-wrapper admin-hidden">
         <header class="admin-header">
             <h1>后台管理 <span onclick="openPwModal()" style="font-size:0.55em;font-weight:400;color:var(--color-text-muted);cursor:pointer;vertical-align:middle;">修改密码</span></h1>
             <div style="display:flex;align-items:center;gap:0.8rem;">
