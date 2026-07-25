@@ -14,11 +14,21 @@
     { id: 'mono',   label: 'Mono',       preview: '</>' }
   ];
 
+  var BG_COLORS = [
+    { id: 'default', label: '默认', color: '#faf9f7' },
+    { id: 'warm',    label: '暖白', color: '#fdf6f0' },
+    { id: 'cool',    label: '冷灰', color: '#e8edf2' },
+    { id: 'mint',    label: '薄荷', color: '#e8f5f0' },
+    { id: 'lavender',label: '薰衣草', color: '#f0e8f5' },
+    { id: 'dark',    label: '深色', color: '#1a1a2e' }
+  ];
+
   /* ── 读取持久化设置 ── */
   var settings = {
     theme: localStorage.getItem('ayoo_theme') || localStorage.getItem('theme') || 'light',
     font:  localStorage.getItem('ayoo_font') || 'inter',
-    lang:  localStorage.getItem('ayoo_lang') || 'zh'
+    lang:  localStorage.getItem('ayoo_lang') || 'zh',
+    bg:    localStorage.getItem('ayoo_bg') || 'default'
   };
 
   /* ── 应用设置 ── */
@@ -66,10 +76,28 @@
     updatePanel();
   }
 
+  function applyBg(bgId) {
+    var found = BG_COLORS.filter(function(b) { return b.id === bgId; });
+    var bg = found.length ? found[0] : BG_COLORS[0];
+    if (bg.id === 'default') {
+      document.documentElement.style.removeProperty('--bg-custom');
+      document.body.style.removeProperty('background-color');
+      document.body.style.removeProperty('background-image');
+    } else {
+      document.documentElement.style.setProperty('--bg-custom', bg.color);
+      document.body.style.backgroundColor = bg.color;
+      document.body.style.backgroundImage = 'none';
+    }
+    localStorage.setItem('ayoo_bg', bgId);
+    settings.bg = bgId;
+    updatePanel();
+  }
+
   /* ── 初始化应用 ── */
   applyTheme(settings.theme);
   if (settings.font !== 'inter') applyFont(settings.font);
   if (settings.lang !== 'zh') applyLang(settings.lang);
+  if (settings.bg !== 'default') applyBg(settings.bg);
 
   /* ── 创建 DOM ── */
   var overlay = document.createElement('div');
@@ -107,6 +135,12 @@
         '<button class="toolbar-btn" data-lang="zh">中文</button>' +
         '<button class="toolbar-btn" data-lang="en">English</button>' +
       '</div>' +
+    '</div>' +
+    '<div class="toolbar-divider"></div>' +
+    /* 背景色 */
+    '<div class="toolbar-group">' +
+      '<div class="toolbar-group-label">背景</div>' +
+      '<div class="toolbar-row" id="tb-bg-row"></div>' +
     '</div>';
 
   document.body.appendChild(overlay);
@@ -124,6 +158,18 @@
     fontRow.appendChild(btn);
   });
 
+  /* ── 填充背景色按钮 ── */
+  var bgRow = document.getElementById('tb-bg-row');
+  BG_COLORS.forEach(function(b) {
+    var btn = document.createElement('button');
+    btn.className = 'toolbar-btn toolbar-bg-btn';
+    btn.setAttribute('data-bg', b.id);
+    btn.title = b.label;
+    btn.style.backgroundColor = b.color;
+    if (b.id === 'dark') btn.style.color = '#fff';
+    bgRow.appendChild(btn);
+  });
+
   /* ── 更新面板状态 ── */
   function updatePanel() {
     // 主题
@@ -137,6 +183,10 @@
     // 语言
     panel.querySelectorAll('[data-lang]').forEach(function(b) {
       b.classList.toggle('active', b.getAttribute('data-lang') === settings.lang);
+    });
+    // 背景色
+    panel.querySelectorAll('[data-bg]').forEach(function(b) {
+      b.classList.toggle('active', b.getAttribute('data-bg') === settings.bg);
     });
   }
   updatePanel();
@@ -179,6 +229,8 @@
       applyFont(btn.getAttribute('data-font'));
     } else if (btn.hasAttribute('data-lang')) {
       applyLang(btn.getAttribute('data-lang'));
+    } else if (btn.hasAttribute('data-bg')) {
+      applyBg(btn.getAttribute('data-bg'));
     }
   });
 })();

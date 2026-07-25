@@ -133,6 +133,32 @@
   color: var(--text-primary);
 }
 
+/* 背景色按钮 */
+.toolbar-bg-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  position: relative;
+}
+.toolbar-bg-btn.active {
+  box-shadow: 0 0 0 2px var(--accent);
+  border-color: var(--accent);
+}
+.toolbar-bg-btn.active::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--accent);
+}
+.toolbar-bg-btn.dark.active::after {
+  color: #fff;
+}
+
 /* 分隔线 */
 .toolbar-divider {
   height: 1px;
