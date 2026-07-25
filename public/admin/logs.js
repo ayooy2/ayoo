@@ -1,3 +1,8 @@
+/**
+ * admin/logs.js — 后台错误日志管理
+ * 功能：加载错误日志列表、按级别筛选、清空日志
+ * 依赖：admin/core.js（apiFetch）
+ */
 (function() {
     var _logsData = [];
 

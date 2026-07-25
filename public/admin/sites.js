@@ -1,3 +1,8 @@
+/**
+ * admin/sites.js — 后台网站管理
+ * 功能：网站 CRUD（添加/编辑/删除/排序）、图标上传
+ * 依赖：admin/core.js（apiFetch、API_BASE、escapeHtml）
+ */
 (function() {
     // ---- 网站管理 ----
     async function loadTable() {

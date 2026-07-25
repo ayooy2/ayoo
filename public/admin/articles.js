@@ -1,3 +1,8 @@
+/**
+ * admin/articles.js — 后台文章管理
+ * 功能：文章 CRUD、Markdown 编辑器、草稿管理、发布/定时发布、评论管理
+ * 依赖：admin/core.js（apiFetch）、admin/images.js（uploadMDImage）
+ */
 (function() {
     // ---- 文章管理 ----
     var _commentMap = {};

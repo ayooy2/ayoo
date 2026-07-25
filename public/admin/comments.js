@@ -1,3 +1,8 @@
+/**
+ * admin/comments.js — 后台评论管理
+ * 功能：评论列表、筛选、排序、删除、批量操作
+ * 依赖：admin/core.js（apiFetch）
+ */
 (function() {
     // ---- 评论管理面板 ----
     var _allComments = [];

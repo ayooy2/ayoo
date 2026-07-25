@@ -1,3 +1,8 @@
+/**
+ * admin/tags.js — 后台标签管理
+ * 功能：标签 CRUD（新建/编辑/删除）、颜色选择
+ * 依赖：admin/core.js（apiFetch）
+ */
 (function() {
     // ---- 标签管理 ----
     var _allTags = [];

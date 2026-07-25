@@ -1,3 +1,8 @@
+/**
+ * admin/about.js — 后台关于我页面管理
+ * 功能：加载/保存关于我页面内容、Markdown 预览
+ * 依赖：admin/core.js（apiFetch）
+ */
 (function() {
     // ---- 关于我 ----
     async function loadAbout() {

@@ -1,3 +1,8 @@
+/**
+ * admin/images.js — 后台图片管理
+ * 功能：图片上传（R2 media）、图片列表、删除
+ * 依赖：admin/core.js（apiFetch）
+ */
 (function() {
     // ---- 图片上传（R2 media） ----
     function uploadMDImage(input) {

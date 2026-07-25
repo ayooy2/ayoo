@@ -1,3 +1,8 @@
+/**
+ * admin/settings.js — 后台页面设置
+ * 功能：页面标题/副标题/页脚/壁纸配置、实时预览
+ * 依赖：admin/core.js（apiFetch、API_SETTINGS）
+ */
 (function() {
     // ---- 页面设置 ----
     var composing = false;
