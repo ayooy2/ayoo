@@ -1,8 +1,8 @@
 /**
  * toolbar.js — 悬浮设置工具栏
- * 功能：主题切换（亮/暗）、字体选择（5种）、语言切换（中/英）
+ * 功能：主题切换（亮/暗）、字体选择（5种）、语言切换（中/英）、背景色切换（6种）
  * 依赖：toolbar.css
- * 存储：localStorage（ayoo_theme、ayoo_font、ayoo_lang）
+ * 存储：localStorage（ayoo_theme、ayoo_font、ayoo_lang、ayoo_bg）
  */
 (function(){
   /* ── 配置 ── */
@@ -22,6 +22,91 @@
     { id: 'lavender',label: '薰衣草', color: '#f0e8f5' },
     { id: 'dark',    label: '深色', color: '#1a1a2e' }
   ];
+
+  /* 背景色对应的完整色彩方案 — 安静克制风格 */
+  var BG_SCHEMES = {
+    default: null, /* 使用 style.css 默认值 */
+    warm: {
+      '--bg-primary': '#fdf6f0',
+      '--bg-secondary': '#f5ece2',
+      '--bg-elevated': '#fffbf7',
+      '--bg-hover': '#f5ece2',
+      '--border': '#e4d8cc',
+      '--border-subtle': '#efe5d9',
+      '--text-primary': '#292524',
+      '--text-secondary': '#6b6560',
+      '--text-tertiary': '#a39e98',
+      '--text-placeholder': '#d1ccc6',
+      '--accent': '#4a7ab5',
+      '--accent-hover': '#3d6a9e',
+      '--accent-subtle': '#eef4fa',
+      '--accent-text': '#4a7ab5'
+    },
+    cool: {
+      '--bg-primary': '#eef1f5',
+      '--bg-secondary': '#e2e7ed',
+      '--bg-elevated': '#f6f8fa',
+      '--bg-hover': '#e2e7ed',
+      '--border': '#cdd4dc',
+      '--border-subtle': '#dce2e9',
+      '--text-primary': '#1e293b',
+      '--text-secondary': '#5a6a7e',
+      '--text-tertiary': '#8e9baa',
+      '--text-placeholder': '#b8c2cd',
+      '--accent': '#4a6a8a',
+      '--accent-hover': '#3d5a78',
+      '--accent-subtle': '#e8eff6',
+      '--accent-text': '#4a6a8a'
+    },
+    mint: {
+      '--bg-primary': '#eef7f2',
+      '--bg-secondary': '#ddeee4',
+      '--bg-elevated': '#f5faf7',
+      '--bg-hover': '#ddeee4',
+      '--border': '#c8dfd0',
+      '--border-subtle': '#daece1',
+      '--text-primary': '#1a2e23',
+      '--text-secondary': '#506b5c',
+      '--text-tertiary': '#84a392',
+      '--text-placeholder': '#b0cbb9',
+      '--accent': '#3d7a5c',
+      '--accent-hover': '#326a4e',
+      '--accent-subtle': '#e6f5ed',
+      '--accent-text': '#3d7a5c'
+    },
+    lavender: {
+      '--bg-primary': '#f3eef7',
+      '--bg-secondary': '#e8e0ee',
+      '--bg-elevated': '#f9f6fb',
+      '--bg-hover': '#e8e0ee',
+      '--border': '#d5cadf',
+      '--border-subtle': '#e6dcee',
+      '--text-primary': '#2a1e36',
+      '--text-secondary': '#6a5a7a',
+      '--text-tertiary': '#9a8aaa',
+      '--text-placeholder': '#c4b8d0',
+      '--accent': '#7a5a9a',
+      '--accent-hover': '#6a4c8a',
+      '--accent-subtle': '#f0eaf5',
+      '--accent-text': '#7a5a9a'
+    },
+    dark: {
+      '--bg-primary': '#12121e',
+      '--bg-secondary': '#1a1a28',
+      '--bg-elevated': '#22222e',
+      '--bg-hover': '#2a2a38',
+      '--border': '#2e2e3e',
+      '--border-subtle': '#242434',
+      '--text-primary': '#e0e0e8',
+      '--text-secondary': '#9898a8',
+      '--text-tertiary': '#686878',
+      '--text-placeholder': '#484858',
+      '--accent': '#6888c0',
+      '--accent-hover': '#8aa4d4',
+      '--accent-subtle': '#1e2844',
+      '--accent-text': '#8aa4d4'
+    }
+  };
 
   /* ── 读取持久化设置 ── */
   var settings = {
@@ -77,16 +162,23 @@
   }
 
   function applyBg(bgId) {
-    var found = BG_COLORS.filter(function(b) { return b.id === bgId; });
-    var bg = found.length ? found[0] : BG_COLORS[0];
-    if (bg.id === 'default') {
-      document.documentElement.style.removeProperty('--bg-custom');
-      document.body.style.removeProperty('background-color');
-      document.body.style.removeProperty('background-image');
+    var scheme = BG_SCHEMES[bgId];
+    var root = document.documentElement;
+    if (!scheme) {
+      /* default: 清除所有自定义变量，恢复 style.css 默认 */
+      Object.keys(BG_SCHEMES).forEach(function(key) {
+        if (BG_SCHEMES[key]) {
+          Object.keys(BG_SCHEMES[key]).forEach(function(v) {
+            root.style.removeProperty(v);
+          });
+        }
+      });
+      root.removeAttribute('data-bg');
     } else {
-      document.documentElement.style.setProperty('--bg-custom', bg.color);
-      document.body.style.backgroundColor = bg.color;
-      document.body.style.backgroundImage = 'none';
+      root.setAttribute('data-bg', bgId);
+      Object.keys(scheme).forEach(function(v) {
+        root.style.setProperty(v, scheme[v]);
+      });
     }
     localStorage.setItem('ayoo_bg', bgId);
     settings.bg = bgId;
