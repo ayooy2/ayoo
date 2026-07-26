@@ -55,7 +55,8 @@ async function createArticle(env, data) {
   if (!title) return error('Title is required', 400);
 
   let slug = (data.slug || '').trim();
-  if (!slug) {
+  // 过滤无效 slug（占位符文本、纯中文、含空格等）
+  if (!slug || /[一-鿿]/.test(slug) || /\s/.test(slug) || slug.length < 2) {
     slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').replace(/-+/g, '-');
     if (!slug || slug.length < 2) slug = 'article-' + Date.now().toString(36);
   }

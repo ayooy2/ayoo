@@ -58,7 +58,12 @@ async function updateArticle(env, id, data) {
   if (!existing) return error('Not found', 404);
 
   const title = (data.title || '').trim() || existing.title;
-  const slug = (data.slug || '').trim() || existing.slug;
+  let slug = (data.slug || '').trim();
+  // 过滤无效 slug（占位符文本、纯中文、含空格等）
+  if (slug && (/[一-鿿]/.test(slug) || /\s/.test(slug) || slug.length < 2)) {
+    slug = '';
+  }
+  slug = slug || existing.slug;
   const content_md = data.content_md !== undefined ? data.content_md : existing.content_md;
 
   // 检查 slug 唯一性（排除当前文章）
