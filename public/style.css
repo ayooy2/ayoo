@@ -147,6 +147,8 @@ html {
 body {
   font-family: var(--font-sans);
   background: var(--bg-primary);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.6;
@@ -307,8 +309,8 @@ body[style*="background-image"] .navbar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 28px;
+  width: 36px;
+  height: 32px;
   flex-shrink: 0;
 }
 .theme-toggle:hover {
@@ -352,6 +354,7 @@ body[style*="background-image"] .navbar {
   flex-direction: column;
   padding: var(--space-xl);
   animation: fade-in var(--duration-normal) var(--ease);
+  overscroll-behavior: contain;
 }
 .mobile-menu.active { display: flex; }
 .mobile-menu-close {
@@ -2267,6 +2270,7 @@ body[style*="background-image"] .page-wrapper {
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--duration-normal) var(--ease);
+  overscroll-behavior: contain;
 }
 .modal-overlay.active {
   opacity: 1;
@@ -3104,6 +3108,9 @@ body[style*="background-image"] .page-wrapper {
   .code-block-btn {
     padding: 4px 8px;
     min-height: 32px;
+  }
+  .code-block-wrapper.folded .code-block-bar {
+    font-size: 0.7rem;
   }
 
   /* ── Archive page: small phone refinements ── */

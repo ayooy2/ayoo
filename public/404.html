@@ -9,8 +9,12 @@
     .error-page { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; text-align:center; padding:2rem; }
     .error-code { font-size:6rem; font-weight:700; color:var(--text-placeholder); line-height:1; margin-bottom:1rem; }
     .error-msg { font-size:1.2rem; color:var(--text-secondary); margin-bottom:2rem; }
-    .error-link { color:var(--accent-text); text-decoration:underline; font-size:0.95rem; }
+    .error-link { color:var(--accent-text); text-decoration:underline; font-size:1rem; }
     .error-link:hover { color:var(--accent); }
+    @media (max-width: 640px) {
+      .error-code { font-size: 4rem; }
+      .error-msg { font-size: 1rem; }
+    }
 </style>
 </head>
 <body>
