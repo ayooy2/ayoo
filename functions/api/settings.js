@@ -2,7 +2,7 @@ import { json, error } from '../lib/response.js';
 import { requireAuth } from '../lib/auth.js';
 import { purgeRecent } from '../lib/cache.js';
 
-const ALLOWED_KEYS = ['title', 'subtitle', 'footer', 'bg_image', 'about_title', 'about_content', 'about_avatar'];
+const ALLOWED_KEYS = ['title', 'subtitle', 'footer', 'bg_image', 'bg_image_dark', 'solid_bg', 'about_title', 'about_content', 'about_avatar'];
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -40,7 +40,7 @@ async function getSettings(env) {
 
 // 每个 key 的最大长度限制
 const MAX_LENGTHS = {
-  title: 100, subtitle: 200, bg_image: 500, bg_color: 50,
+  title: 100, subtitle: 200, bg_image: 500, bg_image_dark: 500, solid_bg: 10, bg_color: 50,
   about_title: 100, about_content: 10000, about_avatar: 500,
   features_intro: 500
 };

@@ -56,9 +56,8 @@ async function createArticle(env, data) {
 
   let slug = (data.slug || '').trim();
   // 过滤无效 slug（占位符文本、纯中文、含空格等）
-  if (!slug || /[一-鿿]/.test(slug) || /\s/.test(slug) || slug.length < 2) {
-    slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').replace(/-+/g, '-');
-    if (!slug || slug.length < 2) slug = 'article-' + Date.now().toString(36);
+  if (slug && (/[一-鿿]/.test(slug) || /\s/.test(slug) || slug.length < 2)) {
+    slug = '';
   }
   const content_md = data.content_md || '';
   const summary = (data.summary || '').trim();
@@ -69,9 +68,17 @@ async function createArticle(env, data) {
   const scheduled_at = data.scheduled_at || null;
 
   try {
+    // 如果没有有效 slug，先用占位符插入，再用文章 ID 作为 slug
+    const insertSlug = slug || '__pending__';
     const result = await env.DB.prepare(
       'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
-    ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at).first();
+    ).bind(title, insertSlug, content_md, summary, cover_image, author, tags, is_published, scheduled_at).first();
+    // 用文章 ID 作为 slug（数字 ID，简洁唯一）
+    if (!slug) {
+      slug = String(result.id);
+      await env.DB.prepare('UPDATE articles SET slug = ? WHERE id = ?').bind(slug, result.id).run();
+      result.slug = slug;
+    }
     // 发布文章时清除 CDN 缓存
     if (is_published) purgeCDN(env, slug);
     return json(result, 201);

@@ -47,14 +47,19 @@ ${headerHtml}
  * @param {string} footerText - 页脚文字，默认返回首页链接
  * @param {string} extraScripts - 额外的 script 标签
  * @param {string} cmdOverlayHtml - cmdOverlay() 返回的 HTML
+ * @param {object} bgSettings - 背景设置 { bg, bgDark, solidBg }
  */
-export function pageEnd(footerText = '<a href="/">← 返回首页</a>', extraScripts = '', cmdOverlayHtml = '') {
+export function pageEnd(footerText = '<a href="/">← 返回首页</a>', extraScripts = '', cmdOverlayHtml = '', bgSettings = null) {
+  var bgScript = bgSettings
+    ? `<script>window.__bgSettings = ${JSON.stringify(bgSettings)};</script>`
+    : '';
   return `  </div>
   <footer class="page-footer">
     <span class="footer-text">${footerText}</span>
   </footer>
 </div>
 <script src="/app.js" defer></script>
+${bgScript}
 <script src="/toolbar.js" defer></script>
 ${extraScripts}
 ${cmdOverlayHtml}

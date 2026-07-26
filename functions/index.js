@@ -38,11 +38,21 @@ function render(s, sites, articles, stats) {
   var sub = esc(subRaw);
   var foot = esc(s.footer || '');
   var bgRaw = s.bg_image || '';
+  var bgDarkRaw = s.bg_image_dark || '';
+  var solidBg = s.solid_bg === '1' || s.solid_bg === true;
   // 防止 CSS 注入：只允许 http/https 或相对路径
   if (bgRaw && !/^https?:\/\/|^\/[^\/]/i.test(bgRaw)) bgRaw = '';
+  if (bgDarkRaw && !/^https?:\/\/|^\/[^\/]/i.test(bgDarkRaw)) bgDarkRaw = '';
   var bg = bgRaw ? esc(bgRaw) : '';
+  var bgDark = bgDarkRaw ? esc(bgDarkRaw) : '';
 
-  var bgStyle = bg ? ' style="background-image:url(\'' + bg + '\');background-size:cover;background-position:center;background-attachment:fixed;"' : '';
+  // 纯色模式不应用背景图；否则根据当前主题选择
+  var bgStyle = '';
+  if (!solidBg && bg) {
+    bgStyle = ' style="background-image:url(\'' + bg + '\');background-size:cover;background-position:center;background-attachment:fixed;"';
+  }
+  // 将背景设置传给前端（toolbar.js 根据主题切换时使用）
+  var bgSettings = JSON.stringify({ bg: bg, bgDark: bgDark, solidBg: solidBg });
 
   // Navigation cards — static pages first, then dynamic sites
   var navCards = '';
@@ -208,6 +218,7 @@ ${mobileMenu()}
 </script>
 ${cmdOverlay()}
 <script src="/toolbar.js" defer></script>
+<script>window.__bgSettings = ${bgSettings};</script>
 </body>
 </html>`;
 }

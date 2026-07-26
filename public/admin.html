@@ -77,35 +77,49 @@
                             <p class="form-hint">显示在页面底部</p>
                         </div>
                         <div class="form-group">
-                            <label>背景壁纸</label>
-                            <div class="wallpaper-grid">
-                                <div class="wallpaper-item active" data-bg="" onclick="selectWallpaper(this)">
-                                    <div class="wallpaper-thumb" style="background:#faf9f7"></div>
-                                    <span>无</span>
-                                </div>
-                                <div class="wallpaper-item" data-bg="/assets/wallpapers/dawn.svg" onclick="selectWallpaper(this)">
-                                    <div class="wallpaper-thumb" style="background:linear-gradient(#fdf6f0,#e8d5c4)"></div>
-                                    <span>晨曦</span>
-                                </div>
-                                <div class="wallpaper-item" data-bg="/assets/wallpapers/mist.svg" onclick="selectWallpaper(this)">
-                                    <div class="wallpaper-thumb" style="background:linear-gradient(#e8edf2,#d0d8e0)"></div>
-                                    <span>薄雾</span>
-                                </div>
-                                <div class="wallpaper-item" data-bg="/assets/wallpapers/ink.svg" onclick="selectWallpaper(this)">
-                                    <div class="wallpaper-thumb" style="background:radial-gradient(#f0ebe6,#d8cec3)"></div>
-                                    <span>水墨</span>
-                                </div>
-                                <div class="wallpaper-item" data-bg="/assets/wallpapers/dusk.svg" onclick="selectWallpaper(this)">
-                                    <div class="wallpaper-thumb" style="background:linear-gradient(#2c2c2c,#151311)"></div>
-                                    <span>黄昏</span>
-                                </div>
-                                <div class="wallpaper-item" data-bg="/assets/wallpapers/night.svg" onclick="selectWallpaper(this)">
-                                    <div class="wallpaper-thumb" style="background:linear-gradient(#1a1820,#100e14)"></div>
-                                    <span>深夜</span>
+                            <label>日间模式背景图</label>
+                            <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.5rem;">
+                                <div id="bg-light-preview" style="width:80px;height:50px;border-radius:6px;background:var(--bg-secondary);border:1px solid var(--border);background-size:cover;background-position:center;flex-shrink:0;"></div>
+                                <div style="flex:1;min-width:0;">
+                                    <input type="text" id="set-bg-image" placeholder="输入图片URL或上传">
+                                    <div style="margin-top:0.3rem;">
+                                        <label class="btn btn-secondary btn-sm" style="cursor:pointer;font-size:0.78rem;">
+                                            📷 上传图片
+                                            <input type="file" accept="image/*" onchange="uploadBgImage(this,'set-bg-image','bg-light-preview')" style="display:none;">
+                                        </label>
+                                        <button type="button" class="btn btn-sm" onclick="clearBgImage('set-bg-image','bg-light-preview')" style="font-size:0.78rem;">清除</button>
+                                    </div>
                                 </div>
                             </div>
-                            <input type="text" id="set-bg-image" placeholder="或输入自定义图片URL">
-                            <p class="form-hint">选择预设壁纸或输入外部图片链接</p>
+                            <p class="form-hint">日间模式下显示的背景图片</p>
+                        </div>
+                        <div class="form-group">
+                            <label>夜间模式背景图</label>
+                            <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.5rem;">
+                                <div id="bg-dark-preview" style="width:80px;height:50px;border-radius:6px;background:#1a1a2e;border:1px solid var(--border);background-size:cover;background-position:center;flex-shrink:0;"></div>
+                                <div style="flex:1;min-width:0;">
+                                    <input type="text" id="set-bg-image-dark" placeholder="输入图片URL或上传">
+                                    <div style="margin-top:0.3rem;">
+                                        <label class="btn btn-secondary btn-sm" style="cursor:pointer;font-size:0.78rem;">
+                                            📷 上传图片
+                                            <input type="file" accept="image/*" onchange="uploadBgImage(this,'set-bg-image-dark','bg-dark-preview')" style="display:none;">
+                                        </label>
+                                        <button type="button" class="btn btn-sm" onclick="clearBgImage('set-bg-image-dark','bg-dark-preview')" style="font-size:0.78rem;">清除</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="form-hint">夜间模式下显示的背景图片</p>
+                        </div>
+                        <div class="form-group">
+                            <label>纯色背景模式</label>
+                            <div style="display:flex;align-items:center;gap:0.8rem;">
+                                <label class="toggle-switch" style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+                                    <input type="checkbox" id="set-solid-bg" onchange="toggleSolidBg(this.checked)" style="opacity:0;width:0;height:0;">
+                                    <span class="toggle-slider" style="position:absolute;inset:0;background:var(--border);border-radius:12px;transition:0.3s;"></span>
+                                </label>
+                                <span id="solid-bg-label" style="font-size:var(--text-sm);color:var(--text-secondary);">关闭 — 显示背景图片</span>
+                            </div>
+                            <p class="form-hint">开启后覆盖背景图片，使用前端选择的纯色背景</p>
                         </div>
                         <div class="modal-actions">
                             <button type="submit" class="btn btn-primary">保存设置</button>

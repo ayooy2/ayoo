@@ -683,6 +683,26 @@
     }
 }
 
+/* ===== 开关切换 ===== */
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--color-primary);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
 /* 留言管理 */
 .message-cell {
     max-width: 300px;
