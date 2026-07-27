@@ -201,11 +201,46 @@
                     <th>标签名</th>
                     <th>标识(slug)</th>
                     <th>颜色</th>
+                    <th>文章数</th>
                     <th style="width:140px;">操作</th>
                 </tr>
             </thead>
             <tbody id="tags-table-body"></tbody>
         </table>
+        <div id="tag-filter-results" style="display:none;margin-top:1.5rem;">
+            <h3 id="tag-filter-title" style="margin-bottom:0.8rem;font-size:1rem;"></h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;"><input type="checkbox" onchange="toggleAllTagArticles(this.checked)"></th>
+                        <th>标题</th>
+                        <th>作者</th>
+                        <th>状态</th>
+                        <th>标签</th>
+                        <th>日期</th>
+                        <th style="width:100px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="tag-filter-articles-body"></tbody>
+            </table>
+            <div class="toolbar" style="margin-top:0.8rem;flex-wrap:wrap;">
+                <span style="font-size:0.85rem;color:var(--color-text-muted);">已选 <strong id="tag-filter-selected-count">0</strong> 篇</span>
+                <button class="btn btn-secondary btn-sm" onclick="batchTagArticleAction('hide')">一键隐藏</button>
+                <button class="btn btn-danger btn-sm" onclick="batchTagArticleAction('delete')">一键删除</button>
+                <button class="btn btn-secondary btn-sm" onclick="closeTagFilter()" style="margin-left:auto;">关闭筛选</button>
+            </div>
+        </div>
+        <div style="margin-top:1.5rem;padding:1rem;background:var(--color-bg-secondary);border-radius:8px;">
+            <h3 style="margin-bottom:0.8rem;font-size:1rem;">标签转换</h3>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                <label style="font-size:0.85rem;">将标签</label>
+                <select id="tag-convert-from" style="padding:0.35rem 0.6rem;border:1px solid var(--color-border);border-radius:6px;font-size:0.85rem;"></select>
+                <label style="font-size:0.85rem;">替换为</label>
+                <select id="tag-convert-to" style="padding:0.35rem 0.6rem;border:1px solid var(--color-border);border-radius:6px;font-size:0.85rem;"></select>
+                <button class="btn btn-primary btn-sm" onclick="convertTag()">执行转换</button>
+            </div>
+            <p style="font-size:0.78rem;color:var(--color-text-muted);margin-top:0.4rem;">将所有文章中的原标签名替换为新标签名</p>
+        </div>
     </div>
 
     <!-- ========== 图片管理 ========== -->
