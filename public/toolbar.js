@@ -333,7 +333,7 @@
     // 绑定事件
     popup.addEventListener('click', function(e) {
       var btn = e.target.closest('[data-theme]');
-      if (btn) { applyTheme(btn.dataset.theme); updateFAB(); return; }
+      if (btn) { applyTheme(btn.dataset.theme); applyBgImage(); updateFAB(); return; }
       btn = e.target.closest('[data-font]');
       if (btn) { applyFont(btn.dataset.font); updateFAB(); return; }
       btn = e.target.closest('[data-bg]');

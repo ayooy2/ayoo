@@ -68,15 +68,21 @@ async function createArticle(env, data) {
   const scheduled_at = data.scheduled_at || null;
 
   try {
-    // 如果没有有效 slug，先用占位符插入，再用文章 ID 作为 slug
-    const insertSlug = slug || '__pending__';
+    // 如果没有有效 slug，先用唯一占位符插入，再用文章 ID 作为 slug
+    const insertSlug = slug || ('__p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '__');
     const result = await env.DB.prepare(
       'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
     ).bind(title, insertSlug, content_md, summary, cover_image, author, tags, is_published, scheduled_at).first();
     // 用文章 ID 作为 slug（数字 ID，简洁唯一）
     if (!slug) {
       slug = String(result.id);
-      await env.DB.prepare('UPDATE articles SET slug = ? WHERE id = ?').bind(slug, result.id).run();
+      try {
+        await env.DB.prepare('UPDATE articles SET slug = ? WHERE id = ?').bind(slug, result.id).run();
+      } catch (updateErr) {
+        // UPDATE 失败时回滚：删除刚插入的记录
+        await env.DB.prepare('DELETE FROM articles WHERE id = ?').bind(result.id).run();
+        throw updateErr;
+      }
       result.slug = slug;
     }
     // 发布文章时清除 CDN 缓存

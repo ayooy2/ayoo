@@ -171,45 +171,7 @@
 .md-status-bar .auto-save-hint { color: var(--color-success-text); opacity: 0; transition: opacity 0.3s; }
 .md-status-bar .auto-save-hint.show { opacity: 1; }
 @media (max-width: 768px) { .editor-split { flex-direction: column; } .editor-split .editor-pane:first-child { border-right: none; border-bottom: 1px solid var(--color-border); } }
-/* 壁纸选择器 */
-.wallpaper-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 0.75rem;
-    margin: 0.75rem 0;
-}
-.wallpaper-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
-    cursor: pointer;
-    padding: 0.4rem;
-    border-radius: var(--radius-sm);
-    border: 2px solid transparent;
-    transition: border-color 0.2s, transform 0.15s;
-}
-.wallpaper-item:hover {
-    transform: translateY(-2px);
-}
-.wallpaper-item.active {
-    border-color: var(--color-primary);
-}
-.wallpaper-thumb {
-    width: 72px;
-    height: 48px;
-    border-radius: 6px;
-    border: 1px solid var(--color-border);
-    overflow: hidden;
-}
-.wallpaper-item span {
-    font-size: 0.78rem;
-    color: var(--color-text-secondary);
-}
-.wallpaper-item.active span {
-    color: var(--color-primary);
-    font-weight: 600;
-}
+/* 壁纸选择器（已废弃，保留注释以便日后参考） */
 .comment-count-badge {
     display: inline-block;
     background: var(--color-primary);
@@ -556,15 +518,7 @@
         opacity: 1;
     }
 
-    /* ── 壁纸选择器：缩小 ── */
-    .wallpaper-grid {
-        grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-        gap: 0.5rem;
-    }
-    .wallpaper-thumb {
-        width: 60px;
-        height: 40px;
-    }
+    /* ── 背景图预览 ── */
 
     /* ── 评论工具栏 ── */
     .cp-toolbar {
