@@ -89,7 +89,7 @@ ${mobileMenu()}
       form.reset();
       btn.disabled=false;btn.textContent='提交留言';
       /* Insert new entry at top of list */
-      var list=document.querySelector('.comment-list')||document.querySelector('.content');
+      var list=document.querySelector('.guestbook-list')||document.querySelector('.comment-list')||document.querySelector('.content');
       if(list){
         var empty=list.querySelector('.empty-state');if(empty)empty.remove();
         var div=document.createElement('div');div.className='comment-box';div.style.animationDelay='0ms';

@@ -85,7 +85,7 @@ ${mobileMenu()}
 <script src="/sanitize.js"></script>
 <script>
 (function(){
-  var raw = ${JSON.stringify(content).replace(/\//g, '\\/')};
+  var raw = ${JSON.stringify(content).replace(/<\x2Fscript/gi, '<\\/script')};
   if(raw && window.marked){
     var el = document.getElementById('about-content');
     if(el) el.innerHTML = sanitizeMD(marked.parse(raw.replace(/\\\\n/g, '\\n')));
@@ -94,7 +94,7 @@ ${mobileMenu()}
     var s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js';
     s.onload = function(){
-      var raw2 = ${JSON.stringify(content).replace(/\//g, '\\/')};
+      var raw2 = ${JSON.stringify(content).replace(/<\x2Fscript/gi, '<\\/script')};
       if(raw2){
         var el2 = document.getElementById('about-content');
         if(el2) el2.innerHTML = sanitizeMD(marked.parse(raw2.replace(/\\\\n/g, '\\n')));

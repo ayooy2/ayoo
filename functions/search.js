@@ -76,7 +76,7 @@ export async function onRequestGet(context) {
   });
 
   /* Recent searches */
-  var q=${JSON.stringify(q)};
+  var q=${JSON.stringify(q).replace(/<\x2Fscript/gi, '<\\/script')};
   if(q){saveRecent(q)}
   function saveRecent(t){
     try{var r=JSON.parse(localStorage.getItem('recent_searches')||'[]');r=r.filter(function(x){return x!==t});r.unshift(t);if(r.length>8)r=r.slice(0,8);localStorage.setItem('recent_searches',JSON.stringify(r))}catch(e){}
