@@ -1,37 +1,41 @@
 /**
  * admin/tags.js — 后台标签管理
- * 功能：标签 CRUD（新建/编辑/删除）、颜色选择
+ * 功能：标签 CRUD、文章数量统计、按标签筛选、批量操作、标签转换
  * 依赖：admin/core.js（apiFetch）
  */
 (function() {
-    // ---- 标签管理 ----
     var _allTags = [];
     var _tagSelectorOpen = false;
+    var _filteredArticles = [];
 
+    // ---- 标签管理（带文章数量） ----
     async function loadTags() {
         try {
-            var res = await apiFetch('/api/tags');
+            var res = await apiFetch('/api/tags?articles=1');
             var data = await res.json();
             _allTags = data.tags || [];
             renderTagsTable(_allTags);
+            updateConvertSelectors(_allTags);
         } catch (e) {
             document.getElementById('tags-table-body').innerHTML =
-                '<tr><td colspan="4" style="text-align:center;color:var(--color-danger);padding:2rem;">加载失败</td></tr>';
+                '<tr><td colspan="5" style="text-align:center;color:var(--color-danger);padding:2rem;">加载失败</td></tr>';
         }
     }
 
     function renderTagsTable(tags) {
         var tbody = document.getElementById('tags-table-body');
         if (!tags.length) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-text-placeholder);padding:2rem;">暂无标签</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-text-placeholder);padding:2rem;">暂无标签</td></tr>';
             return;
         }
         tbody.innerHTML = tags.map(function(t) {
             var color = t.color || '#6366f1';
+            var count = t.article_count || 0;
             return '<tr>'
                 + '<td><span class="tag-color-badge" style="background:' + escapeHtml(color) + '">' + escapeHtml(t.name) + '</span></td>'
                 + '<td><code style="font-size:0.82rem;color:var(--color-text-secondary);">' + escapeHtml(t.slug || '') + '</code></td>'
                 + '<td><span class="tag-color-dot" style="background:' + escapeHtml(color) + ';cursor:default;"></span> <span style="font-size:0.8rem;color:var(--color-text-muted);">' + escapeHtml(color) + '</span></td>'
+                + '<td><a href="javascript:void(0)" onclick="filterByTag(\'' + escapeHtml(t.name).replace(/'/g, "\\'") + '\')" style="color:var(--color-primary);text-decoration:underline;cursor:pointer;">' + count + ' 篇</a></td>'
                 + '<td class="actions">'
                 + '<button class="btn btn-secondary btn-sm" onclick="openTagEditor(' + t.id + ')">编辑</button>'
                 + '<button class="btn btn-danger btn-sm" onclick="deleteTag(' + t.id + ')">删除</button>'
@@ -39,13 +43,145 @@
         }).join('');
     }
 
+    // ---- 按标签筛选文章 ----
+    async function filterByTag(tagName) {
+        try {
+            var res = await apiFetch('/api/articles?all=1&limit=100');
+            var data = await res.json();
+            var articles = (data.articles || []).filter(function(a) {
+                var tags = (a.tags || '').split(',').map(function(s) { return s.trim(); });
+                return tags.indexOf(tagName) >= 0;
+            });
+            _filteredArticles = articles;
+            renderFilterResults(tagName, articles);
+        } catch (e) {
+            alert('筛选失败: ' + e.message);
+        }
+    }
+
+    function renderFilterResults(tagName, articles) {
+        var container = document.getElementById('tag-filter-results');
+        var title = document.getElementById('tag-filter-title');
+        var tbody = document.getElementById('tag-filter-articles-body');
+        container.style.display = 'block';
+        title.textContent = '包含标签「' + tagName + '」的文章（' + articles.length + ' 篇）';
+
+        if (!articles.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--color-text-placeholder);padding:1.5rem;">暂无文章</td></tr>';
+            return;
+        }
+        tbody.innerHTML = articles.map(function(a) {
+            var status = a.is_published ? '<span style="color:var(--color-success-text);">已发布</span>' : '<span style="color:var(--color-text-muted);">草稿</span>';
+            var date = (a.created_at || '').slice(0, 10);
+            var tags = escapeHtml(a.tags || '');
+            return '<tr>'
+                + '<td><input type="checkbox" class="tag-article-cb" data-id="' + a.id + '" onchange="updateTagFilterCount()"></td>'
+                + '<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(a.title) + '</td>'
+                + '<td>' + escapeHtml(a.author || 'Admin') + '</td>'
+                + '<td>' + status + '</td>'
+                + '<td style="font-size:0.8rem;">' + tags + '</td>'
+                + '<td style="font-size:0.8rem;">' + date + '</td>'
+                + '<td><a href="/blog/' + (a.slug || a.id) + '" target="_blank" class="btn btn-secondary btn-sm" style="font-size:0.75rem;">查看</a></td>'
+                + '</tr>';
+        }).join('');
+        updateTagFilterCount();
+    }
+
+    function toggleAllTagArticles(checked) {
+        document.querySelectorAll('.tag-article-cb').forEach(function(cb) {
+            cb.checked = checked;
+        });
+        updateTagFilterCount();
+    }
+
+    function updateTagFilterCount() {
+        var count = document.querySelectorAll('.tag-article-cb:checked').length;
+        document.getElementById('tag-filter-selected-count').textContent = count;
+    }
+
+    function closeTagFilter() {
+        document.getElementById('tag-filter-results').style.display = 'none';
+        _filteredArticles = [];
+    }
+
+    // ---- 批量操作 ----
+    async function batchTagArticleAction(action) {
+        var checked = document.querySelectorAll('.tag-article-cb:checked');
+        var ids = Array.from(checked).map(function(cb) { return parseInt(cb.dataset.id); });
+        if (!ids.length) { alert('请先选择文章'); return; }
+
+        var actionLabel = action === 'hide' ? '隐藏' : '删除';
+        if (!confirm('确定' + actionLabel + '选中的 ' + ids.length + ' 篇文章？')) return;
+
+        try {
+            for (var i = 0; i < ids.length; i++) {
+                var id = ids[i];
+                if (action === 'delete') {
+                    await apiFetch('/api/articles/' + id, { method: 'DELETE' });
+                } else if (action === 'hide') {
+                    await apiFetch('/api/articles/' + id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ is_published: false })
+                    });
+                }
+            }
+            alert(actionLabel + '成功: ' + ids.length + ' 篇文章');
+            // 刷新筛选结果
+            var title = document.getElementById('tag-filter-title').textContent;
+            var match = title.match(/「(.+?)」/);
+            if (match) filterByTag(match[1]);
+            loadTags();
+        } catch (e) {
+            alert('操作失败: ' + e.message);
+        }
+    }
+
+    // ---- 标签转换 ----
+    function updateConvertSelectors(tags) {
+        var fromSel = document.getElementById('tag-convert-from');
+        var toSel = document.getElementById('tag-convert-to');
+        if (!fromSel || !toSel) return;
+        var opts = tags.map(function(t) {
+            return '<option value="' + escapeHtml(t.name) + '">' + escapeHtml(t.name) + '</option>';
+        }).join('');
+        fromSel.innerHTML = opts;
+        toSel.innerHTML = opts;
+    }
+
+    async function convertTag() {
+        var fromTag = document.getElementById('tag-convert-from').value;
+        var toTag = document.getElementById('tag-convert-to').value;
+        if (!fromTag || !toTag) { alert('请选择标签'); return; }
+        if (fromTag === toTag) { alert('原标签和新标签不能相同'); return; }
+        if (!confirm('将所有文章中的「' + fromTag + '」替换为「' + toTag + '」？')) return;
+
+        try {
+            var res = await apiFetch('/api/tags', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'convert', fromTag: fromTag, toTag: toTag })
+            });
+            if (res.ok) {
+                alert('转换成功');
+                loadTags();
+                closeTagFilter();
+            } else {
+                var err = await res.json().catch(function() { return {}; });
+                alert('转换失败: ' + (err.error || '未知错误'));
+            }
+        } catch (e) {
+            alert('转换失败: ' + e.message);
+        }
+    }
+
+    // ---- 标签编辑器 ----
     function openTagEditor(id) {
         document.getElementById('tag-modal').classList.add('active');
         document.getElementById('tag-form').reset();
         document.getElementById('tag-edit-id').value = '';
         document.getElementById('tag-color').value = '#6366f1';
         document.getElementById('tag-modal-title').textContent = id ? '编辑标签' : '新建标签';
-        // 重置颜色选择
         document.querySelectorAll('#tag-color-presets .tag-color-dot').forEach(function(d) {
             d.classList.toggle('active', d.dataset.color === '#6366f1');
         });
@@ -110,7 +246,7 @@
         try {
             var tag = _allTags.find(function(t) { return t.id === id; });
             var name = tag ? tag.name : '';
-            if (!confirm('确定删除标签"' + name + '"？')) return;
+            if (!confirm('确定删除标签「' + name + '」？\n注意：已关联的文章不会受影响，但标签筛选将不再显示该标签。')) return;
             var res = await apiFetch('/api/tags/' + id, {
                 method: 'DELETE',
                 headers: {}
@@ -199,7 +335,7 @@
         }).join('');
     }
 
-    // ---- 事件委托：标签选择器和标签芯片 ----
+    // ---- 事件委托 ----
     (function() {
         var dropdownEl = document.getElementById('tag-selector-dropdown');
         if (dropdownEl) {
@@ -222,6 +358,12 @@
     window._tagSelectorOpen = _tagSelectorOpen;
     window.loadTags = loadTags;
     window.renderTagsTable = renderTagsTable;
+    window.filterByTag = filterByTag;
+    window.toggleAllTagArticles = toggleAllTagArticles;
+    window.updateTagFilterCount = updateTagFilterCount;
+    window.closeTagFilter = closeTagFilter;
+    window.batchTagArticleAction = batchTagArticleAction;
+    window.convertTag = convertTag;
     window.openTagEditor = openTagEditor;
     window.closeTagEditor = closeTagEditor;
     window.selectTagColor = selectTagColor;
