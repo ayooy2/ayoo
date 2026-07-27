@@ -162,7 +162,7 @@
           solidBg: data.solid_bg === '1' || data.solid_bg === true
         };
         doApplyBgImage(window.__bgSettings);
-      }).catch(function() {});
+      }).catch(function() { bgSettingsLoaded = false; });
     }
   }
 
@@ -189,6 +189,8 @@
   function applyLang(lang) {
     settings.lang = lang;
     localStorage.setItem('ayoo_lang', lang);
+    // 语言变化需要重建弹窗（选项文本会变）
+    buildPopup();
     updateFAB();
     // 通知其他组件
     document.dispatchEvent(new CustomEvent('langchange', { detail: lang }));
@@ -275,8 +277,8 @@
     if (mainBtn) mainBtn.title = L.settings;
     var topBtn = document.getElementById('fab-top');
     if (topBtn) topBtn.title = L.top;
-    // 重建弹窗（语言变化需要刷新标签）
-    buildPopup();
+    // 只更新弹窗内 active 状态，不重建 DOM
+    updatePopupState();
   }
 
   /* ===== 构建设置弹窗 ===== */
@@ -333,13 +335,42 @@
     // 绑定事件
     popup.addEventListener('click', function(e) {
       var btn = e.target.closest('[data-theme]');
-      if (btn) { applyTheme(btn.dataset.theme); applyBgImage(); updateFAB(); return; }
+      if (btn) { toggleTheme(); return; }
       btn = e.target.closest('[data-font]');
       if (btn) { applyFont(btn.dataset.font); updateFAB(); return; }
       btn = e.target.closest('[data-bg]');
       if (btn) { applyBg(btn.dataset.bg); updateFAB(); return; }
       btn = e.target.closest('[data-lang]');
       if (btn) { applyLang(btn.dataset.lang); return; }
+    });
+  }
+
+  /* ===== 更新弹窗 active 状态（不重建 DOM） ===== */
+  function updatePopupState() {
+    var popup = document.getElementById('fab-popup');
+    if (!popup) return;
+    var L = LABELS[settings.lang] || LABELS.zh;
+    // 更新组标签
+    var labels = popup.querySelectorAll('.fab-group-label');
+    if (labels[0]) labels[0].textContent = L.theme;
+    if (labels[1]) labels[1].textContent = L.font;
+    if (labels[2]) labels[2].textContent = L.bg;
+    if (labels[3]) labels[3].textContent = L.lang;
+    // 更新主题按钮
+    popup.querySelectorAll('[data-theme]').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.theme === settings.theme);
+    });
+    // 更新字体按钮
+    popup.querySelectorAll('[data-font]').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.font === settings.font);
+    });
+    // 更新背景色按钮
+    popup.querySelectorAll('[data-bg]').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.bg === settings.bg);
+    });
+    // 更新语言按钮
+    popup.querySelectorAll('[data-lang]').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.lang === settings.lang);
     });
   }
 
