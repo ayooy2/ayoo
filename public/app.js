@@ -5,23 +5,26 @@
  * 入口：IIFE 自执行，页面加载时自动初始化
  */
 (function(){
-  /* Theme toggle */
-  var b=document.getElementById('theme-toggle'),st=localStorage.getItem('theme')||'light';
+  /* Theme toggle — 优先读 ayoo_theme（toolbar.js 使用），回退到 theme（admin 使用） */
+  var b=document.getElementById('theme-toggle');
+  var st=localStorage.getItem('ayoo_theme')||localStorage.getItem('theme')||'light';
+  /* 同步两个 key，避免 toolbar.js 和 app.js 冲突 */
+  localStorage.setItem('ayoo_theme',st);localStorage.setItem('theme',st);
   if(st==='dark'){
     document.documentElement.setAttribute('data-theme','dark');
-    /* Set highlight.js dark theme */
     var hljsLink=document.getElementById('hljs-theme');
     if(hljsLink) hljsLink.href='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';
   }
   if(b){b.textContent=st==='dark'?'☀':'☽';b.addEventListener('click',function(){
     var d=document.documentElement.getAttribute('data-theme')==='dark';
-    if(d){document.documentElement.removeAttribute('data-theme');localStorage.setItem('theme','light');b.textContent='☽'}
-    else{document.documentElement.setAttribute('data-theme','dark');localStorage.setItem('theme','dark');b.textContent='☀'}
-    /* Switch highlight.js theme */
+    var next=d?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    localStorage.setItem('theme',next);localStorage.setItem('ayoo_theme',next);
+    b.textContent=next==='dark'?'☀':'☽';
     var hljsLink=document.getElementById('hljs-theme');
-    if(hljsLink){hljsLink.href=d
-      ?'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css'
-      :'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';}
+    if(hljsLink){hljsLink.href=next==='dark'
+      ?'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css'
+      :'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css';}
   })}
 
   /* Clock — navbar (HH:MM:SS) */

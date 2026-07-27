@@ -79,7 +79,7 @@
 
   /* ===== 状态 ===== */
   var settings = {
-    theme: localStorage.getItem('ayoo_theme') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'),
+    theme: localStorage.getItem('ayoo_theme') || localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'),
     font: localStorage.getItem('ayoo_font') || 'inter',
     bg: localStorage.getItem('ayoo_bg') || 'default',
     lang: localStorage.getItem('ayoo_lang') || 'zh'
@@ -110,6 +110,7 @@
     document.documentElement.setAttribute('data-theme', theme);
     settings.theme = theme;
     localStorage.setItem('ayoo_theme', theme);
+    localStorage.setItem('theme', theme);  // 同步，避免与 app.js 冲突
   }
 
   function toggleTheme() {
@@ -148,13 +149,13 @@
   }
 
   /* ===== 背景图片管理 ===== */
-  var bgSettingsLoaded = false;
+  var bgFetching = false;
   function applyBgImage() {
     // 优先用 SSR 注入的设置，否则从 API 获取
     if (window.__bgSettings) {
       doApplyBgImage(window.__bgSettings);
-    } else if (!bgSettingsLoaded) {
-      bgSettingsLoaded = true;
+    } else if (!bgFetching) {
+      bgFetching = true;
       fetch('/api/settings').then(function(r) { return r.json(); }).then(function(data) {
         window.__bgSettings = {
           bg: data.bg_image || '',
@@ -162,7 +163,7 @@
           solidBg: data.solid_bg === '1' || data.solid_bg === true
         };
         doApplyBgImage(window.__bgSettings);
-      }).catch(function() { bgSettingsLoaded = false; });
+      }).catch(function() { bgFetching = false; });
     }
   }
 
@@ -190,7 +191,12 @@
     settings.lang = lang;
     localStorage.setItem('ayoo_lang', lang);
     // 语言变化需要重建弹窗（选项文本会变）
+    var wasOpen = popupOpen;
     buildPopup();
+    if (wasOpen) {
+      var popup = document.getElementById('fab-popup');
+      if (popup) popup.classList.add('active');
+    }
     updateFAB();
     // 通知其他组件
     document.dispatchEvent(new CustomEvent('langchange', { detail: lang }));

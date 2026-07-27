@@ -22,24 +22,20 @@
         return div.innerHTML;
     }
 
-    // ---- 主题初始化 ----
+    // ---- 主题初始化（同步 ayoo_theme 和 theme 两个 key） ----
     (function() {
-        var saved = localStorage.getItem('theme') || 'light';
+        var saved = localStorage.getItem('ayoo_theme') || localStorage.getItem('theme') || 'light';
+        localStorage.setItem('ayoo_theme', saved); localStorage.setItem('theme', saved);
         if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
         var btn = document.getElementById('theme-toggle');
         if (btn) {
             btn.textContent = saved === 'dark' ? '☀' : '☽';
             btn.addEventListener('click', function() {
                 var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                if (isDark) {
-                    document.documentElement.removeAttribute('data-theme');
-                    localStorage.setItem('theme', 'light');
-                    btn.textContent = '☽';
-                } else {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('theme', 'dark');
-                    btn.textContent = '☀';
-                }
+                var next = isDark ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next); localStorage.setItem('ayoo_theme', next);
+                btn.textContent = next === 'dark' ? '☀' : '☽';
             });
         }
     })();

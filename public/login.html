@@ -61,7 +61,7 @@
     </div>
     <script>
         (function() {
-            var saved = localStorage.getItem('theme') || 'light';
+            var saved = localStorage.getItem('ayoo_theme') || localStorage.getItem('theme') || 'light';
             if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
         })();
 
