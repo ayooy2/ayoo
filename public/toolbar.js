@@ -92,6 +92,7 @@
     applyFont(settings.font);
     applyBg(settings.bg);
     applyBgImage();
+    switchPageLang(settings.lang);
     buildFAB();
     bindScroll();
     // 监听系统主题变化
@@ -190,6 +191,8 @@
   function applyLang(lang) {
     settings.lang = lang;
     localStorage.setItem('ayoo_lang', lang);
+    // 更新页面所有 data-zh/data-en 元素的文本
+    switchPageLang(lang);
     // 语言变化需要重建弹窗（选项文本会变）
     var wasOpen = popupOpen;
     buildPopup();
@@ -200,6 +203,18 @@
     updateFAB();
     // 通知其他组件
     document.dispatchEvent(new CustomEvent('langchange', { detail: lang }));
+  }
+
+  /* 遍历页面所有 [data-zh] 元素，切换显示语言 */
+  function switchPageLang(lang) {
+    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+    var els = document.querySelectorAll('[data-zh]');
+    for (var i = 0; i < els.length; i++) {
+      var text = els[i].getAttribute('data-' + lang);
+      if (text !== null) {
+        els[i].textContent = text;
+      }
+    }
   }
 
   /* ===== 滚动监听（返回顶部按钮显隐） ===== */
@@ -341,7 +356,7 @@
     // 绑定事件
     popup.addEventListener('click', function(e) {
       var btn = e.target.closest('[data-theme]');
-      if (btn) { toggleTheme(); return; }
+      if (btn) { applyTheme(btn.dataset.theme); applyBgImage(); updateFAB(); return; }
       btn = e.target.closest('[data-font]');
       if (btn) { applyFont(btn.dataset.font); updateFAB(); return; }
       btn = e.target.closest('[data-bg]');
