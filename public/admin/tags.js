@@ -14,6 +14,40 @@
             var res = await apiFetch('/api/tags?articles=1');
             var data = await res.json();
             _allTags = data.tags || [];
+
+            // 从文章中提取 tags 表中不存在的标签
+            try {
+                var artRes = await apiFetch('/api/articles?all=1&limit=200');
+                var artData = await artRes.json();
+                var existingNames = {};
+                _allTags.forEach(function(t) { existingNames[t.name] = true; });
+                var extraTags = {};
+                (artData.articles || []).forEach(function(a) {
+                    var tagNames = (a.tags || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                    tagNames.forEach(function(name) {
+                        if (!existingNames[name]) {
+                            if (!extraTags[name]) extraTags[name] = { count: 0, ids: {} };
+                            extraTags[name].count++;
+                            extraTags[name].ids[a.id] = true;
+                        }
+                    });
+                });
+                // 将未分类标签追加到 _allTags（放在最后，标记为未分类）
+                Object.keys(extraTags).sort().forEach(function(name) {
+                    _allTags.push({
+                        id: null,
+                        name: name,
+                        slug: '',
+                        color: '#9ca3af',
+                        article_count: extraTags[name].count,
+                        _unclassified: true
+                    });
+                });
+            } catch (e) {
+                // 获取文章标签失败，继续使用 tags 表的标签
+                console.warn('获取文章标签失败:', e);
+            }
+
             renderTagsTable(_allTags);
             updateConvertSelectors(_allTags);
         } catch (e) {
@@ -31,15 +65,19 @@
         tbody.innerHTML = tags.map(function(t) {
             var color = t.color || '#6366f1';
             var count = t.article_count || 0;
+            var isUnclassified = t._unclassified;
+            var nameHtml = '<span class="tag-color-badge" style="background:' + escapeHtml(color) + '">' + escapeHtml(t.name) + '</span>'
+                + (isUnclassified ? ' <span style="font-size:0.7rem;color:#9ca3af;background:#f3f4f6;padding:1px 5px;border-radius:3px;">未分类</span>' : '');
+            var actionsHtml = isUnclassified
+                ? '<span style="font-size:0.78rem;color:var(--color-text-muted);">需创建标签</span>'
+                : ('<button class="btn btn-secondary btn-sm" onclick="openTagEditor(' + t.id + ')">编辑</button>'
+                + '<button class="btn btn-danger btn-sm" onclick="deleteTag(' + t.id + ')">删除</button>');
             return '<tr>'
-                + '<td><span class="tag-color-badge" style="background:' + escapeHtml(color) + '">' + escapeHtml(t.name) + '</span></td>'
+                + '<td>' + nameHtml + '</td>'
                 + '<td><code style="font-size:0.82rem;color:var(--color-text-secondary);">' + escapeHtml(t.slug || '') + '</code></td>'
                 + '<td><span class="tag-color-dot" style="background:' + escapeHtml(color) + ';cursor:default;"></span> <span style="font-size:0.8rem;color:var(--color-text-muted);">' + escapeHtml(color) + '</span></td>'
                 + '<td><a href="javascript:void(0)" onclick="filterByTag(\'' + escapeHtml(t.name).replace(/'/g, "\\'") + '\')" style="color:var(--color-primary);text-decoration:underline;cursor:pointer;">' + count + ' 篇</a></td>'
-                + '<td class="actions">'
-                + '<button class="btn btn-secondary btn-sm" onclick="openTagEditor(' + t.id + ')">编辑</button>'
-                + '<button class="btn btn-danger btn-sm" onclick="deleteTag(' + t.id + ')">删除</button>'
-                + '</td></tr>';
+                + '<td class="actions">' + actionsHtml + '</td></tr>';
         }).join('');
     }
 
@@ -110,7 +148,8 @@
         var ids = Array.from(checked).map(function(cb) { return parseInt(cb.dataset.id); });
         if (!ids.length) { alert('请先选择文章'); return; }
 
-        var actionLabel = action === 'hide' ? '隐藏' : '删除';
+        var actionLabels = { hide: '隐藏', delete: '删除', encrypt: '加密', decrypt: '取消加密' };
+        var actionLabel = actionLabels[action] || action;
         if (!confirm('确定' + actionLabel + '选中的 ' + ids.length + ' 篇文章？')) return;
 
         try {
@@ -123,6 +162,18 @@
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ is_published: false })
+                    });
+                } else if (action === 'encrypt') {
+                    await apiFetch('/api/articles/' + id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ is_encrypted: 1 })
+                    });
+                } else if (action === 'decrypt') {
+                    await apiFetch('/api/articles/' + id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ is_encrypted: 0 })
                     });
                 }
             }

@@ -13,7 +13,7 @@ export async function onRequestGet(context) {
   const tagFilter = (url.searchParams.get('tag') || '').trim();
 
   // Build query with optional tag filter
-  var sql = `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, SUBSTR(a.content_md, 1, 2000) as content_md, a.author, a.tags, a.created_at, a.views,
+  var sql = `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.is_encrypted, SUBSTR(a.content_md, 1, 2000) as content_md, a.author, a.tags, a.created_at, a.views,
       (SELECT COUNT(*) FROM likes WHERE article_id=a.id) as likes,
       (SELECT COUNT(*) FROM comments WHERE article_id=a.id) as comments
     FROM articles a WHERE a.is_published=1 AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))`;
@@ -160,7 +160,7 @@ function blogCard(a, index) {
   return `<a href="/blog/${esc(a.slug)}" class="${cardClass}" style="animation-delay:${index * 60}ms">
     ${cover}
     <div class="blog-card-body">
-      <h3 class="blog-card-title">${esc(a.title)}</h3>
+      <h3 class="blog-card-title">${a.is_encrypted ? '<span title="已加密" style="font-size:0.85rem;">&#x1f512;</span> ' : ''}${esc(a.title)}</h3>
       ${a.summary ? '<p class="blog-card-summary">' + esc(a.summary) + '</p>' : ''}
       <div class="blog-card-meta">
         <span>${esc(date)}</span>

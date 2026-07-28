@@ -98,8 +98,9 @@ ${mobileMenu()}
           ${tags ? '<div class="article-tags">' + tags + '</div>' : ''}
         </header>
 
-        <div class="article-body" id="content" data-aid="${a.id||0}" data-md=${JSON.stringify(a.content_md || '')}>${simpleMD(a.content_md || '')}</div>
+        <div class="article-body" id="content" data-aid="${a.id||0}" data-md=${JSON.stringify(a.content_md || '')}>${a.is_encrypted ? renderEncryptedContent() : simpleMD(a.content_md || '')}</div>
 
+        ${a.is_encrypted ? '' : `
         <div class="article-actions">
           <button class="btn-like" id="like-btn" onclick="toggleLike()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> <span data-zh="喜欢" data-en="Like">喜欢</span> <span id="like-count">${likes}</span>
@@ -126,6 +127,7 @@ ${mobileMenu()}
           </form>
           <div id="comments-area"></div>
         </section>
+        `}
       </article>
 
       <!-- Mobile prev/next navigation -->
@@ -290,4 +292,12 @@ function simpleMD(md) {
     else out += '<p>' + p.replace(/\n/g, '<br>') + '</p>';
   }
   return out;
+}
+
+function renderEncryptedContent() {
+  return '<div style="text-align:center;padding:3rem 1rem;background:var(--color-bg-secondary, #f9fafb);border-radius:12px;border:1px dashed var(--color-border, #e5e7eb);">'
+    + '<div style="font-size:2.5rem;margin-bottom:1rem;">&#x1f512;</div>'
+    + '<h3 style="margin:0 0 0.5rem;font-size:1.1rem;color:var(--color-text-primary, #111827);">此文章已加密</h3>'
+    + '<p style="margin:0;font-size:0.9rem;color:var(--color-text-muted, #6b7280);">请输入密码查看</p>'
+    + '</div>';
 }
