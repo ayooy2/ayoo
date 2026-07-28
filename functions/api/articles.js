@@ -41,7 +41,7 @@ async function listArticles(env, params) {
   const total = countResult ? countResult.total : 0;
 
   const { results } = await env.DB.prepare(
-    `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.author, a.tags, a.is_published, a.scheduled_at, a.created_at, a.updated_at, a.views,
+    `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.author, a.tags, a.is_published, a.is_encrypted, a.scheduled_at, a.created_at, a.updated_at, a.views,
       (SELECT COUNT(*) FROM likes WHERE article_id=a.id) as likes,
       (SELECT COUNT(*) FROM comments WHERE article_id=a.id) as comments
     FROM articles a ${where} ORDER BY a.created_at DESC LIMIT ? OFFSET ?`
@@ -65,14 +65,15 @@ async function createArticle(env, data) {
   const author = (data.author || 'Admin').trim();
   const tags = (data.tags || '').trim();
   const is_published = data.is_published ? 1 : 0;
+  const is_encrypted = data.is_encrypted ? 1 : 0;
   const scheduled_at = data.scheduled_at || null;
 
   try {
     // 如果没有有效 slug，先用唯一占位符插入，再用文章 ID 作为 slug
     const insertSlug = slug || ('__p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '__');
     const result = await env.DB.prepare(
-      'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
-    ).bind(title, insertSlug, content_md, summary, cover_image, author, tags, is_published, scheduled_at).first();
+      'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
+    ).bind(title, insertSlug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, scheduled_at).first();
     // 用文章 ID 作为 slug（数字 ID，简洁唯一）
     if (!slug) {
       slug = String(result.id);

@@ -1,0 +1,1 @@
+ALTER TABLE articles ADD COLUMN is_encrypted INTEGER DEFAULT 0;
