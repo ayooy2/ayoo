@@ -224,7 +224,7 @@ export function bindEvents(callbacks) {
             e.preventDefault();
             var cmd = this.getAttribute('data-cmd');
             var lang = this.getAttribute('data-lang');
-            if (cmd) executeSlashCommand(MD_CMDS[cmd] ? cmd : cmd, lang);
+            if (cmd) executeSlashCommand(cmd, lang);
         });
         item.addEventListener('mouseenter', function() {
             $$('.eh-slash-item').forEach(function(el) { el.classList.remove('active'); });

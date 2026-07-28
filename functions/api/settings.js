@@ -28,12 +28,13 @@ export async function onRequest(context) {
 }
 
 async function getSettings(env) {
-  const { results } = await env.DB.prepare('SELECT key, value FROM settings').all();
+  const placeholders = ALLOWED_KEYS.map(() => '?').join(',');
+  const { results } = await env.DB.prepare(
+    'SELECT key, value FROM settings WHERE key IN (' + placeholders + ')'
+  ).bind(...ALLOWED_KEYS).all();
   const config = {};
   for (const row of results || []) {
-    if (ALLOWED_KEYS.includes(row.key)) {
-      config[row.key] = row.value;
-    }
+    config[row.key] = row.value;
   }
   return json(config);
 }
