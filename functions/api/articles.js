@@ -69,14 +69,32 @@ async function createArticle(env, data) {
   const scheduled_at = data.scheduled_at || null;
 
   try {
-    // 如果没有有效 slug，先用唯一占位符插入，再用文章 ID 作为 slug
+    // 如果没有提供 slug，查询所有纯数字 slug，找到最小未被占用的正整数
+    var finalSlug = slug;
+    if (!slug) {
+      var { results: numericSlugs } = await env.DB.prepare(
+        "SELECT slug FROM articles WHERE slug GLOB '[0-9]*' AND CAST(slug AS INTEGER) > 0 ORDER BY CAST(slug AS INTEGER) ASC"
+      ).all();
+      // 在 JS 中遍历已排序的数字 slug，找到第一个缺口（最小未占用数字）
+      var nextId = 1;
+      for (var i = 0; i < numericSlugs.length; i++) {
+        var num = parseInt(numericSlugs[i].slug, 10);
+        if (num === nextId) {
+          nextId++;
+        } else if (num > nextId) {
+          break; // 找到缺口，nextId 即为最小未占用数字
+        }
+      }
+      finalSlug = String(nextId);
+    }
+    // 第一阶段：用占位符插入（防止 UNIQUE 冲突）
     const insertSlug = slug || ('__p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '__');
     const result = await env.DB.prepare(
       'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
     ).bind(title, insertSlug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, scheduled_at).first();
-    // 用文章 ID 作为 slug（数字 ID，简洁唯一）
+    // 第二阶段：更新为找到的数字 slug（实现自动回收已释放的数字 ID）
     if (!slug) {
-      slug = String(result.id);
+      slug = finalSlug;
       try {
         await env.DB.prepare('UPDATE articles SET slug = ? WHERE id = ?').bind(slug, result.id).run();
       } catch (updateErr) {

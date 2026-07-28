@@ -63,7 +63,7 @@ async function updateArticle(env, id, data) {
   if (slug && (/[一-鿿]/.test(slug) || /\s/.test(slug) || slug.length < 2)) {
     slug = '';
   }
-  // slug 为空时回退到数字 ID（与新建文章逻辑一致）
+  // slug 为空时回退到旧 slug（保持原有标识；被释放的数字 slug 由 createArticle 回收）
   slug = slug || existing.slug || String(id);
   const content_md = data.content_md !== undefined ? data.content_md : existing.content_md;
 
