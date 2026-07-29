@@ -6,7 +6,7 @@
  * 核心入口：onRequestGet()
  */
 import { navbar, mobileMenu, cmdOverlay } from '../lib/navbar.js';
-import { esc, safeUrl } from '../lib/sanitize.js';
+import { esc } from '../lib/sanitize.js';
 
 export async function onRequestGet(context) {
   try {
