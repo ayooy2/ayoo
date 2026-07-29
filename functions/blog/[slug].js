@@ -16,8 +16,8 @@ export async function onRequestGet(context) {
     await env.DB.prepare('UPDATE articles SET views = views + 1 WHERE id = ?').bind(a.id).run();
     a.views = (a.views || 0) + 1;
     const l = await env.DB.prepare('SELECT COUNT(*) as c FROM likes WHERE article_id=?').bind(a.id).first();
-    const prev = await env.DB.prepare("SELECT title, slug FROM articles WHERE is_published=1 AND id < ? AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY id DESC LIMIT 1").bind(a.id).first();
-    const next = await env.DB.prepare("SELECT title, slug FROM articles WHERE is_published=1 AND id > ? AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY id ASC LIMIT 1").bind(a.id).first();
+    const prev = await env.DB.prepare("SELECT title, slug FROM articles WHERE is_published=1 AND (article_type = 'blog' OR article_type IS NULL) AND id < ? AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY id DESC LIMIT 1").bind(a.id).first();
+    const next = await env.DB.prepare("SELECT title, slug FROM articles WHERE is_published=1 AND (article_type = 'blog' OR article_type IS NULL) AND id > ? AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY id ASC LIMIT 1").bind(a.id).first();
     var h = render(a, l.c, prev, next);
     return new Response(h, {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=3600' }

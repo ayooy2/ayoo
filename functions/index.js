@@ -13,7 +13,7 @@ export async function onRequestGet(context) {
       env.DB.prepare('SELECT key, value FROM settings').all(),
       env.DB.prepare('SELECT id, title, url, icon, description FROM sites ORDER BY sort_order ASC, id ASC LIMIT 200').all(),
       env.DB.prepare("SELECT id, title, slug, summary, cover_image, is_encrypted, created_at, views FROM articles WHERE is_published = 1 AND (article_type = 'blog' OR article_type IS NULL) AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY created_at DESC LIMIT 4").all(),
-      env.DB.prepare('SELECT COUNT(*) as count, COALESCE(SUM(views), 0) as total_views FROM articles WHERE is_published = 1').first(),
+      env.DB.prepare('SELECT COUNT(*) as count, COALESCE(SUM(views), 0) as total_views FROM articles WHERE is_published = 1 AND (article_type = \'blog\' OR article_type IS NULL)').first(),
       env.DB.prepare('SELECT COUNT(*) as count FROM tags').first()
     ]);
     var settings = {};
