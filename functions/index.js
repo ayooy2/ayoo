@@ -85,7 +85,7 @@ function render(s, sites, articles, stats) {
     }
     linksHtml += '</div>';
   }
-  var profileHtml = '<div class="home-profile animate-in" style="animation-delay:100ms">'
+  var profileHtml = '<div class="home-profile home-profile-enter" style="animation-delay:100ms">'
     + avatarHtml
     + '<div class="home-profile-name">' + t + '</div>'
     + bioHtml

@@ -210,7 +210,7 @@
 .code-article-body figure.highlight {
   margin: var(--space-lg) 0;
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow-x: auto;
   border: 1px solid var(--border);
   background: var(--bg-secondary);
 }

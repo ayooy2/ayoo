@@ -2852,6 +2852,15 @@ body[style*="background-image"] .page-wrapper {
   }
 }
 
+/* Profile enter animation (opacity only, no transform to avoid conflict with fixed positioning) */
+@keyframes profile-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.home-profile-enter {
+  animation: profile-fade-in var(--duration-slow) var(--ease) both;
+}
+
 /* Avatar */
 .home-profile-avatar {
   width: 72px;
@@ -3022,8 +3031,6 @@ body[style*="background-image"] .page-wrapper {
   .feature-stats { gap: 1.5rem; padding: 1rem; }
   .feature-stat-num { font-size: 1.5rem; }
   .feature-grid { grid-template-columns: 1fr; }
-  .home-profile { flex-direction: column; text-align: center; padding: 1rem; }
-  .home-profile-stats { justify-content: center; }
   .home-articles { grid-template-columns: 1fr; }
   .home-time { font-size: var(--text-xl); }
   .home-hero { padding: var(--space-lg) 0 var(--space-md); }
