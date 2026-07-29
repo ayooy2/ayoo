@@ -54,10 +54,23 @@
   function setBgFilter(filterId) {
     var filter = BG_FILTERS.find(function(f) { return f.id === filterId; });
     if (!filter) return;
-    document.documentElement.style.setProperty('--bg-filter', filter.color);
     settings.bgFilter = filterId;
     localStorage.setItem('ayoo_bgfilter', filterId);
+    applyBgFilter();
     refreshUI();
+  }
+
+  /* 创建/更新滤镜覆盖层（真实 DOM div，不用伪元素） */
+  function applyBgFilter() {
+    var overlay = document.getElementById('ayoo-bg-filter');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'ayoo-bg-filter';
+      overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2;transition:background 0.6s;';
+      document.body.appendChild(overlay);
+    }
+    var filter = BG_FILTERS.find(function(f) { return f.id === settings.bgFilter; });
+    overlay.style.background = filter ? filter.color : 'transparent';
   }
 
   /* ===== 背景图片管理 ===== */
