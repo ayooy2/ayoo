@@ -131,10 +131,7 @@
 
 /* ── Font Variants (toolbar.js) ── */
 [data-font="inter"]  { --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif; }
-[data-font="noto"]   { --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-[data-font="system"] { --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; }
 [data-font="serif"]  { --font-sans: 'Noto Serif SC', 'Georgia', 'Times New Roman', serif; }
-[data-font="mono"]   { --font-sans: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace; }
 
 /* ── Reset ── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -157,6 +154,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
   transition: background var(--duration-slow) var(--ease),
               color var(--duration-slow) var(--ease);
+}
+
+/* 背景滤镜叠加层（toolbar.js 控制 --bg-filter） */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: var(--bg-filter, transparent);
+  transition: background 0.6s var(--ease);
 }
 
 ::selection {
@@ -421,6 +429,8 @@ body[style*="background-image"] .navbar {
 
 /* ===== PAGE LAYOUT ===== */
 .page-wrapper {
+  position: relative;
+  z-index: 1;
   max-width: var(--max-w-content);
   margin: 0 auto;
   padding: var(--space-2xl) var(--space-xl) var(--space-3xl);

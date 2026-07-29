@@ -60,7 +60,7 @@ export function pageEnd(footerText = '<a href="/">← 返回首页</a>', extraSc
 </div>
 <script src="/app.js" defer></script>
 ${bgScript}
-<script src="/toolbar.js?v=8" defer></script>
+<script src="/toolbar.js?v=9" defer></script>
 ${extraScripts}
 ${cmdOverlayHtml}
 </body>

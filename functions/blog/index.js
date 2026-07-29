@@ -68,7 +68,7 @@ export async function onRequestGet(context) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/style.css?v=6">
-<link rel="stylesheet" href="/toolbar.css?v=6">
+<link rel="stylesheet" href="/toolbar.css?v=9">
 </head>
 <body>
 ${navbar('Blog', '/blog', '/blog')}
@@ -117,7 +117,7 @@ ${mobileMenu()}
   window.addEventListener('popstate',function(){window.location.reload()});
 })();
 </script>
-<script src="/toolbar.js?v=8" defer></script>
+<script src="/toolbar.js?v=9" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=3600' } });
