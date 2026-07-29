@@ -37,6 +37,14 @@ function render(s, sites, articles, stats) {
   var subRaw = s.subtitle || '';
   var sub = esc(subRaw);
   var foot = esc(s.footer || '');
+  // Profile: bio and social links
+  var profileBio = s.profile_bio || '';
+  var profileLinks = [];
+  if (s.profile_links) {
+    try {
+      profileLinks = JSON.parse(s.profile_links.replace(/\\n/g, '\n'));
+    } catch(e) { profileLinks = []; }
+  }
   var bgRaw = s.bg_image || '';
   var bgDarkRaw = s.bg_image_dark || '';
   var solidBg = s.solid_bg === '1' || s.solid_bg === true;
@@ -53,6 +61,42 @@ function render(s, sites, articles, stats) {
   }
   // 将背景设置传给前端（toolbar.js 根据主题切换时使用）
   var bgSettings = JSON.stringify({ bg: bg, bgDark: bgDark, solidBg: solidBg });
+
+  // Build profile sidebar HTML
+  var avatarHtml = '';
+  if (s.about_avatar) {
+    avatarHtml = '<img class="home-profile-avatar" src="' + esc(s.about_avatar) + '" alt="avatar" />';
+  } else {
+    avatarHtml = '<div class="home-profile-avatar home-profile-avatar-placeholder">&#x1F60A;</div>';
+  }
+  var bioHtml = '';
+  var bioText = profileBio || subRaw || '';
+  if (bioText) {
+    bioHtml = '<div class="home-profile-bio">' + esc(bioText) + '</div>';
+  }
+  var linksHtml = '';
+  if (profileLinks.length > 0) {
+    linksHtml = '<div class="home-profile-links">';
+    for (var li = 0; li < profileLinks.length; li++) {
+      var link = profileLinks[li];
+      var safeUrl = link.url || '#';
+      if (/^(javascript|data|vbscript):/i.test(safeUrl)) safeUrl = '#';
+      linksHtml += '<a href="' + esc(safeUrl) + '" class="home-profile-link" title="' + esc(link.label || '') + '" target="_blank" rel="noopener noreferrer">' + profileLinkIcon(link.icon, link.label) + '</a>';
+    }
+    linksHtml += '</div>';
+  }
+  var profileHtml = '<div class="home-profile animate-in" style="animation-delay:100ms">'
+    + avatarHtml
+    + '<div class="home-profile-name">' + t + '</div>'
+    + bioHtml
+    + '<div class="home-profile-stats">'
+    + '<span class="home-profile-stat"><strong>' + stats.count + '</strong> <span data-zh="文章" data-en="Posts">文章</span></span>'
+    + '<span class="home-profile-stat"><strong>' + stats.tag_count + '</strong> <span data-zh="标签" data-en="Tags">标签</span></span>'
+    + '<span class="home-profile-stat"><strong>' + stats.total_views + '</strong> <span data-zh="阅读" data-en="Views">阅读</span></span>'
+    + '<span class="home-profile-stat"><strong>' + sites.length + '</strong> <span data-zh="导航" data-en="Links">导航</span></span>'
+    + '</div>'
+    + linksHtml
+    + '</div>';
 
   // Navigation cards — static pages first, then dynamic sites
   var navCards = '';
