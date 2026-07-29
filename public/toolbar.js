@@ -117,10 +117,6 @@
   function updatePopupState() {
     var popup = document.getElementById('fab-popup');
     if (!popup) return;
-    // 更新主题按钮
-    popup.querySelectorAll('[data-theme]').forEach(function(b) {
-      b.classList.toggle('active', b.dataset.theme === settings.theme);
-    });
     // 更新字体按钮
     popup.querySelectorAll('[data-font]').forEach(function(b) {
       b.classList.toggle('active', b.dataset.font === settings.font);
@@ -217,14 +213,6 @@
     popup.className = 'fab-popup';
 
     var html = '';
-
-    // 主题
-    html += '<div class="fab-group">'
-      + '<div class="fab-group-label">主题</div>'
-      + '<div class="fab-row">'
-      + '<button class="fab-opt' + (settings.theme === 'light' ? ' active' : '') + '" data-theme="light" onclick="AyooToolbar._setTheme(\'light\')">☀️ 日间</button>'
-      + '<button class="fab-opt' + (settings.theme === 'dark' ? ' active' : '') + '" data-theme="dark" onclick="AyooToolbar._setTheme(\'dark\')">🌙 夜间</button>'
-      + '</div></div>';
 
     // 字体
     html += '<div class="fab-group">'

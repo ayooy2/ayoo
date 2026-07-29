@@ -5,27 +5,15 @@
  * 入口：IIFE 自执行，页面加载时自动初始化
  */
 (function(){
-  /* Theme toggle — 优先读 ayoo_theme（toolbar.js 使用），回退到 theme（admin 使用） */
-  var b=document.getElementById('theme-toggle');
+  /* 初始化主题：优先读 ayoo_theme（toolbar.js），回退到 theme */
   var st=localStorage.getItem('ayoo_theme')||localStorage.getItem('theme')||'light';
-  /* 同步两个 key，避免 toolbar.js 和 app.js 冲突 */
   localStorage.setItem('ayoo_theme',st);localStorage.setItem('theme',st);
   if(st==='dark'){
     document.documentElement.setAttribute('data-theme','dark');
     var hljsLink=document.getElementById('hljs-theme');
     if(hljsLink) hljsLink.href='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';
   }
-  if(b){b.textContent=st==='dark'?'☀':'☽';b.addEventListener('click',function(){
-    var d=document.documentElement.getAttribute('data-theme')==='dark';
-    var next=d?'light':'dark';
-    document.documentElement.setAttribute('data-theme',next);
-    localStorage.setItem('theme',next);localStorage.setItem('ayoo_theme',next);
-    b.textContent=next==='dark'?'☀':'☽';
-    var hljsLink=document.getElementById('hljs-theme');
-    if(hljsLink){hljsLink.href=next==='dark'
-      ?'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css'
-      :'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css';}
-  })}
+  /* 主题切换统一由 toolbar.js 的 FAB 按钮处理 */
 
   /* Clock — navbar (HH:MM:SS) */
   function updateClock(){var n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0'),s=String(n.getSeconds()).padStart(2,'0');var el=document.getElementById('clock');if(el) el.textContent=h+':'+m+':'+s}

@@ -33,7 +33,6 @@ export function navbar(brandText, brandHref, currentPath) {
     '<div class="nav-links">' + desktopLinks + '</div>' +
     '<div class="nav-spacer"></div>' +
     '<span class="nav-clock" id="clock">--:--:--</span>' +
-    '<button class="theme-toggle" id="theme-toggle" aria-label="切换主题">☽</button>' +
     '<button class="nav-hamburger" id="nav-hamburger" aria-label="菜单"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg></button>' +
     '</div></nav>';
 }
