@@ -86,54 +86,31 @@
   };
   var popupOpen = false;
 
-  /* ===== 初始化 ===== */
-  function init() {
-    applyTheme(settings.theme);
-    applyFont(settings.font);
-    applyBg(settings.bg);
-    applyBgImage();
-    switchPageLang(settings.lang);
-    buildFAB();
-    bindScroll();
-    // 监听系统主题变化
-    matchMedia('(prefers-color-scheme:dark)').addEventListener('change', function(e) {
-      if (!localStorage.getItem('ayoo_theme')) {
-        settings.theme = e.matches ? 'dark' : 'light';
-        applyTheme(settings.theme);
-        applyBgImage();
-        updateFAB();
-      }
-    });
-  }
-
-  /* ===== 主题切换 ===== */
-  function applyTheme(theme) {
+  /* ===== 公共方法（暴露给 window 供 onclick 调用） ===== */
+  function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     settings.theme = theme;
     localStorage.setItem('ayoo_theme', theme);
-    localStorage.setItem('theme', theme);  // 同步，避免与 app.js 冲突
+    localStorage.setItem('theme', theme);
+    applyBgImage();
+    refreshUI();
   }
 
   function toggleTheme() {
-    settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
-    applyTheme(settings.theme);
-    applyBgImage();
-    updateFAB();
+    setTheme(settings.theme === 'dark' ? 'light' : 'dark');
   }
 
-  /* ===== 字体切换 ===== */
-  function applyFont(fontId) {
+  function setFont(fontId) {
     document.documentElement.setAttribute('data-font', fontId);
     settings.font = fontId;
     localStorage.setItem('ayoo_font', fontId);
+    refreshUI();
   }
 
-  /* ===== 背景色切换 ===== */
-  function applyBg(bgId) {
+  function setBg(bgId) {
     var scheme = BG_SCHEMES[bgId];
     var root = document.documentElement;
     if (!scheme) {
-      // 默认方案：清除所有自定义属性
       Object.keys(BG_SCHEMES).forEach(function(key) {
         if (BG_SCHEMES[key]) {
           Object.keys(BG_SCHEMES[key]).forEach(function(v) { root.style.removeProperty(v); });
@@ -147,12 +124,35 @@
     settings.bg = bgId;
     localStorage.setItem('ayoo_bg', bgId);
     applyBgImage();
+    refreshUI();
+  }
+
+  function setLang(lang) {
+    settings.lang = lang;
+    localStorage.setItem('ayoo_lang', lang);
+    // 切换页面文本
+    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+    var els = document.querySelectorAll('[data-zh]');
+    for (var i = 0; i < els.length; i++) {
+      var text = els[i].getAttribute('data-' + lang);
+      if (text !== null) els[i].textContent = text;
+    }
+    // 重建弹窗以更新按钮文字
+    var wasOpen = popupOpen;
+    buildPopup();
+    if (wasOpen) {
+      var popup = document.getElementById('fab-popup');
+      if (popup) popup.classList.add('active');
+      var overlay = document.getElementById('fab-overlay');
+      if (overlay) overlay.classList.add('active');
+    }
+    refreshUI();
+    document.dispatchEvent(new CustomEvent('langchange', { detail: lang }));
   }
 
   /* ===== 背景图片管理 ===== */
   var bgFetching = false;
   function applyBgImage() {
-    // 优先用 SSR 注入的设置，否则从 API 获取
     if (window.__bgSettings) {
       doApplyBgImage(window.__bgSettings);
     } else if (!bgFetching) {
@@ -170,12 +170,10 @@
 
   function doApplyBgImage(bg) {
     if (!bg) return;
-    // 纯色模式下不显示背景图
     if (bg.solidBg) {
       document.body.style.backgroundImage = '';
       return;
     }
-    // 根据当前主题选择背景图
     var imgUrl = settings.theme === 'dark' ? (bg.bgDark || '') : (bg.bg || '');
     if (imgUrl) {
       document.body.style.backgroundImage = 'url(' + imgUrl + ')';
@@ -187,209 +185,48 @@
     }
   }
 
-  /* ===== 语言切换 ===== */
-  function applyLang(lang) {
-    settings.lang = lang;
-    localStorage.setItem('ayoo_lang', lang);
-    // 更新页面所有 data-zh/data-en 元素的文本
-    switchPageLang(lang);
-    // 语言变化需要重建弹窗（选项文本会变）
-    var wasOpen = popupOpen;
-    buildPopup();
-    if (wasOpen) {
-      var popup = document.getElementById('fab-popup');
-      if (popup) popup.classList.add('active');
-    }
-    updateFAB();
-    // 通知其他组件
-    document.dispatchEvent(new CustomEvent('langchange', { detail: lang }));
-  }
-
-  /* 遍历页面所有 [data-zh] 元素，切换显示语言 */
-  function switchPageLang(lang) {
-    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
-    var els = document.querySelectorAll('[data-zh]');
-    for (var i = 0; i < els.length; i++) {
-      var text = els[i].getAttribute('data-' + lang);
-      if (text !== null) {
-        els[i].textContent = text;
-      }
-    }
-  }
-
-  /* ===== 滚动监听（返回顶部按钮显隐） ===== */
-  function bindScroll() {
-    var topBtn = document.getElementById('fab-top');
-    if (!topBtn) return;
-    var ticking = false;
-    window.addEventListener('scroll', function() {
-      if (!ticking) {
-        requestAnimationFrame(function() {
-          topBtn.classList.toggle('visible', window.scrollY > 300);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }, { passive: true });
-  }
-
-  function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  /* ===== 构建 FAB 按钮 ===== */
-  function buildFAB() {
-    // 移除旧工具栏
-    var old = document.getElementById('ayoo-toolbar');
-    if (old) old.remove();
-
+  /* ===== UI 刷新（更新 FAB 按钮 + 弹窗状态） ===== */
+  function refreshUI() {
     var L = LABELS[settings.lang] || LABELS.zh;
     var isDark = settings.theme === 'dark';
-
-    // FAB 容器
-    var container = document.createElement('div');
-    container.id = 'ayoo-toolbar';
-    container.className = 'fab-container';
-
-    // 返回顶部按钮
-    var topBtn = createFabBtn('fab-top', 'fab-btn fab-btn-top', '↑', L.top, scrollToTop);
-
-    // 暗色模式切换
-    var darkBtn = createFabBtn('fab-dark', 'fab-btn', isDark ? '☀️' : '🌙', L.theme, toggleTheme);
-
-    // 主设置按钮
-    var mainBtn = createFabBtn('fab-main', 'fab-btn fab-btn-main', '⚙', L.settings, togglePopup);
-
-    container.appendChild(topBtn);
-    container.appendChild(darkBtn);
-    container.appendChild(mainBtn);
-    document.body.appendChild(container);
-
-    // 设置弹窗
-    buildPopup();
-
-    // 遮罩层
-    var overlay = document.createElement('div');
-    overlay.id = 'fab-overlay';
-    overlay.className = 'fab-overlay';
-    overlay.addEventListener('click', closePopup);
-    document.body.appendChild(overlay);
-  }
-
-  function createFabBtn(id, className, icon, title, onClick) {
-    var btn = document.createElement('button');
-    btn.id = id;
-    btn.className = className;
-    btn.title = title;
-    btn.textContent = icon;
-    btn.addEventListener('click', onClick);
-    return btn;
-  }
-
-  function updateFAB() {
-    var L = LABELS[settings.lang] || LABELS.zh;
-    var isDark = settings.theme === 'dark';
+    // 更新暗色模式按钮图标
     var darkBtn = document.getElementById('fab-dark');
     if (darkBtn) {
       darkBtn.textContent = isDark ? '☀️' : '🌙';
       darkBtn.title = L.theme;
     }
+    // 更新主按钮标题
     var mainBtn = document.getElementById('fab-main');
     if (mainBtn) mainBtn.title = L.settings;
+    // 更新返回顶部按钮标题
     var topBtn = document.getElementById('fab-top');
     if (topBtn) topBtn.title = L.top;
-    // 只更新弹窗内 active 状态，不重建 DOM
+    // 更新弹窗 active 状态
     updatePopupState();
   }
 
-  /* ===== 构建设置弹窗 ===== */
-  function buildPopup() {
-    var old = document.getElementById('fab-popup');
-    if (old) old.remove();
-
-    var L = LABELS[settings.lang] || LABELS.zh;
-    var popup = document.createElement('div');
-    popup.id = 'fab-popup';
-    popup.className = 'fab-popup';
-
-    var html = '';
-
-    // 主题
-    html += '<div class="fab-group">'
-      + '<div class="fab-group-label">' + L.theme + '</div>'
-      + '<div class="fab-row">'
-      + '<button class="fab-opt' + (settings.theme === 'light' ? ' active' : '') + '" data-theme="light">☀️ ' + (settings.lang === 'zh' ? '日间' : 'Light') + '</button>'
-      + '<button class="fab-opt' + (settings.theme === 'dark' ? ' active' : '') + '" data-theme="dark">🌙 ' + (settings.lang === 'zh' ? '夜间' : 'Dark') + '</button>'
-      + '</div></div>';
-
-    // 字体
-    html += '<div class="fab-group">'
-      + '<div class="fab-group-label">' + L.font + '</div>'
-      + '<div class="fab-row">';
-    FONTS.forEach(function(f) {
-      html += '<button class="fab-opt' + (settings.font === f.id ? ' active' : '') + '" data-font="' + f.id + '">'
-        + (settings.lang === 'zh' ? f.label : f.en) + '</button>';
-    });
-    html += '</div></div>';
-
-    // 背景色
-    html += '<div class="fab-group">'
-      + '<div class="fab-group-label">' + L.bg + '</div>'
-      + '<div class="fab-row">';
-    BG_COLORS.forEach(function(b) {
-      html += '<button class="fab-bg-btn' + (settings.bg === b.id ? ' active' : '') + (b.dark ? ' dark-swatch' : '') + '"'
-        + ' data-bg="' + b.id + '" style="background:' + b.color + '" title="' + b.label + '"></button>';
-    });
-    html += '</div></div>';
-
-    // 语言
-    html += '<div class="fab-group">'
-      + '<div class="fab-group-label">' + L.lang + '</div>'
-      + '<div class="fab-row">'
-      + '<button class="fab-opt' + (settings.lang === 'zh' ? ' active' : '') + '" data-lang="zh">中文</button>'
-      + '<button class="fab-opt' + (settings.lang === 'en' ? ' active' : '') + '" data-lang="en">English</button>'
-      + '</div></div>';
-
-    popup.innerHTML = html;
-    document.body.appendChild(popup);
-
-    // 绑定事件
-    popup.addEventListener('click', function(e) {
-      var btn = e.target.closest('[data-theme]');
-      if (btn) { applyTheme(btn.dataset.theme); applyBgImage(); updateFAB(); return; }
-      btn = e.target.closest('[data-font]');
-      if (btn) { applyFont(btn.dataset.font); updateFAB(); return; }
-      btn = e.target.closest('[data-bg]');
-      if (btn) { applyBg(btn.dataset.bg); updateFAB(); return; }
-      btn = e.target.closest('[data-lang]');
-      if (btn) { applyLang(btn.dataset.lang); return; }
-    });
-  }
-
-  /* ===== 更新弹窗 active 状态（不重建 DOM） ===== */
   function updatePopupState() {
     var popup = document.getElementById('fab-popup');
     if (!popup) return;
     var L = LABELS[settings.lang] || LABELS.zh;
-    // 更新组标签
     var labels = popup.querySelectorAll('.fab-group-label');
     if (labels[0]) labels[0].textContent = L.theme;
     if (labels[1]) labels[1].textContent = L.font;
     if (labels[2]) labels[2].textContent = L.bg;
     if (labels[3]) labels[3].textContent = L.lang;
-    // 更新主题按钮
+    // 更新主题按钮 active
     popup.querySelectorAll('[data-theme]').forEach(function(b) {
       b.classList.toggle('active', b.dataset.theme === settings.theme);
     });
-    // 更新字体按钮
+    // 更新字体按钮 active
     popup.querySelectorAll('[data-font]').forEach(function(b) {
       b.classList.toggle('active', b.dataset.font === settings.font);
     });
-    // 更新背景色按钮
+    // 更新背景按钮 active
     popup.querySelectorAll('[data-bg]').forEach(function(b) {
       b.classList.toggle('active', b.dataset.bg === settings.bg);
     });
-    // 更新语言按钮
+    // 更新语言按钮 active
     popup.querySelectorAll('[data-lang]').forEach(function(b) {
       b.classList.toggle('active', b.dataset.lang === settings.lang);
     });
@@ -397,7 +234,8 @@
 
   /* ===== 弹窗开关 ===== */
   function togglePopup() {
-    popupOpen ? closePopup() : openPopup();
+    if (popupOpen) { closePopup(); }
+    else { openPopup(); }
   }
 
   function openPopup() {
@@ -416,6 +254,155 @@
     if (overlay) overlay.classList.remove('active');
   }
 
+  /* ===== 返回顶部 ===== */
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ===== 构建 FAB 按钮 ===== */
+  function buildFAB() {
+    var old = document.getElementById('ayoo-toolbar');
+    if (old) old.remove();
+
+    var L = LABELS[settings.lang] || LABELS.zh;
+    var isDark = settings.theme === 'dark';
+
+    // FAB 容器
+    var container = document.createElement('div');
+    container.id = 'ayoo-toolbar';
+    container.className = 'fab-container';
+
+    // 返回顶部按钮 — 使用内联 onclick
+    var topBtn = document.createElement('button');
+    topBtn.id = 'fab-top';
+    topBtn.className = 'fab-btn fab-btn-top';
+    topBtn.title = L.top;
+    topBtn.textContent = '↑';
+    topBtn.setAttribute('onclick', 'AyooToolbar._scrollToTop()');
+
+    // 暗色模式切换 — 使用内联 onclick
+    var darkBtn = document.createElement('button');
+    darkBtn.id = 'fab-dark';
+    darkBtn.className = 'fab-btn';
+    darkBtn.title = L.theme;
+    darkBtn.textContent = isDark ? '☀️' : '🌙';
+    darkBtn.setAttribute('onclick', 'AyooToolbar._toggleTheme()');
+
+    // 主设置按钮 — 使用内联 onclick
+    var mainBtn = document.createElement('button');
+    mainBtn.id = 'fab-main';
+    mainBtn.className = 'fab-btn fab-btn-main';
+    mainBtn.title = L.settings;
+    mainBtn.textContent = '⚙';
+    mainBtn.setAttribute('onclick', 'AyooToolbar._togglePopup()');
+
+    container.appendChild(topBtn);
+    container.appendChild(darkBtn);
+    container.appendChild(mainBtn);
+    document.body.appendChild(container);
+
+    // 设置弹窗
+    buildPopup();
+
+    // 遮罩层
+    var overlay = document.createElement('div');
+    overlay.id = 'fab-overlay';
+    overlay.className = 'fab-overlay';
+    overlay.setAttribute('onclick', 'AyooToolbar._closePopup()');
+    document.body.appendChild(overlay);
+  }
+
+  /* ===== 构建设置弹窗（所有按钮使用内联 onclick） ===== */
+  function buildPopup() {
+    var old = document.getElementById('fab-popup');
+    if (old) old.remove();
+
+    var L = LABELS[settings.lang] || LABELS.zh;
+    var popup = document.createElement('div');
+    popup.id = 'fab-popup';
+    popup.className = 'fab-popup';
+
+    var html = '';
+
+    // 主题 — 每个按钮内联 onclick 调用 setTheme
+    html += '<div class="fab-group">'
+      + '<div class="fab-group-label">' + L.theme + '</div>'
+      + '<div class="fab-row">'
+      + '<button class="fab-opt' + (settings.theme === 'light' ? ' active' : '') + '" data-theme="light" onclick="AyooToolbar._setTheme(\'light\')">☀️ ' + (settings.lang === 'zh' ? '日间' : 'Light') + '</button>'
+      + '<button class="fab-opt' + (settings.theme === 'dark' ? ' active' : '') + '" data-theme="dark" onclick="AyooToolbar._setTheme(\'dark\')">🌙 ' + (settings.lang === 'zh' ? '夜间' : 'Dark') + '</button>'
+      + '</div></div>';
+
+    // 字体 — 每个按钮内联 onclick 调用 setFont
+    html += '<div class="fab-group">'
+      + '<div class="fab-group-label">' + L.font + '</div>'
+      + '<div class="fab-row">';
+    FONTS.forEach(function(f) {
+      html += '<button class="fab-opt' + (settings.font === f.id ? ' active' : '') + '" data-font="' + f.id + '" onclick="AyooToolbar._setFont(\'' + f.id + '\')">'
+        + (settings.lang === 'zh' ? f.label : f.en) + '</button>';
+    });
+    html += '</div></div>';
+
+    // 背景色 — 每个按钮内联 onclick 调用 setBg
+    html += '<div class="fab-group">'
+      + '<div class="fab-group-label">' + L.bg + '</div>'
+      + '<div class="fab-row">';
+    BG_COLORS.forEach(function(b) {
+      html += '<button class="fab-bg-btn' + (settings.bg === b.id ? ' active' : '') + (b.dark ? ' dark-swatch' : '') + '"'
+        + ' data-bg="' + b.id + '" style="background:' + b.color + '" title="' + b.label + '" onclick="AyooToolbar._setBg(\'' + b.id + '\')"></button>';
+    });
+    html += '</div></div>';
+
+    // 语言 — 每个按钮内联 onclick 调用 setLang
+    html += '<div class="fab-group">'
+      + '<div class="fab-group-label">' + L.lang + '</div>'
+      + '<div class="fab-row">'
+      + '<button class="fab-opt' + (settings.lang === 'zh' ? ' active' : '') + '" data-lang="zh" onclick="AyooToolbar._setLang(\'zh\')">中文</button>'
+      + '<button class="fab-opt' + (settings.lang === 'en' ? ' active' : '') + '" data-lang="en" onclick="AyooToolbar._setLang(\'en\')">English</button>'
+      + '</div></div>';
+
+    popup.innerHTML = html;
+    document.body.appendChild(popup);
+  }
+
+  /* ===== 滚动监听 ===== */
+  function bindScroll() {
+    var topBtn = document.getElementById('fab-top');
+    if (!topBtn) return;
+    var ticking = false;
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        requestAnimationFrame(function() {
+          topBtn.classList.toggle('visible', window.scrollY > 300);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+  }
+
+  /* ===== 初始化 ===== */
+  function init() {
+    setTheme(settings.theme);
+    setFont(settings.font);
+    setBg(settings.bg);
+    applyBgImage();
+    // 初始语言设置
+    document.documentElement.lang = settings.lang === 'en' ? 'en' : 'zh-CN';
+    var els = document.querySelectorAll('[data-zh]');
+    for (var i = 0; i < els.length; i++) {
+      var text = els[i].getAttribute('data-' + settings.lang);
+      if (text !== null) els[i].textContent = text;
+    }
+    buildFAB();
+    bindScroll();
+    // 监听系统主题变化
+    matchMedia('(prefers-color-scheme:dark)').addEventListener('change', function(e) {
+      if (!localStorage.getItem('ayoo_theme')) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  }
+
   /* ===== 启动 ===== */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -423,6 +410,16 @@
     init();
   }
 
-  // 暴露给外部（调试用）
-  window.AyooToolbar = { settings: settings, applyBg: applyBg, applyFont: applyFont, applyTheme: applyTheme };
+  // 暴露公共接口（供 onclick 和调试使用）
+  window.AyooToolbar = {
+    settings: settings,
+    _setTheme: setTheme,
+    _toggleTheme: toggleTheme,
+    _setFont: setFont,
+    _setBg: setBg,
+    _setLang: setLang,
+    _togglePopup: togglePopup,
+    _closePopup: closePopup,
+    _scrollToTop: scrollToTop
+  };
 })();

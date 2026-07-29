@@ -117,7 +117,7 @@ ${mobileMenu()}
   window.addEventListener('popstate',function(){window.location.reload()});
 })();
 </script>
-<script src="/toolbar.js?v=7" defer></script>
+<script src="/toolbar.js?v=8" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=3600' } });
