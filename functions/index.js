@@ -218,7 +218,7 @@ ${mobileMenu()}
 </script>
 ${cmdOverlay()}
 <script>window.__bgSettings = ${bgSettings};</script>
-<script src="/toolbar.js" defer></script>
+<script src="/toolbar.js?v=7" defer></script>
 </body>
 </html>`;
 }
