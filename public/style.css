@@ -2827,52 +2827,168 @@ body[style*="background-image"] .page-wrapper {
   margin: 0;
 }
 
-/* ── Personal Card (Homepage) ── */
+/* ── Personal Card (Homepage Sidebar) ── */
 .home-profile {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 1.25rem;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 12px;
-  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  z-index: 50;
+  transition: background var(--duration-slow) var(--ease),
+              border-color var(--duration-slow) var(--ease),
+              box-shadow var(--duration-slow) var(--ease);
 }
+
+/* Desktop: fixed left sidebar */
+@media (min-width: 769px) {
+  .home-profile {
+    position: fixed;
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 220px;
+  }
+}
+
+/* Avatar */
 .home-profile-avatar {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--border);
-  flex-shrink: 0;
+  margin: 0 auto 0.75rem;
+  display: block;
 }
-.home-profile-info {
-  flex: 1;
-  min-width: 0;
+.home-profile-avatar-placeholder {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 0.75rem;
 }
+
+/* Name */
 .home-profile-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
 }
+
+/* Bio */
 .home-profile-bio {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+  word-break: break-word;
 }
+
+/* Stats grid: 2x2 */
 .home-profile-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
 }
 .home-profile-stat {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: var(--text-tertiary);
+  white-space: nowrap;
 }
 .home-profile-stat strong {
   color: var(--accent);
   font-weight: 600;
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+/* Social links row */
+.home-profile-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.home-profile-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--text-tertiary);
+  transition: color var(--duration-fast) var(--ease),
+              background var(--duration-fast) var(--ease);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.home-profile-link:hover {
+  color: var(--accent);
+  background: var(--accent-subtle);
+}
+.home-profile-link svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Mobile: in-flow horizontal card */
+@media (max-width: 768px) {
+  .home-profile {
+    position: static;
+    width: 100%;
+    transform: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+  }
+  .home-profile-avatar,
+  .home-profile-avatar-placeholder {
+    width: 48px;
+    height: 48px;
+    margin: 0;
+    flex-shrink: 0;
+    font-size: 1.5rem;
+  }
+  .home-profile-name {
+    font-size: 0.95rem;
+    margin-bottom: 0;
+  }
+  .home-profile-bio {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    font-size: 0.78rem;
+  }
+  .home-profile-stats {
+    grid-template-columns: repeat(4, 1fr);
+    width: 100%;
+    gap: 0.25rem;
+    border: none;
+    padding: 0.5rem 0 0;
+    margin-bottom: 0;
+  }
+  .home-profile-stat strong {
+    font-size: 0.8rem;
+  }
+  .home-profile-links {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 /* ── Tag Filter Bar (Blog) ── */

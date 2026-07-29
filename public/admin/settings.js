@@ -26,6 +26,10 @@
             var solidBg = data.solid_bg === '1' || data.solid_bg === true;
             document.getElementById('set-solid-bg').checked = solidBg;
             updateSolidBgLabel(solidBg);
+            // 个人简介
+            document.getElementById('set-profile-bio').value = data.profile_bio || '';
+            // 社交链接
+            document.getElementById('set-profile-links').value = data.profile_links || '';
             updatePreview();
         } catch (e) { /* ignore */ }
     }
@@ -119,7 +123,9 @@
                 footer: document.getElementById('set-footer').value.trim(),
                 bg_image: document.getElementById('set-bg-image').value.trim(),
                 bg_image_dark: document.getElementById('set-bg-image-dark').value.trim(),
-                solid_bg: document.getElementById('set-solid-bg').checked ? '1' : '0'
+                solid_bg: document.getElementById('set-solid-bg').checked ? '1' : '0',
+                profile_bio: document.getElementById('set-profile-bio').value.trim(),
+                profile_links: document.getElementById('set-profile-links').value.trim()
             };
             var res = await apiFetch(API_SETTINGS, {
                 method: 'PUT',

@@ -189,7 +189,7 @@ function buildTOC(toc) {
   var html = '';
   for (var i = 0; i < toc.length; i++) {
     var item = toc[i];
-    var indent = item.level === 3 ? ' toc-indent' : '';
+    var indent = item.level === 3 ? ' toc-h3' : '';
     html += '<li class="toc-item' + indent + '"><a href="#' + esc(item.id) + '">' + esc(item.text) + '</a></li>';
   }
   return html;
@@ -251,7 +251,7 @@ function codeMD(md) {
   for (var n = 0; n < cbs.length; n++) {
     var cb = cbs[n];
     var lang = cb.l ? esc(cb.l) : 'text';
-    var code = cb.c; // 代码内容已在上面 esc(t) 中转义，这里不需要再次转义
+    var code = esc(cb.c);
     var lines = code.split('\n');
     var gutterHtml = '';
     var codeHtml = '';

@@ -77,6 +77,16 @@
                             <p class="form-hint">显示在页面底部</p>
                         </div>
                         <div class="form-group">
+                            <label>个人简介</label>
+                            <textarea id="set-profile-bio" rows="3" placeholder="简短的个人介绍，显示在首页左侧卡片中" maxlength="300"></textarea>
+                            <p class="form-hint">显示在首页个人卡片中，最多 300 字</p>
+                        </div>
+                        <div class="form-group">
+                            <label>社交链接 (JSON)</label>
+                            <textarea id="set-profile-links" rows="4" placeholder='[{"icon":"github","url":"https://github.com/xxx","label":"GitHub"},{"icon":"twitter","url":"https://x.com/xxx","label":"Twitter"}]' maxlength="1000"></textarea>
+                            <p class="form-hint">JSON 格式，支持的 icon: github, twitter, email, website, rss, weibo, zhihu, bilibili, douyin, telegram, discord, youtube, instagram, mastodon, bluesky, steam, podcast。也可用 emoji 或文字作为 icon。</p>
+                        </div>
+                        <div class="form-group">
                             <label>日间模式背景图</label>
                             <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.5rem;">
                                 <div id="bg-light-preview" style="width:80px;height:50px;border-radius:6px;background:var(--bg-secondary);border:1px solid var(--border);background-size:cover;background-position:center;flex-shrink:0;"></div>

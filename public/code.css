@@ -1,0 +1,382 @@
+/* ===== Code 页面专用样式 ===== */
+/* 包含：极简列表、figure.highlight 代码块、TOC 侧栏、前后导航 */
+
+/* ── Code 列表页 ── */
+
+.code-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.code-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-elevated);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: background var(--duration-fast) var(--ease);
+  animation: fade-in-up var(--duration-slow) var(--ease) both;
+}
+
+.code-list-item:hover {
+  background: var(--bg-hover);
+}
+
+.code-list-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.code-list-item-title {
+  font-size: var(--text-base);
+  font-weight: 500;
+  margin: 0 0 0.25rem 0;
+  color: var(--text-primary);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.code-list-item-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  flex-wrap: wrap;
+}
+
+.code-list-item-date {
+  white-space: nowrap;
+}
+
+.code-list-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.code-list-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.code-list-item-arrow {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--text-placeholder);
+  transition: transform var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+}
+
+.code-list-item:hover .code-list-item-arrow {
+  transform: translateX(2px);
+  color: var(--text-secondary);
+}
+
+/* ── Code 文章详情 ── */
+
+.code-article {
+  max-width: 100%;
+}
+
+.code-article-body {
+  font-size: var(--text-base);
+  line-height: 1.8;
+}
+
+.code-article-body p {
+  margin: 0 0 var(--space-md) 0;
+}
+
+.code-article-body h2 {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  margin: var(--space-2xl) 0 var(--space-md) 0;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.code-article-body h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: var(--space-xl) 0 var(--space-sm) 0;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.code-article-body h1 {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  margin: var(--space-2xl) 0 var(--space-md) 0;
+  color: var(--text-primary);
+}
+
+.code-article-body blockquote {
+  margin: var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-secondary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-secondary);
+}
+
+.code-article-body hr {
+  margin: var(--space-xl) 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.code-article-body img {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  margin: var(--space-md) 0;
+}
+
+.code-article-body a {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.code-article-body a:hover {
+  color: var(--accent-hover);
+}
+
+.code-article-body ul,
+.code-article-body ol {
+  margin: var(--space-md) 0;
+  padding-left: var(--space-xl);
+}
+
+.code-article-body li {
+  margin-bottom: var(--space-xs);
+}
+
+.code-article-body strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.code-article-body code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--bg-secondary);
+  color: var(--accent);
+  word-break: break-word;
+}
+
+.code-article-body pre code {
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+.code-article-body .video-wrapper,
+.code-article-body .audio-wrapper,
+.code-article-body .iframe-wrapper {
+  margin: var(--space-md) 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.code-article-body .video-wrapper video,
+.code-article-body .audio-wrapper audio {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ── figure.highlight 代码块 ── */
+
+.code-article-body figure.highlight {
+  margin: var(--space-lg) 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.code-article-body figure.highlight table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.code-article-body figure.highlight td {
+  vertical-align: top;
+  padding: 0;
+}
+
+/* Gutter: 行号列 */
+.code-article-body figure.highlight td.gutter {
+  width: 1%;
+  min-width: 40px;
+  background: rgba(0, 0, 0, 0.03);
+  border-right: 1px solid var(--border);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.code-article-body figure.highlight td.gutter pre {
+  margin: 0;
+  padding: var(--space-md) var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--text-tertiary);
+  text-align: right;
+  white-space: pre;
+  overflow: visible;
+  background: transparent;
+}
+
+.code-article-body figure.highlight td.gutter .line {
+  display: block;
+  min-height: 1.7em;
+}
+
+/* Code: 代码列 */
+.code-article-body figure.highlight td.code {
+  width: auto;
+  overflow-x: auto;
+}
+
+.code-article-body figure.highlight td.code pre {
+  margin: 0;
+  padding: var(--space-md) var(--space-lg);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  white-space: pre;
+  overflow: visible;
+  background: transparent;
+  tab-size: 4;
+  -moz-tab-size: 4;
+}
+
+.code-article-body figure.highlight td.code .line {
+  display: block;
+  min-height: 1.7em;
+}
+
+/* Hover 行高亮 */
+.code-article-body figure.highlight tbody tr:hover td {
+  background: rgba(37, 99, 235, 0.03);
+}
+
+
+/* ── TOC 空状态 ── */
+.toc-empty {
+  padding: var(--space-md);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  list-style: none;
+  text-align: center;
+}
+
+/* ── 响应式 ── */
+
+/* 移动端：代码块横向滚动 */
+@media (max-width: 768px) {
+  .code-list-item {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .code-list-item-title {
+    font-size: var(--text-sm);
+  }
+
+  .code-article-body figure.highlight td.gutter {
+    min-width: 32px;
+  }
+
+  .code-article-body figure.highlight td.gutter pre {
+    padding: var(--space-sm) var(--space-xs);
+    font-size: 0.72rem;
+    line-height: 1.6;
+  }
+
+  .code-article-body figure.highlight td.code pre {
+    padding: var(--space-sm);
+    font-size: 0.72rem;
+    line-height: 1.6;
+  }
+
+  .code-article-body figure.highlight td.gutter .line,
+  .code-article-body figure.highlight td.code .line {
+    min-height: 1.6em;
+  }
+
+  .code-article-body h2 {
+    font-size: var(--text-lg);
+  }
+
+  .code-article-body h3 {
+    font-size: var(--text-base);
+  }
+}
+
+@media (max-width: 480px) {
+  .code-list {
+    border-radius: var(--radius-sm);
+  }
+
+  .code-list-item {
+    padding: var(--space-sm);
+  }
+
+  .code-list-item-arrow {
+    display: none;
+  }
+
+  .code-article-body figure.highlight {
+    margin-left: calc(-1 * var(--space-md));
+    margin-right: calc(-1 * var(--space-md));
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
+
+/* ── 暗色模式 ── */
+
+[data-theme="dark"] .code-article-body figure.highlight {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .code-article-body figure.highlight td.gutter {
+  background: rgba(255, 255, 255, 0.02);
+  border-right-color: var(--border);
+}
+
+[data-theme="dark"] .code-article-body figure.highlight tbody tr:hover td {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+[data-theme="dark"] .code-list-tag {
+  background: var(--bg-secondary);
+}
+
+/* ── TOC indent override (complement style.css .toc-item.toc-h3) ── */
+/* .toc-h3 样式已在 style.css 中定义 */
