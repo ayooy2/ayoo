@@ -78,11 +78,12 @@ async function updateArticle(env, id, data) {
   const tags = (data.tags || '').trim();
   const is_published = data.is_published !== undefined ? (data.is_published ? 1 : 0) : existing.is_published;
   const is_encrypted = data.is_encrypted !== undefined ? (data.is_encrypted ? 1 : 0) : existing.is_encrypted;
+  const article_type = data.article_type !== undefined ? (data.article_type || 'blog').trim() : (existing.article_type || 'blog');
   const scheduled_at = data.scheduled_at !== undefined ? data.scheduled_at : existing.scheduled_at;
 
   const result = await env.DB.prepare(
-    `UPDATE articles SET title=?, slug=?, content_md=?, summary=?, cover_image=?, author=?, tags=?, is_published=?, is_encrypted=?, scheduled_at=?, updated_at=CURRENT_TIMESTAMP WHERE id=? RETURNING *`
-  ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, scheduled_at, id).first();
+    `UPDATE articles SET title=?, slug=?, content_md=?, summary=?, cover_image=?, author=?, tags=?, is_published=?, is_encrypted=?, article_type=?, scheduled_at=?, updated_at=CURRENT_TIMESTAMP WHERE id=? RETURNING *`
+  ).bind(title, slug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, article_type, scheduled_at, id).first();
 
   // 清除 CDN 缓存（旧 slug 和新 slug 都清除）
   purgeCDN(env, existing.slug);

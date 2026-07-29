@@ -12,7 +12,7 @@ export async function onRequestGet(context) {
     const [sRes, siteRes, articleRes, statsRes, tagsRes] = await Promise.all([
       env.DB.prepare('SELECT key, value FROM settings').all(),
       env.DB.prepare('SELECT id, title, url, icon, description FROM sites ORDER BY sort_order ASC, id ASC LIMIT 200').all(),
-      env.DB.prepare("SELECT id, title, slug, summary, is_encrypted, created_at, views FROM articles WHERE is_published = 1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY created_at DESC LIMIT 4").all(),
+      env.DB.prepare("SELECT id, title, slug, summary, cover_image, is_encrypted, created_at, views FROM articles WHERE is_published = 1 AND (article_type = 'blog' OR article_type IS NULL) AND (scheduled_at IS NULL OR scheduled_at <= datetime('now')) ORDER BY created_at DESC LIMIT 4").all(),
       env.DB.prepare('SELECT COUNT(*) as count, COALESCE(SUM(views), 0) as total_views FROM articles WHERE is_published = 1').first(),
       env.DB.prepare('SELECT COUNT(*) as count FROM tags').first()
     ]);
@@ -225,7 +225,9 @@ ${cmdOverlay()}
 
 function articleCard(article, index) {
   var date = formatDate(article.created_at);
+  var cover = article.cover_image ? '<img class="article-card-cover" src="' + esc(article.cover_image) + '" alt="" loading="lazy" onerror="this.remove()">' : '';
   return `<a href="/blog/${esc(article.slug)}" class="article-card" style="animation-delay:${index * 80}ms">
+    ${cover}
     <h3 class="article-card-title">${article.is_encrypted ? '<span title="已加密" style="font-size:0.85rem;">&#x1f512;</span> ' : ''}${esc(article.title)}</h3>
     <p class="article-card-summary">${esc(article.summary || '')}</p>
     <div class="article-card-meta">

@@ -11,7 +11,7 @@ export async function onRequestGet(context) {
   try {
     const { env, params } = context;
     const slug = params.slug || new URL(context.request.url).pathname.replace('/blog/', '').replace(/\/$/, '');
-    const a = await env.DB.prepare("SELECT * FROM articles WHERE slug=? AND is_published=1 AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))").bind(slug).first();
+    const a = await env.DB.prepare("SELECT * FROM articles WHERE slug=? AND is_published=1 AND (article_type = 'blog' OR article_type IS NULL) AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))").bind(slug).first();
     if (!a) return new Response('Not found', { status: 404 });
     await env.DB.prepare('UPDATE articles SET views = views + 1 WHERE id = ?').bind(a.id).run();
     a.views = (a.views || 0) + 1;

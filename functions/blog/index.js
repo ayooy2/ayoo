@@ -16,7 +16,7 @@ export async function onRequestGet(context) {
   var sql = `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.is_encrypted, SUBSTR(a.content_md, 1, 2000) as content_md, a.author, a.tags, a.created_at, a.views,
       (SELECT COUNT(*) FROM likes WHERE article_id=a.id) as likes,
       (SELECT COUNT(*) FROM comments WHERE article_id=a.id) as comments
-    FROM articles a WHERE a.is_published=1 AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))`;
+    FROM articles a WHERE a.is_published=1 AND (a.article_type = 'blog' OR a.article_type IS NULL) AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))`;
   var params = [];
   if (tagFilter) {
     sql += " AND (',' || a.tags || ',') LIKE ?";

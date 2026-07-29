@@ -33,15 +33,18 @@ async function listArticles(env, params) {
   const limit = Math.min(50, Math.max(1, parseInt(params.get('limit')) || 10));
   const offset = (page - 1) * limit;
   const publishedOnly = params.get('all') !== '1';
+  const typeFilter = (params.get('type') || '').trim();
 
-  let where = publishedOnly
-    ? "WHERE a.is_published = 1 AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))"
-    : '';
+  let conditions = [];
+  if (publishedOnly) conditions.push("a.is_published = 1 AND (a.scheduled_at IS NULL OR a.scheduled_at <= datetime('now'))");
+  if (typeFilter === 'blog') conditions.push("(a.article_type = 'blog' OR a.article_type IS NULL)");
+  else if (typeFilter === 'code') conditions.push("a.article_type = 'code'");
+  let where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
   const countResult = await env.DB.prepare(`SELECT COUNT(*) as total FROM articles a ${where}`).first();
   const total = countResult ? countResult.total : 0;
 
   const { results } = await env.DB.prepare(
-    `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.author, a.tags, a.is_published, a.is_encrypted, a.scheduled_at, a.created_at, a.updated_at, a.views,
+    `SELECT a.id, a.title, a.slug, a.summary, a.cover_image, a.author, a.tags, a.is_published, a.is_encrypted, a.article_type, a.scheduled_at, a.created_at, a.updated_at, a.views,
       (SELECT COUNT(*) FROM likes WHERE article_id=a.id) as likes,
       (SELECT COUNT(*) FROM comments WHERE article_id=a.id) as comments
     FROM articles a ${where} ORDER BY a.created_at DESC LIMIT ? OFFSET ?`
@@ -66,6 +69,7 @@ async function createArticle(env, data) {
   const tags = (data.tags || '').trim();
   const is_published = data.is_published ? 1 : 0;
   const is_encrypted = data.is_encrypted ? 1 : 0;
+  const article_type = (data.article_type || 'blog').trim();
   const scheduled_at = data.scheduled_at || null;
 
   try {
@@ -90,8 +94,8 @@ async function createArticle(env, data) {
     // 第一阶段：用占位符插入（防止 UNIQUE 冲突）
     const insertSlug = slug || ('__p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '__');
     const result = await env.DB.prepare(
-      'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
-    ).bind(title, insertSlug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, scheduled_at).first();
+      'INSERT INTO articles (title, slug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, article_type, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
+    ).bind(title, insertSlug, content_md, summary, cover_image, author, tags, is_published, is_encrypted, article_type, scheduled_at).first();
     // 第二阶段：更新为找到的数字 slug（实现自动回收已释放的数字 ID）
     if (!slug) {
       slug = finalSlug;
