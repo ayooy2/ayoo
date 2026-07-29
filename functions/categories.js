@@ -57,14 +57,14 @@ function render(blogArticles, codeArticles, activeTab) {
   // 渲染笔记列表
   var blogList = '';
   for (var i = 0; i < blogArticles.length; i++) {
-    blogList += articleItem(blogArticles[i], i);
+    blogList += articleItem(blogArticles[i], i, 'blog');
   }
   if (!blogList) blogList = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p class="empty-state-text" data-zh="暂无笔记" data-en="No notes yet">暂无笔记</p></div>';
 
   // 渲染 Code 列表
   var codeList = '';
   for (var i = 0; i < codeArticles.length; i++) {
-    codeList += articleItem(codeArticles[i], i);
+    codeList += articleItem(codeArticles[i], i, 'code');
   }
   if (!codeList) codeList = '<div class="empty-state"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><p class="empty-state-text" data-zh="暂无代码文章" data-en="No code articles yet">暂无代码文章</p></div>';
 
@@ -262,9 +262,10 @@ ${cmdOverlay()}
 </html>`;
 }
 
-function articleItem(a, index) {
+function articleItem(a, index, type) {
   var date = (a.created_at || '').slice(0, 10);
-  return '<a href="/blog/' + esc(a.slug) + '" class="categories-item" style="animation-delay:' + (index * 40) + 'ms">' +
+  var urlPrefix = type === 'code' ? '/code/' : '/blog/';
+  return '<a href="' + urlPrefix + esc(a.slug) + '" class="categories-item" style="animation-delay:' + (index * 40) + 'ms">' +
     '<div class="categories-item-main">' +
       '<h3 class="categories-item-title">' + (a.is_encrypted ? '<span title="已加密" style="font-size:0.85rem;">&#x1f512;</span> ' : '') + esc(a.title) + '</h3>' +
       (a.summary ? '<p class="categories-item-summary">' + esc(a.summary) + '</p>' : '') +

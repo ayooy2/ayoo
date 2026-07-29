@@ -21,7 +21,8 @@ export var state = {
     slashMenuIndex: 0,
     slashQuery: '',
     slashStartPos: 0,
-    articleStatus: 'draft'  // draft, published, scheduled
+    articleStatus: 'draft',  // draft, published, scheduled
+    articleType: 'blog'      // 'blog' or 'code'
 };
 
 // DOM 元素引用（在 cacheDom() 中填充）

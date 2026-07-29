@@ -380,6 +380,34 @@ body {
     margin-bottom: 10px;
 }
 
+/* 文章类型切换 */
+.es-type-toggle {
+    display: flex;
+    gap: 0.5rem;
+}
+.es-type-btn {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all 0.15s var(--ease);
+    text-align: center;
+}
+.es-type-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.es-type-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
 .es-status-badge {
     display: inline-block;
     padding: 3px 10px;

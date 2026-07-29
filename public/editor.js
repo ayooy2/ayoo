@@ -56,6 +56,12 @@ function init() {
 
     var params = new URLSearchParams(window.location.search);
     var id = params.get('id');
+    var typeParam = params.get('type');
+
+    // 读取 URL 参数设置文章类型
+    if (typeParam === 'code') {
+        state.articleType = 'code';
+    }
 
     if (id) {
         state.editId = id;
@@ -66,6 +72,9 @@ function init() {
             restoreDraft(draft);
         }
     }
+
+    // 根据文章类型调整 UI
+    updateTypeUI();
 
     updateStatusBar();
     setupBeforeUnload();
@@ -382,6 +391,35 @@ function onDocumentClick(e) {
         hideSlashMenu();
     }
 }
+
+// ============================================================
+// 文章类型切换
+// ============================================================
+function updateTypeUI() {
+    var isCode = state.articleType === 'code';
+    // 类型按钮 active 状态
+    var blogBtn = document.getElementById('es-type-blog');
+    var codeBtn = document.getElementById('es-type-code');
+    if (blogBtn) blogBtn.classList.toggle('active', !isCode);
+    if (codeBtn) codeBtn.classList.toggle('active', isCode);
+    // Code 文章：隐藏封面和摘要区域，隐藏发布相关按钮
+    var coverSection = document.getElementById('es-cover-section');
+    if (coverSection) coverSection.style.display = isCode ? 'none' : '';
+    // 发布下拉：code 只有发布和草稿，没有定时
+    var scheduleSection = dom.scheduleSection;
+    if (scheduleSection) scheduleSection.style.display = isCode ? 'none' : '';
+    // 更新发布按钮文案
+    var publishBtn = dom.publishBtn;
+    if (publishBtn) {
+        publishBtn.textContent = isCode ? '发布' : '发布';
+    }
+}
+
+// 暴露给 editor.html 的 onclick 调用
+window._setArticleType = function(type) {
+    state.articleType = type;
+    updateTypeUI();
+};
 
 // ============================================================
 // 启动

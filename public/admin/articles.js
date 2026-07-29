@@ -79,7 +79,9 @@
         var time = (a.created_at || '').slice(0, 10);
         var cc = (_commentMap[a.id] || []).length;
         var ccHtml = cc ? ' <span class="comment-count-badge">' + cc + '</span>' : '';
-        return '<tr><td><strong>' + escapeHtml(a.title) + '</strong>' + ccHtml + '</td><td>' + escapeHtml(a.author) + '</td><td>' + formatArticleStatus(a) + '</td><td>' + escapeHtml(a.tags||'') + '</td><td>' + time + '</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editArticle(' + a.id + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteArticle(' + a.id + ')">删除</button></td></tr>';
+        var isCode = a.article_type === 'code';
+        var typeBadge = isCode ? ' <span style="background:#6366f1;color:#fff;font-size:0.7rem;padding:1px 6px;border-radius:3px;margin-left:4px;">Code</span>' : '';
+        return '<tr><td><strong>' + escapeHtml(a.title) + '</strong>' + typeBadge + ccHtml + '</td><td>' + escapeHtml(a.author) + '</td><td>' + formatArticleStatus(a) + '</td><td>' + escapeHtml(a.tags||'') + '</td><td>' + time + '</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editArticle(' + a.id + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteArticle(' + a.id + ')">删除</button></td></tr>';
     }
 
     function renderArticleList(articles) {
@@ -148,6 +150,7 @@
                 document.getElementById('article-cover').value = a.cover_image || '';
                 document.getElementById('article-content-md').value = a.content_md || '';
                 document.getElementById('article-author').value = a.author || 'Admin';
+                document.getElementById('article-type').value = a.article_type || 'blog';
                 document.getElementById('article-tags').value = a.tags || '';
                 updateArticleTagChips();
                 if (a.scheduled_at) {
@@ -198,6 +201,7 @@
                 author: document.getElementById('article-author').value.trim(),
                 tags: document.getElementById('article-tags').value.trim(),
                 is_published: mode === 'publish' ? 1 : 0,
+                article_type: document.getElementById('article-type') ? document.getElementById('article-type').value : 'blog',
                 scheduled_at: mode === 'schedule' ? scheduledVal : null
             };
 

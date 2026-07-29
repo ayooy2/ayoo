@@ -195,6 +195,7 @@
     <div id="tab-articles" class="tab-content hidden">
         <div class="toolbar">
             <button class="btn btn-primary" onclick="window.location.href='/editor.html'">+ 写文章</button>
+            <button class="btn btn-secondary" onclick="window.location.href='/editor.html?type=code'">+ 写 Code</button>
             <button class="btn btn-secondary" onclick="showCommentPanel()">管理评论</button>
         </div>
         <div id="article-list-area"></div>
@@ -308,6 +309,7 @@
             <h2 id="article-modal-title">写文章</h2>
             <form id="article-form" onsubmit="return false">
                 <input type="hidden" id="article-edit-id">
+                <input type="hidden" id="article-type" value="blog">
                 <div class="form-group"><label>标题 *</label><input type="text" id="article-title" required></div>
                 <div class="form-group"><label>Slug（URL 标识，留空自动生成）</label><input type="text" id="article-slug"></div>
                 <div class="form-group"><label>摘要</label><input type="text" id="article-summary"></div>

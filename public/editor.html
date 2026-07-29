@@ -90,6 +90,15 @@
                 <div id="article-status-display" class="es-status-badge es-status-draft">草稿</div>
             </div>
 
+            <!-- 文章类型 -->
+            <div class="es-section" id="es-type-section">
+                <div class="es-section-title">文章类型</div>
+                <div class="es-type-toggle">
+                    <button type="button" id="es-type-blog" class="es-type-btn active" onclick="window._setArticleType('blog')">📝 笔记</button>
+                    <button type="button" id="es-type-code" class="es-type-btn" onclick="window._setArticleType('code')">💻 Code</button>
+                </div>
+            </div>
+
             <!-- SEO 设置 -->
             <div class="es-section">
                 <div class="es-section-title">SEO 设置</div>
@@ -115,7 +124,7 @@
             </div>
 
             <!-- 封面图片 -->
-            <div class="es-section">
+            <div class="es-section" id="es-cover-section">
                 <div class="es-section-title">封面图片</div>
                 <div class="es-cover-preview" id="cover-preview">
                     <span>无封面</span>

@@ -50,11 +50,12 @@ export async function doPublish(mode, callbacks) {
         title: title,
         slug: dom.sidebarSlug ? dom.sidebarSlug.value.trim() : '',
         summary: dom.summaryInput ? dom.summaryInput.value.trim() : '',
-        cover_image: dom.coverInput ? dom.coverInput.value.trim() : '',
+        cover_image: state.articleType === 'code' ? '' : (dom.coverInput ? dom.coverInput.value.trim() : ''),
         content_md: dom.contentArea ? dom.contentArea.value : '',
         author: dom.authorInput ? dom.authorInput.value : 'Admin',
         tags: state.selectedTags.join(', '),
         is_published: mode === 'publish' ? 1 : 0,
+        article_type: state.articleType || 'blog',
         scheduled_at: mode === 'schedule' && dom.scheduleInput ? dom.scheduleInput.value : null
     };
 
