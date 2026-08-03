@@ -283,6 +283,46 @@ body[style*="background-image"] .navbar {
   flex-shrink: 0;
 }
 
+/* ── Dropdown 分类菜单 ── */
+.nav-item.dropdown {
+  position: relative;
+}
+.dropdown-toggle {
+  cursor: default;
+  user-select: none;
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 130px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem 0;
+  z-index: 110;
+  overflow: hidden;
+}
+.dropdown:hover .dropdown-menu,
+.dropdown-menu:hover {
+  display: block;
+}
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
 .nav-spacer { flex: 1; }
 
 .nav-clock {
@@ -393,6 +433,18 @@ body[style*="background-image"] .navbar {
   gap: var(--space-md);
 }
 .mobile-menu-link:hover { color: var(--accent); }
+.mobile-menu-category {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-bottom: 0.25rem;
+}
+.mobile-menu-sub {
+  padding-left: 3rem;
+  font-size: var(--text-base);
+}
 .mobile-menu-icon {
   display: inline-flex;
   align-items: center;
@@ -453,30 +505,21 @@ body[style*="background-image"] .page-wrapper {
 /* ===== HOMEPAGE ===== */
 
 /* Hero section: time + greeting */
-.home-hero {
-  padding: var(--space-3xl) 0 var(--space-2xl);
+/* ── 首页 Banner（ihkk.net 风格） ── */
+.home-banner {
+  text-align: center;
+  padding: var(--space-2xl) 0 var(--space-xl);
 }
-
-.home-time {
-  font-size: var(--text-3xl);
+.home-banner-title {
+  font-size: var(--text-2xl);
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
 }
-
-.home-date {
+.home-banner-subtitle {
   font-size: var(--text-sm);
   color: var(--text-tertiary);
   margin-top: var(--space-sm);
-  letter-spacing: 0.02em;
-}
-
-.home-greeting {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
-  margin-top: var(--space-xs);
 }
 
 /* Section titles */
@@ -504,32 +547,16 @@ body[style*="background-image"] .page-wrapper {
 }
 .section-link:hover { color: var(--accent); }
 
-/* Homepage grid: articles + nav cards */
-.home-grid {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: var(--space-2xl);
+/* 首页文章列表（单栏） */
+.home-articles-section {
   margin-bottom: var(--space-2xl);
 }
 
-@media (max-width: 1024px) {
-  .home-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-xl);
-  }
-}
-
-/* Recent articles on homepage */
+/* Recent articles on homepage — single column */
 .home-articles {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-md);
-}
-
-@media (max-width: 768px) {
-  .home-articles {
-    grid-template-columns: 1fr;
-  }
 }
 
 .article-card {
@@ -2593,12 +2620,8 @@ body[style*="background-image"] .page-wrapper {
   .page-header { padding: var(--space-lg) 0 var(--space-md); }
   .page-title { font-size: var(--text-xl); }
 
-  .home-time { font-size: var(--text-2xl); }
-  .home-hero { padding: var(--space-xl) 0 var(--space-lg); }
-
-  .home-grid {
-    gap: var(--space-xl);
-  }
+  .home-banner { padding: var(--space-lg) 0 var(--space-md); }
+  .home-banner-title { font-size: var(--text-xl); }
 
   .article-title { font-size: 1.5rem; }
   .article-layout { grid-template-columns: 1fr; }
@@ -3082,10 +3105,10 @@ body[style*="background-image"] .page-wrapper {
   .feature-stats { gap: 1.5rem; padding: 1rem; }
   .feature-stat-num { font-size: 1.5rem; }
   .feature-grid { grid-template-columns: 1fr; }
-  .home-articles { grid-template-columns: 1fr; }
+  .home-articles { gap: var(--space-sm); }
   .home-time { font-size: var(--text-xl); }
-  .home-hero { padding: var(--space-lg) 0 var(--space-md); }
-  .home-grid { gap: var(--space-lg); margin-bottom: var(--space-lg); }
+  .home-banner { padding: var(--space-md) 0; }
+  .home-banner-title { font-size: var(--text-lg); }
   .home-status { gap: var(--space-xs) var(--space-md); font-size: 0.7rem; }
 
   /* ── 移动端博客阅读体验优化 ── */

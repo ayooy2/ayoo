@@ -139,40 +139,34 @@ ${profileHtml}
 <div class="page-wrapper">
   <div class="content">
 
-    <!-- Hero: Time + Greeting -->
-    <section class="home-hero animate-in">
-      <div class="home-time" id="time">--:--</div>
-      <div class="home-date" id="date">----年--月--日</div>
-      <div class="home-greeting" id="greeting"></div>
+    <!-- Banner: 站点标题（ihkk.net 风格） -->
+    <section class="home-banner animate-in">
+      <h1 class="home-banner-title">${t}</h1>
+      ${subRaw ? '<p class="home-banner-subtitle">' + sub + '</p>' : ''}
     </section>
 
-    <!-- Main Grid: Articles + Nav Cards -->
-    <div class="home-grid">
+    <!-- 最近文章（单栏列表） -->
+    <section class="home-articles-section">
+      <div class="section-header">
+        <span class="section-title">最近文章</span>
+        <a href="/blog" class="section-link">查看全部 →</a>
+      </div>
+      <div class="home-articles stagger">
+        ${articleCards}
+      </div>
+    </section>
 
-      <!-- Left: Recent Articles -->
-      <section>
-        <div class="section-header">
-          <span class="section-title">最近文章</span>
-          <a href="/blog" class="section-link">查看全部 →</a>
-        </div>
-        <div class="home-articles stagger">
-          ${articleCards}
-        </div>
-      </section>
+    <!-- 导航卡片 -->
+    <section class="home-nav-section">
+      <div class="section-header">
+        <span class="section-title">导航</span>
+      </div>
+      <div class="home-nav stagger">
+        ${navCards}
+      </div>
+    </section>
 
-      <!-- Right: Navigation Cards -->
-      <section>
-        <div class="section-header">
-          <span class="section-title">导航</span>
-        </div>
-        <div class="home-nav stagger">
-          ${navCards}
-        </div>
-      </section>
-
-    </div>
-
-    <!-- Status Bar -->
+    <!-- 状态栏 -->
     <div class="home-status animate-in" style="animation-delay:500ms">
       <div class="status-item">
         <span class="status-dot"></span>
@@ -249,7 +243,7 @@ ${mobileMenu()}
 </script>
 ${cmdOverlay()}
 <script>window.__bgSettings = ${bgSettings};</script>
-<script src="/toolbar.js?v=12" defer></script>
+<script src="/toolbar.js?v=13" defer></script>
 </body>
 </html>`;
 }

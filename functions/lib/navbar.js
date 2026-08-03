@@ -5,8 +5,7 @@ import { esc } from './sanitize.js';
 
 const ALL_LINKS = [
   { href: '/', label: '首页', en: 'Home', icon: '<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
-  { href: '/categories', label: '分类', en: 'Categories', icon: '<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>' },
-  { href: '/code', label: 'Code', en: 'Code', icon: '<svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>' },
+  // 分类用 dropdown，不在 ALL_LINKS 中
   { href: '/search', label: '搜索', en: 'Search', icon: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>' },
   { href: '/archive', label: '归档', en: 'Archive', icon: '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>' },
   { href: '/now', label: 'Now', en: 'Now', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
@@ -14,6 +13,17 @@ const ALL_LINKS = [
   { href: '/about', label: '关于', en: 'About', icon: '' },
   { href: '/features', label: '功能', en: 'Features', icon: '' }
 ];
+
+// 分类下拉菜单 HTML
+function categoryDropdown(currentPath) {
+  var catIcon = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>';
+  return '<div class="nav-item dropdown">'
+    + '<span class="nav-link dropdown-toggle">' + catIcon + '<span>分类 ▾</span></span>'
+    + '<div class="dropdown-menu">'
+      + '<a href="/blog" class="dropdown-item">📝 笔记</a>'
+      + '<a href="/code" class="dropdown-item">💻 Code</a>'
+    + '</div></div>';
+}
 
 // brandHref: 品牌链接地址，默认 '/'
 // currentPath: 当前页面路径，用于排除桌面端自身链接
@@ -26,26 +36,30 @@ export function navbar(brandText, brandHref, currentPath) {
   for (var i = 0; i < ALL_LINKS.length; i++) {
     var link = ALL_LINKS[i];
     if (link.href === currentPath) continue;
-    desktopLinks += '<a href="' + link.href + '" class="nav-link">' + link.icon + '<span data-zh="' + esc(link.label) + '" data-en="' + esc(link.en) + '">' + esc(link.label) + '</span></a>';
+    desktopLinks += '<a href="' + link.href + '" class="nav-link">' + link.icon + '<span>' + esc(link.label) + '</span></a>';
   }
 
   return '<nav class="navbar"><div class="nav-inner">' +
     '<a href="' + brandHref + '" class="nav-brand">' + esc(brandText) + '</a>' +
-    '<div class="nav-links">' + desktopLinks + '</div>' +
+    '<div class="nav-links">' + desktopLinks + categoryDropdown(currentPath) + '</div>' +
     '<div class="nav-spacer"></div>' +
     '<span class="nav-clock" id="clock">--:--:--</span>' +
     '<button class="nav-hamburger" id="nav-hamburger" aria-label="菜单"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg></button>' +
     '</div></nav>';
 }
 
-// 移动端菜单：始终包含全部链接
+// 移动端菜单：包含全部链接 + 分类子项
 export function mobileMenu() {
   var links = '';
   for (var i = 0; i < ALL_LINKS.length; i++) {
     var link = ALL_LINKS[i];
     var iconHtml = link.icon ? '<span class="mobile-menu-icon">' + link.icon + '</span>' : '';
-    links += '<a href="' + link.href + '" class="mobile-menu-link">' + iconHtml + '<span data-zh="' + esc(link.label) + '" data-en="' + esc(link.en) + '">' + esc(link.label) + '</span></a>';
+    links += '<a href="' + link.href + '" class="mobile-menu-link">' + iconHtml + '<span>' + esc(link.label) + '</span></a>';
   }
+  // 分类 + 子项
+  links += '<div class="mobile-menu-link mobile-menu-category"><span class="mobile-menu-icon"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span><span>分类</span></div>';
+  links += '<a href="/blog" class="mobile-menu-link mobile-menu-sub">📝 笔记</a>';
+  links += '<a href="/code" class="mobile-menu-link mobile-menu-sub">💻 Code</a>';
   return '<div class="mobile-menu" id="mobile-menu">' +
     '<button class="mobile-menu-close" id="mobile-menu-close"><svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>' +
     '<div class="mobile-menu-links">' + links + '</div></div>';
