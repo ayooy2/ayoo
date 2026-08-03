@@ -104,7 +104,7 @@ ${mobileMenu()}
   });
 })()
 </script>
-<script src="/toolbar.js?v=11" defer></script>
+<script src="/toolbar.js?v=12" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=300' } });

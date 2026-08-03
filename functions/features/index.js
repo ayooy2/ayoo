@@ -95,7 +95,7 @@ ${mobileMenu()}
   </footer>
 </div>
 <script src="/app.js" defer></script>
-<script src="/toolbar.js?v=11" defer></script>
+<script src="/toolbar.js?v=12" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`;

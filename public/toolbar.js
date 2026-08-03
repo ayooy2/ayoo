@@ -13,18 +13,17 @@
     { id: 'serif', label: '宋体' }
   ];
 
-  // 三种背景滤镜
+  // 两种背景滤镜（低饱和度，护眼）
   var BG_FILTERS = [
-    { id: 'none',  color: 'transparent', label: '默认' },
-    { id: 'warm',  color: 'rgba(253, 240, 225, 0.25)', label: '暖色' },
-    { id: 'cool',  color: 'rgba(225, 235, 250, 0.22)', label: '冷色' }
+    { id: 'warm',  color: 'rgba(253, 240, 225, 0.15)', label: '暖色' },
+    { id: 'cool',  color: 'rgba(225, 235, 250, 0.12)', label: '冷色' }
   ];
 
   /* ===== 状态 ===== */
   var settings = {
     theme: localStorage.getItem('ayoo_theme') || localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'),
     font: localStorage.getItem('ayoo_font') || 'inter',
-    bgFilter: localStorage.getItem('ayoo_bgfilter') || 'none'
+    bgFilter: localStorage.getItem('ayoo_bgfilter') || 'warm'
   };
   var popupOpen = false;
 
@@ -242,7 +241,7 @@
       + '<div class="fab-row">';
     BG_FILTERS.forEach(function(f) {
       html += '<button class="fab-bg-btn' + (settings.bgFilter === f.id ? ' active' : '') + '"'
-        + ' data-bgfilter="' + f.id + '" style="background:' + (f.id === 'none' ? 'var(--bg-primary)' : f.color.replace(/[\d.]+\)$/, '0.6)')) + '" title="' + f.label + '" onclick="AyooToolbar._setBgFilter(\'' + f.id + '\')"></button>';
+        + ' data-bgfilter="' + f.id + '" style="background:' + f.color.replace(/[\d.]+\)$/, '0.45)') + '" title="' + f.label + '" onclick="AyooToolbar._setBgFilter(\'' + f.id + '\')"></button>';
     });
     html += '</div></div>';
 

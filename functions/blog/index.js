@@ -117,7 +117,7 @@ ${mobileMenu()}
   window.addEventListener('popstate',function(){window.location.reload()});
 })();
 </script>
-<script src="/toolbar.js?v=11" defer></script>
+<script src="/toolbar.js?v=12" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=3600' } });
@@ -152,25 +152,27 @@ function blogCard(a, index) {
   var hasImage = !!imgSrc;
   var cardClass = hasImage ? 'blog-card blog-card-has-image' : 'blog-card blog-card-no-image';
 
-  var cover = '';
+  // ihkk.net 风格：有图时封面在顶部全宽，文字在下
+  var headerHtml = '';
   if (hasImage) {
-    cover = '<img class="blog-card-cover" src="' + esc(imgSrc) + '" alt="" loading="lazy" onerror="this.parentElement.classList.remove(\'blog-card-has-image\');this.parentElement.classList.add(\'blog-card-no-image\');this.remove()">';
+    headerHtml = '<div class="blog-card-header has-cover">'
+      + '<img class="blog-card-cover" src="' + esc(imgSrc) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+      + '<div class="blog-card-header-text">'
+        + '<h3 class="blog-card-title">' + (a.is_encrypted ? '<span title="已加密" style="font-size:0.85rem;">&#x1f512;</span> ' : '') + esc(a.title) + '</h3>'
+        + '<div class="blog-card-meta"><span>' + esc(date) + '</span><span>' + (a.views || 0) + ' 阅读</span></div>'
+      + '</div></div>';
+  } else {
+    headerHtml = '<div class="blog-card-header">'
+      + '<h3 class="blog-card-title">' + (a.is_encrypted ? '<span title="已加密" style="font-size:0.85rem;">&#x1f512;</span> ' : '') + esc(a.title) + '</h3>'
+      + '<div class="blog-card-meta"><span>' + esc(date) + '</span><span>' + (a.views || 0) + ' 阅读</span></div>'
+      + '</div>';
   }
 
-  return `<a href="/blog/${esc(a.slug)}" class="${cardClass}" style="animation-delay:${index * 60}ms">
-    ${cover}
-    <div class="blog-card-body">
-      <h3 class="blog-card-title">${a.is_encrypted ? '<span title="已加密" style="font-size:0.85rem;">&#x1f512;</span> ' : ''}${esc(a.title)}</h3>
-      ${a.summary ? '<p class="blog-card-summary">' + esc(a.summary) + '</p>' : ''}
-      <div class="blog-card-meta">
-        <span>${esc(date)}</span>
-        <span>${a.views || 0} <span data-zh="阅读" data-en="views">阅读</span></span>
-        <span>${a.likes} <span data-zh="喜欢" data-en="likes">喜欢</span></span>
-        <span>${a.comments} <span data-zh="评论" data-en="comments">评论</span></span>
-      </div>
-      ${tags ? '<div class="blog-card-tags">' + tags + '</div>' : ''}
-    </div>
-  </a>`;
+  return '<a href="/blog/' + esc(a.slug) + '" class="' + cardClass + '" style="animation-delay:' + (index * 60) + 'ms">'
+    + headerHtml
+    + (a.summary ? '<div class="blog-card-summary">' + esc(a.summary) + '</div>' : '')
+    + (tags ? '<div class="blog-card-tags">' + tags + '</div>' : '')
+    + '</a>';
 }
 
 function tagFilterBar(allTags, active) {

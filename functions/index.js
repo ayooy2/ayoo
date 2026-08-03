@@ -249,23 +249,31 @@ ${mobileMenu()}
 </script>
 ${cmdOverlay()}
 <script>window.__bgSettings = ${bgSettings};</script>
-<script src="/toolbar.js?v=11" defer></script>
+<script src="/toolbar.js?v=12" defer></script>
 </body>
 </html>`;
 }
 
 function articleCard(article, index) {
   var date = formatDate(article.created_at);
-  var cover = article.cover_image ? '<img class="article-card-cover" src="' + esc(article.cover_image) + '" alt="" loading="lazy" onerror="this.remove()">' : '';
-  return `<a href="/blog/${esc(article.slug)}" class="article-card" style="animation-delay:${index * 80}ms">
-    ${cover}
-    <h3 class="article-card-title">${article.is_encrypted ? '<span title="已加密" style="font-size:0.85rem;">&#x1f512;</span> ' : ''}${esc(article.title)}</h3>
-    <p class="article-card-summary">${esc(article.summary || '')}</p>
-    <div class="article-card-meta">
-      <span>${date}</span>
-      <span>${article.views || 0} <span data-zh="阅读" data-en="views">阅读</span></span>
-    </div>
-  </a>`;
+  var hasCover = !!article.cover_image;
+  // 有封面：ihkk.net post-header-with-thumbnail 风格
+  var coverHtml = hasCover
+    ? '<div class="article-card-header has-cover">'
+      + '<img class="article-card-thumb" src="' + esc(article.cover_image) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+      + '<div class="article-card-header-text">'
+        + '<h3 class="article-card-title">' + esc(article.title) + '</h3>'
+        + '<div class="article-card-meta"><span>' + date + '</span><span>' + (article.views || 0) + ' 阅读</span></div>'
+      + '</div></div>'
+    : '<div class="article-card-header">'
+      + '<h3 class="article-card-title">' + esc(article.title) + '</h3>'
+      + '<div class="article-card-meta"><span>' + date + '</span><span>' + (article.views || 0) + ' 阅读</span></div>'
+      + '</div>';
+  // 摘要
+  var summaryHtml = article.summary ? '<div class="article-card-summary">' + esc(article.summary) + '</div>' : '';
+  return '<a href="/blog/' + esc(article.slug) + '" class="article-card" style="animation-delay:' + (index * 80) + 'ms">'
+    + coverHtml + summaryHtml
+    + '</a>';
 }
 
 function navCard(site, index) {
