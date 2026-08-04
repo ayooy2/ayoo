@@ -97,7 +97,6 @@
   --color-bg-secondary:    var(--bg-secondary);
   --color-bg-card:         var(--bg-elevated);
   --color-danger-border:   var(--danger);
-  --shadow-card:           var(--shadow-xs);
   --content-max-width:     var(--max-w-text);
 }
 
