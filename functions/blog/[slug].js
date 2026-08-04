@@ -164,7 +164,7 @@ ${mobileMenu()}
 <script src="/sanitize.js" defer></script>
 <script src="/blog-detail.js" defer></script>
 <script src="/app.js" defer></script>
-<script src="/toolbar.js?v=13" defer></script>
+<script src="/toolbar.js?v=14" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`;

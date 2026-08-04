@@ -4,33 +4,33 @@
 
 /* ── Design Tokens ── */
 :root {
-  /* Color — Neutral, low-saturation */
-  --bg-primary:      #fafafa;
-  --bg-secondary:    #f5f5f5;
+  /* Color — ihkk.net Argon 风格 */
+  --bg-primary:      #f4f5f7;
+  --bg-secondary:    #e9ecef;
   --bg-elevated:     #ffffff;
-  --bg-hover:        #f5f5f5;
-  --border:          #e5e5e5;
-  --border-subtle:   #f0f0f0;
-  --text-primary:    #171717;
-  --text-secondary:  #525252;
-  --text-tertiary:   #a3a3a3;
-  --text-placeholder:#d4d4d4;
-  --accent:          #2563eb;
-  --accent-hover:    #1d4ed8;
-  --accent-subtle:   #eff6ff;
-  --accent-text:     #2563eb;
-  --danger:          #dc2626;
-  --danger-bg:       #fef2f2;
-  --success:         #16a34a;
-  --success-bg:      #f0fdf4;
+  --bg-hover:        #f0f1f3;
+  --border:          #dce0e5;
+  --border-subtle:   #e9ecef;
+  --text-primary:    #32325d;
+  --text-secondary:  #525f7f;
+  --text-tertiary:   #8898aa;
+  --text-placeholder:#adb5bd;
+  --accent:          #5e72e4;
+  --accent-hover:    #4a5cd4;
+  --accent-subtle:   #f0f2ff;
+  --accent-text:     #5e72e4;
+  --danger:          #f5365c;
+  --danger-bg:       #fff5f7;
+  --success:         #2dce89;
+  --success-bg:      #f0fdf6;
 
-  /* Shadows */
-  --shadow-xs:   0 1px 2px rgba(0,0,0,0.04);
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:   0 4px 6px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.03);
-  --shadow-lg:   0 10px 15px rgba(0,0,0,0.05), 0 4px 6px rgba(0,0,0,0.03);
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.08);
+  /* Shadows — 更突出的卡片阴影 */
+  --shadow-xs:   0 1px 2px rgba(50,50,93,0.06);
+  --shadow-sm:   0 1px 3px rgba(50,50,93,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 6px rgba(50,50,93,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:   0 15px 35px rgba(50,50,93,0.1), 0 5px 15px rgba(0,0,0,0.07);
+  --shadow-card: 0 1px 3px rgba(50,50,93,0.08);
+  --shadow-card-hover: 0 15px 35px rgba(50,50,93,0.12), 0 5px 15px rgba(0,0,0,0.08);
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
@@ -103,30 +103,30 @@
 
 /* ── Dark Mode ── */
 [data-theme="dark"] {
-  --bg-primary:      #0a0a0a;
-  --bg-secondary:    #141414;
-  --bg-elevated:     #171717;
-  --bg-hover:        #1f1f1f;
-  --border:          #262626;
-  --border-subtle:   #1f1f1f;
-  --text-primary:    #e5e5e5;
-  --text-secondary:  #a3a3a3;
-  --text-tertiary:   #737373;
-  --text-placeholder:#525252;
-  --accent:          #3b82f6;
-  --accent-hover:    #60a5fa;
-  --accent-subtle:   #172554;
-  --accent-text:     #60a5fa;
-  --danger:          #ef4444;
-  --danger-bg:       #450a0a;
-  --success:         #22c55e;
-  --success-bg:      #052e16;
-  --shadow-xs:       0 1px 2px rgba(0,0,0,0.2);
-  --shadow-sm:       0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
-  --shadow-md:       0 4px 6px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.2);
-  --shadow-lg:       0 10px 15px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.2);
-  --shadow-card:     0 1px 3px rgba(0,0,0,0.2);
-  --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.3);
+  --bg-primary:      #282828;
+  --bg-secondary:    #333333;
+  --bg-elevated:     #424242;
+  --bg-hover:        #383838;
+  --border:          #555555;
+  --border-subtle:   #444444;
+  --text-primary:    #eeeeee;
+  --text-secondary:  #bbbbbb;
+  --text-tertiary:   #888888;
+  --text-placeholder:#666666;
+  --accent:          #7b8ff7;
+  --accent-hover:    #9aabf9;
+  --accent-subtle:   #252840;
+  --accent-text:     #8fa0f8;
+  --danger:          #f0506e;
+  --danger-bg:       #3d1a1a;
+  --success:         #3dd68c;
+  --success-bg:      #1a2d24;
+  --shadow-xs:       0 1px 2px rgba(0,0,0,0.3);
+  --shadow-sm:       0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:       0 4px 6px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-lg:       0 15px 35px rgba(0,0,0,0.4), 0 5px 15px rgba(0,0,0,0.35);
+  --shadow-card:     0 1px 3px rgba(0,0,0,0.35);
+  --shadow-card-hover: 0 15px 35px rgba(0,0,0,0.45);
 }
 
 /* ── Font Variants (toolbar.js) ── */
@@ -212,7 +212,7 @@ img { max-width: 100%; height: auto; }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(250,250,250,0.8);
+  background: rgba(244,245,247,0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-subtle);
@@ -221,17 +221,17 @@ img { max-width: 100%; height: auto; }
 }
 
 [data-theme="dark"] .navbar {
-  background: rgba(10,10,10,0.8);
+  background: rgba(40,40,40,0.85);
 }
 
 /* Wallpaper overlay */
 body[style*="background-image"] .navbar {
-  background: rgba(250,250,250,0.7);
+  background: rgba(244,245,247,0.7);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 [data-theme="dark"] body[style*="background-image"] .navbar {
-  background: rgba(10,10,10,0.7);
+  background: rgba(40,40,40,0.7);
 }
 
 .nav-inner {
@@ -561,13 +561,13 @@ body[style*="background-image"] .page-wrapper {
 
 .article-card {
   background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border: none;
+  border-radius: var(--radius-sm);
   padding: var(--space-lg);
   cursor: pointer;
-  transition: transform var(--duration-normal) var(--ease),
-              box-shadow var(--duration-normal) var(--ease),
-              border-color var(--duration-normal) var(--ease);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.3s var(--ease),
+              box-shadow 0.3s var(--ease);
   text-decoration: none;
   color: inherit;
   display: flex;
@@ -578,7 +578,6 @@ body[style*="background-image"] .page-wrapper {
 .article-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
-  border-color: var(--accent);
 }
 
 .article-card-title {
