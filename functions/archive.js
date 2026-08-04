@@ -80,7 +80,7 @@ ${mobileMenu()}
   </footer>
 </div>
 <script src="/app.js" defer></script>
-<script src="/toolbar.js?v=14" defer></script>
+<script src="/toolbar.js?v=15" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600, s-maxage=3600' } });

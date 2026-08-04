@@ -479,9 +479,9 @@ body[style*="background-image"] .navbar {
   flex-direction: column;
 }
 
-/* 桌面端：为左侧 Profile 悬浮框让路 */
+/* 桌面端：仅在首页有 Profile 时，为左侧悬浮框让路 */
 @media (min-width: 769px) {
-  .page-wrapper {
+  .home-profile ~ .page-wrapper {
     margin-left: 260px;
     max-width: calc(var(--max-w-content) - 260px);
   }

@@ -13,10 +13,10 @@
     { id: 'serif', label: '宋体' }
   ];
 
-  // 两种背景滤镜（低饱和度，护眼）
+  // 两种背景滤镜
   var BG_FILTERS = [
-    { id: 'warm',  color: 'rgba(253, 240, 225, 0.15)', label: '暖色' },
-    { id: 'cool',  color: 'rgba(225, 235, 250, 0.12)', label: '冷色' }
+    { id: 'warm',  color: 'rgba(253, 240, 225, 0.35)', label: '暖色' },
+    { id: 'cool',  color: 'rgba(225, 235, 250, 0.30)', label: '冷色' }
   ];
 
   /* ===== 状态 ===== */
@@ -65,7 +65,7 @@
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'ayoo-bg-filter';
-      overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2;transition:background 0.6s;';
+      overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:0;transition:background 0.6s;';
       document.body.appendChild(overlay);
     }
     var filter = BG_FILTERS.find(function(f) { return f.id === settings.bgFilter; });

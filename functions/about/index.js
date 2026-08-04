@@ -104,7 +104,7 @@ ${mobileMenu()}
   }
 })();
 </script>
-<script src="/toolbar.js?v=14" defer></script>
+<script src="/toolbar.js?v=15" defer></script>
 ${cmdOverlay()}
 </body>
 </html>`;
