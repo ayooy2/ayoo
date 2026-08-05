@@ -84,7 +84,7 @@ ${mobileMenu()}
     </div>
 
     <!-- Article Layout: Content + Sidebar TOC -->
-    <div class="article-layout">
+    <div class="article-layout article-layout-code">
 
       <!-- Main Content -->
       <article class="article-wrapper code-article animate-in" style="animation-delay:100ms">
